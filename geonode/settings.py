@@ -97,7 +97,7 @@ LANGUAGES = (
     ('km', 'Khmer'),
     ('pl', 'Polish'),
     ('sv', 'Swedish'),
-    ('th', 'Thai'),
+    ('th', 'ไทย'),
     ('uk', 'Ukranian'),
     ('si', 'Sinhala'),
     ('ta', 'Tamil'),
@@ -299,6 +299,10 @@ INSTALLED_APPS = (
     'tastypie',
     'polymorphic',
     'guardian',
+
+    # Geosafe
+    'geosafe',
+    'south',
 
 ) + GEONODE_APPS
 
@@ -555,8 +559,8 @@ PYCSW = {
         #},
         'metadata:main': {
             'identification_title': 'GeoNode Catalogue',
-            'identification_abstract': 'GeoNode is an open source platform that facilitates the creation, sharing, \
-             and collaborative use of geospatial data',
+            'identification_abstract': 'GeoNode is an open source platform that facilitates the creation, sharing, ' \
+            'and collaborative use of geospatial data',
             'identification_keywords': 'sdi,catalogue,discovery,metadata,GeoNode',
             'identification_keywords_type': 'theme',
             'identification_fees': 'None',
@@ -594,6 +598,10 @@ PYCSW = {
 
 # GeoNode javascript client configuration
 
+# default map projection
+# Note: If set to EPSG:4326, then only EPSG:4326 basemaps will work.
+DEFAULT_MAP_CRS = "EPSG:900913"
+
 # Where should newly created maps be focused?
 DEFAULT_MAP_CENTER = (0, 0)
 
@@ -626,13 +634,15 @@ MAP_BASELAYERS = [{
     "name": "naip",
     "group": "background",
     "visibility": False
-}, {
-    "source": {"ptype": "gxp_bingsource"},
-    "name": "AerialWithLabels",
-    "fixed": True,
-    "visibility": False,
-    "group": "background"
-}, {
+}, 
+# {    
+#     "source": {"ptype": "gxp_bingsource"},
+#     "name": "AerialWithLabels",
+#     "fixed": True,
+#     "visibility": False,
+#     "group": "background"
+# }, 
+{
     "source": {"ptype": "gxp_mapboxsource"},
 }]
 
@@ -670,7 +680,7 @@ CKAN_ORIGINS = [{
 # Be sure to replace @GeoNode with your organization or site's twitter handle.
 TWITTER_CARD = True
 TWITTER_SITE = '@GeoNode'
-TWITTER_HASHTAGS = ['geonode'] 
+TWITTER_HASHTAGS = ['geonode']
 
 OPENGRAPH_ENABLED = True
 
@@ -696,11 +706,6 @@ LOCKDOWN_GEONODE = False
 # Add additional paths (as regular expressions) that don't require
 # authentication.
 AUTH_EXEMPT_URLS = ()
-
-if LOCKDOWN_GEONODE:
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
-        ('geonode.security.middleware.LoginRequiredMiddleware',)
-
 
 # A tuple of hosts the proxy can send requests to.
 PROXY_ALLOWED_HOSTS = ()
@@ -886,6 +891,11 @@ try:
 except ImportError:
     pass
 
+
+# Require users to authenticate before using Geonode
+if LOCKDOWN_GEONODE:
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
+        ('geonode.security.middleware.LoginRequiredMiddleware',)
 
 #for windows users check if they didn't set GEOS and GDAL in local_settings.py
 #maybe they set it as a windows environment

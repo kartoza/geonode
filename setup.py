@@ -82,7 +82,7 @@ setup(name='GeoNode',
         "pillow", # python-pillow
         "lxml", # python-lxml
         # "psycopg2==2.4.5", # python-psycopg2
-        "Django==1.6.10", # python-django
+        "Django==1.6.11", # python-django
 
         # Other
         "beautifulsoup4==4.2.1", # python-bs4
@@ -126,8 +126,8 @@ setup(name='GeoNode',
         "geonode-arcrest==10.2",
         "geonode-notification==1.1.1",
         "geonode-dialogos==0.4",
-        "gsconfig==0.6.13",
-        "gsimporter==0.1",
+        "gsconfig==1.0.0",
+        "gsimporter==1.0.0",
         "gisdata==0.5.4",
 
         # geopython dependencies
