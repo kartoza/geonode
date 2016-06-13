@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponseServerError, HttpResponse, \
     HttpResponseBadRequest, HttpResponseRedirect
@@ -14,8 +15,16 @@ from django.shortcuts import render
 from django.views.generic import (
     ListView, CreateView, DetailView)
 
+from geosafe.helpers.impact_summary.polygon_people_summary import \
+    PolygonPeopleSummary
+from geosafe.helpers.impact_summary.summary_base import ImpactSummary
+
 from geonode.layers.models import Layer
 from geosafe.forms import (AnalysisCreationForm)
+from geosafe.helpers.impact_summary.population_summary import \
+    PopulationSummary
+from geosafe.helpers.impact_summary.road_summary import RoadSummary
+from geosafe.helpers.impact_summary.structure_summary import StructureSummary
 from geosafe.models import Analysis, Metadata
 from geosafe.signals import analysis_post_save
 from geosafe.tasks.headless.analysis import filter_impact_function
@@ -33,11 +42,30 @@ def retrieve_layers(purpose, category=None, bbox=None):
         category = None
     if bbox:
         bbox = json.loads(bbox)
+        # normalize bbox
+        if bbox[2] < bbox[0]:
+            temp = bbox[0]
+            bbox[0] = bbox[2]
+            bbox[2] = temp
+        if bbox[3] < bbox[1]:
+            temp = bbox[1]
+            bbox[1] = bbox[3]
+            bbox[3] = temp
         intersect = (
             Q(layer__bbox_x0__lte=bbox[2]) &
             Q(layer__bbox_x1__gte=bbox[0]) &
             Q(layer__bbox_y0__lte=bbox[3]) &
-            Q(layer__bbox_y1__gte=bbox[1])
+            Q(layer__bbox_y1__gte=bbox[1]) &
+            Q(layer__bbox_x0__lte=F('layer__bbox_x1')) &
+            Q(layer__bbox_y0__lte=F('layer__bbox_y1'))
+        ) | (
+            # in case of swapped value
+            Q(layer__bbox_x0__lte=bbox[2]) &
+            Q(layer__bbox_x1__gte=bbox[0]) &
+            Q(layer__bbox_y0__gte=bbox[3]) &
+            Q(layer__bbox_y1__lte=bbox[1]) &
+            Q(layer__bbox_x0__lte=F('layer__bbox_x1')) &
+            Q(layer__bbox_y1__lte=F('layer__bbox_y0'))
         )
         metadatas = Metadata.objects.filter(
             Q(layer_purpose=purpose),
@@ -66,21 +94,29 @@ class AnalysisCreateView(CreateView):
         purposes = [
             {
                 'name': 'exposure',
-                'categories': ['population', 'road', 'structure'],
+                'categories': [
+                    'population',
+                    'road',
+                    'structure',
+                    # 'land_cover',
+                    ],
                 'list_titles': [
                     'Select a population layer',
                     'Select a roads layer',
                     'Select a structure layer',
+                    # 'Select a land_cover layer',
                 ]
             },
             {
                 'name': 'hazard',
-                'categories': ['flood', 'tsunami', 'earthquake', 'volcano'],
+                'categories': ['flood', 'tsunami', 'earthquake', 'volcano',
+                               'volcanic-ash'],
                 'list_titles': [
                     'Select a flood layer',
                     'Select a tsunami layer',
                     'Select an earthquake layer',
                     'Select a volcano layer',
+                    'Select a volcanic ash layer',
                 ]
             }
         ]
@@ -124,6 +160,7 @@ class AnalysisCreateView(CreateView):
             {
                 'sections': sections,
                 'analysis': analysis,
+                'report_type': None,
             }
         )
         return context
@@ -500,8 +537,28 @@ def analysis_summary(request, impact_id):
 
     try:
         analysis = Analysis.objects.get(impact_layer__id=impact_id)
+        report_type = None
+        summary = ImpactSummary(analysis.impact_layer)
+        if 'building' in summary.exposure_type():
+            report_type = 'structure'
+            summary = StructureSummary(analysis.impact_layer)
+        elif 'population' in summary.exposure_type():
+            report_type = 'population'
+            summary = PopulationSummary(analysis.impact_layer)
+        elif 'polygon people' in summary.exposure_type():
+            report_type = 'polygon_people'
+            summary = PolygonPeopleSummary(analysis.impact_layer)
+        elif 'road' in summary.exposure_type():
+            report_type = 'road'
+            summary = RoadSummary(analysis.impact_layer)
+        elif 'landcover' in summary.exposure_type():
+            report_type = 'landcover'
         context = {
-            'analysis': analysis
+            'analysis': analysis,
+            'report_type': report_type,
+            'report_template': 'geosafe/analysis/summary/%s_report.html' % (
+                report_type, ),
+            'summary': summary
         }
         return render(request, "geosafe/analysis/modal/impact_card.html",
                       context)

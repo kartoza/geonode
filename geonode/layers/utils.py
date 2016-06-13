@@ -177,6 +177,20 @@ def get_files(filename):
                    'distinct by spelling and not just case.') % filename
             raise GeoNodeException(msg)
 
+    if 'geosafe' in settings.INSTALLED_APPS:
+        matches = glob.glob(glob_name + ".[jJ][sS][oO][nN]")
+        logger.debug('Checking JSON file')
+        logger.debug('Number of matches JSON file : %s' % len(matches))
+        logger.debug('glob name: %s' % glob_name)
+        if len(matches) == 1:
+            files['json'] =matches[0]
+        elif len(matches) > 1:
+            msg = ('Multiple impact summary report (json) for %s exist; '
+                   'they need to be distinct by spelling and not just case.'
+                   ) % filename
+            raise GeoNodeException(msg)
+
+
     return files
 
 

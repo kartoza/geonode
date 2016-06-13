@@ -131,6 +131,14 @@ class Analysis(models.Model):
         null=True
     )
 
+    task_state = models.CharField(
+        max_length=10,
+        verbose_name='Task State',
+        help_text='Task State recorded in the model',
+        blank=True,
+        null=True
+    )
+
     keep = models.BooleanField(
         verbose_name='Keep impact result',
         help_text='True if the impact will be kept',
@@ -180,13 +188,26 @@ class Analysis(models.Model):
         return AsyncResult(self.task_id)
 
     def get_label_class(self):
-        result = self.get_task_result()
-        if result.state == 'SUCCESS':
+        state = self.get_task_state()
+        if state == 'SUCCESS':
             return 'success'
-        elif result.state == 'FAILURE':
+        elif state == 'FAILURE':
             return 'danger'
         else:
             return 'info'
+
+    def get_task_state(self):
+        """Check task state
+
+        State need to be evaluated from task result.
+        However after a certain time, the task result is removed from broker.
+        In this case, the state will always return 'PENDING'. For this, we
+        receive the actual result from self.state, which is the cached state
+
+        :return:
+        """
+        result = self.get_task_result()
+        return self.task_state if result.state == 'PENDING' else result.state
 
     def get_default_impact_title(self):
         layer_name = '%s on %s' % (

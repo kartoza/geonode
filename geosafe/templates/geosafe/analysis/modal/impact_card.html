@@ -1,82 +1,8 @@
 {% load bootstrap_tags %}
 {% load staticfiles %}
-<style>
-    #impact-card-modal{
-        color: #cacaca;
-    }
-    #impact-card-modal .modal-title{
-        text-align: center;
-    }
-    #impact-card-modal .impact-icons{
-        text-align: center;
-        background: #3c3c3c;
-        margin-left: -20px;
-        margin-right: -20px;
-        margin-top: -20px;
-        padding: 10px;
-    }
-    #impact-card-modal .impact-icons img{
-        height: 20px;
-    }
-    #impact-card-modal .modal-footer{
-        text-align: center;
-        border-top: 1px solid #606060;
-    }
-    #impact-card-modal .modal-header{
-        border-bottom: 1px solid #606060;
-    }
-    #impact-card-modal .modal-content{
-        background: #454545;
-    }
-    #impact-card-modal .btn{
-        background: #6c6c6c;
-        color: #eeeeee;
-        border: none;
-        height: 30px;
-        padding-top: 5px;
-    }
-    #impact-card-modal .modal-header .btn{
-        background: transparent;
-    }
-
-    .save-analysis{
-        vertical-align: middle;
-        display: inline-block;
-        margin-left: 5px;
-    }
-    .save-analysis .onoffswitch-label{
-        margin-bottom: 0;
-    }
-    .save-analysis.processing .onoffswitch-inner,
-    .save-analysis.processing .onoffswitch-switch{
-        display: none;
-    }
-    .save-analysis.processing{
-        width: 130px;
-    }
-    .save-analysis.processing .processing-indicator{
-        display: inline-block;
-        white-space: nowrap;
-        height: 30px;
-        padding-left: 10px;
-        padding-right: 10px;
-        padding-top: 5px;
-    }
-    .save-analysis .processing-indicator{
-        display: none;
-    }
-    .save-analysis .onoffswitch-inner:before{
-        content: "SAVE";
-        padding: 0;
-    }
-    .save-analysis .onoffswitch-inner:after{
-        content: "NOT";
-        padding: 0;
-        text-align: center;
-    }
-</style>
+<link href="{% static "geosafe/css/impact_summary.css" %}" rel="stylesheet"/>
 <div class="modal fade" id="impact-card-modal" tabindex="-1" role="dialog" aria-labelledby="Impact">
-    {% if analysis %}
+    {% if analysis and report_type%}
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -87,17 +13,10 @@
                 <h4 class="modal-title" id="impact_card_label">Analysis Result</h4>
             </div>
             <div class="modal-body">
-                <p class="impact-icons">
-                    {% with analysis.exposure_layer.metadata.category as c %}
-                    <img src="{% static "geosafe/img/"|add:c|add:".svg" %}" alt="{{ c }}" class="svg"/>
-                    {% endwith %}
-                    {% with analysis.hazard_layer.metadata.category as c %}
-                    <img src="{% static "geosafe/img/"|add:c|add:".svg" %}" alt="{{ c }}" class="svg"/>
-                    {% endwith %}
-                </p>
                 <p class="impact-questions">
                     In the event of {{ analysis.hazard_layer.title }}, how many {{ analysis.exposure_layer.title }} will be affected
                 </p>
+                {% include report_template %}
             </div>
             <div class="modal-footer">
                 <a href="javascript:show_in_iframe('Impact Report', '{% url "geosafe:download-report" analysis_id=analysis.id data_type="map" %}')" role="button" class="btn btn-default btn-xs">Show map report</a>

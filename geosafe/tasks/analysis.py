@@ -123,6 +123,8 @@ def process_impact_result(analysis_id, impact_url_result):
         for name in zf.namelist():
             basename, ext = os.path.splitext(name)
             if ext in ['.shp', '.tif']:
+                # process this in the for loop to make sure it works only
+                # when we found the layer
                 saved_layer = file_upload(
                     os.path.join(dir_name, name),
                     overwrite=True)
@@ -150,6 +152,7 @@ def process_impact_result(analysis_id, impact_url_result):
                 if os.path.exists(report_table_path):
                     analysis.assign_report_table(report_table_path)
 
+                analysis.task_state = 'SUCCESS'
                 analysis.save()
 
                 if current_impact:

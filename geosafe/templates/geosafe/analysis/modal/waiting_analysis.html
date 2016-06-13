@@ -2,22 +2,22 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                {% if analysis.get_task_result.state == 'FAILURE' %}
+                {% if analysis.get_task_state == 'FAILURE' %}
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Analysis Failed</h4>
+                    <h4 class="modal-title" id="analysis-result-label">Analysis Failed</h4>
                 {% else %}
-                    <h4 class="modal-title" id="myModalLabel"><i class="fa fa-spinner fa-spin"></i> Waiting for analysis to run</h4>
+                    <h4 class="modal-title" id="analysis-result-label"><i class="fa fa-spinner fa-spin"></i> Waiting for analysis to run</h4>
                 {% endif %}
             </div>
             <div class="modal-body">
-                {% if analysis.get_task_result.state == 'FAILURE' %}
+                {% if analysis.get_task_state == 'FAILURE' %}
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h3 class="panel-title">Error Detail</h3>
                         </div>
                         <div class="panel-body">
-                            Analysis process is failed.
+                            Analysis process has failed.
                             <p>{{ analysis.get_task_result.result }}</p>
                             <p>{{ analysis.get_task_result.traceback }}</p>
                         </div>
@@ -33,7 +33,7 @@
             </div>
             <div class="modal-footer">
                 {% if analysis.get_task_result %}
-                    {% if analysis.get_task_result.failed %}
+                    {% if analysis.get_task_result.failed or analysis.get_task_state == 'FAILURE'%}
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <p>
                             <form action="{% url 'geosafe:rerun-analysis' analysis_id=analysis.id %}" method="post">

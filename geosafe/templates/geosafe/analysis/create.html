@@ -52,7 +52,7 @@
 .options-panel .option:last-child {
     margin-bottom:0;
 }
-.options-panel svg {
+.options-panel svg, .options-panel i {
     position:absolute;
     top:0;
     bottom:0;
@@ -140,6 +140,12 @@ a:not(.set):hover i {
     display: block;
 }
 .options-panel .list:hover {
+    display: block;
+}
+#impact-function.loading svg, #impact-function i {
+    display: none;
+}
+#impact-function.loading i, #impact-function svg {
     display: block;
 }
 .list-title {
@@ -332,15 +338,23 @@ function init_layer_panel(){
     var last_click;
     $(".option>a").click(function () {
         {# special case when only contains one layer #}
+        var $list_box = $(this).next().filter(".list");
         if($(this).hasClass('one')){
             {# automatically click the only layer #}
-            $(this).next().filter(".list").find("a")[0].click();
+            $list_box.find("a")[0].click();
             return;
         }
         if(last_click!=this){
             $(last_click).next().filter(".list").removeClass("show");
         }
-        $(this).next().filter(".list").toggleClass("show");
+        $list_box.toggleClass("show");
+
+        {# correcting position for impact #}
+        if($list_box.closest("#impact-option").length > 0){
+            var box_height = $list_box.height();
+            var pos_y = -box_height + 40;
+            $list_box.css("top", pos_y);
+        }
         last_click=this;
     });
     var $analysis_form = $(".report.section form");
@@ -381,6 +395,10 @@ $(document).ready(function () {
                 'hazard_id': $("#id_hazard_layer").val()
             };
 
+            {# create spinning animation #}
+            var if_function = $("#impact-function");
+            if_function.addClass('loading');
+
             $.get('{% url 'geosafe:impact-function-filter' %}', chosen_combination, function (data) {
                 console.log(data);
                 var select = $("#id_impact_function_id");
@@ -388,7 +406,7 @@ $(document).ready(function () {
                 select.empty();
                 ul.empty();
                 // clear styles
-                $("#impact-function").removeClass("set");
+                if_function.removeClass("set").removeClass("loading");
                 $("#impact-function-list .selected").removeClass("selected");
                 if (data.length == 0) {
                     console.log('No IF found')
@@ -399,6 +417,11 @@ $(document).ready(function () {
                     $li.append($a);
                     $li.appendTo(ul);
                 }
+
+                if(data.length > 1){
+                    if_function.addClass("has-children");
+                }
+
                 for (var i = 0; i < data.length; i++) {
                     var id = data[i]['id'];
                     var name = data[i]['name'];
@@ -880,7 +903,7 @@ $(document).ready(function () {
                 update_hazard_layer({{ analysis.hazard_layer_id }});
                 update_exposure_layer({{ analysis.exposure_layer_id }});
                 {# check if impact process is done #}
-                {% if analysis.get_task_result.successful %}
+                {% if analysis.get_task_state == 'SUCCESS' %}
                     update_impact_layer({{ analysis.impact_layer_id }});
                 {% else %}
                     {# impact not yet processed #}
@@ -891,7 +914,7 @@ $(document).ready(function () {
                 {% endif %}
 
                 {% if analysis.get_task_result %}
-                    {% if not analysis.get_task_result.successful and not analysis.get_task_result.failed %}
+                    {% if not analysis.get_task_state == 'SUCCESS' and not analysis.get_task_state == 'FAILURE' %}
                         {# Automatic check in 30 sec #}
                         function check_analysis(){
                             var check_analysis_url = '{% url 'geosafe:check-analysis' analysis_id=analysis.id %}';

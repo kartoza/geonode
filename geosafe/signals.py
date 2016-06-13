@@ -43,4 +43,5 @@ def analysis_post_save(sender, instance, created, **kwargs):
         async_result = process_impact_result.delay(
             instance.id, impact_url_result)
         instance.task_id = async_result.task_id
+        instance.task_state = async_result.state
         instance.save()

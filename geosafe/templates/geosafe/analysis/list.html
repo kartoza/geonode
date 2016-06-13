@@ -119,10 +119,19 @@
                         <td>
                             {% if not analysis.get_task_result %}
                                 Analysis not yet running
-                            {% elif analysis.get_task_result.successful %}
+                            {% elif analysis.get_task_state == 'SUCCESS' %}
                                 <a href="{% url 'layer_detail' layername=analysis.impact_layer.typename %}">{{ analysis.impact_layer }}</a>
                             {% else %}
-                                Task Status: <span class="label label-{{ analysis.get_label_class }}">{{ analysis.get_task_result.state }}</span>
+                                <div>Task Status: <span class="label label-{{ analysis.get_label_class }}">{{ analysis.get_task_state }}</span></div>
+                                {% if analysis.get_task_state == 'FAILURE' %}
+                                <div>
+                                    <form action="{% url 'geosafe:rerun-analysis' analysis_id=analysis.id %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" id="analysis_id" value="{{ analysis.id }}" />
+                                        <button type="submit" class="btn btn-primary">Rerun Analysis</button>
+                                    </form>
+                                </div>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td>

@@ -1,0 +1,48 @@
+{% load geosafe_impact_summary %}
+{% load staticfiles %}
+<div class="impact-summary row">
+    <div class="summary col-xs-6">
+        <div class="row highlight">
+            <div class="col-xs-8">
+                <div class="number">{{ summary.total }}</div>
+                <div class="category">Total Population</div>
+            </div>
+            <div class="col-xs-4">
+                {% with analysis.exposure_layer.metadata.category as c %}
+                <img src="{% static "geosafe/img/"|add:c|add:".svg" %}" alt="{{ c }}" class="svg"/>
+                {% endwith %}
+            </div>
+        </div>
+        <div class="row highlight">
+            <div class="col-xs-8">
+                <div class="number">{{ summary.total_affected }}</div>
+                <div class="category">Population Affected</div>
+            </div>
+            <div class="col-xs-4">
+                {% with analysis.hazard_layer.metadata.category as c %}
+                <img src="{% static "geosafe/img/"|add:c|add:".svg" %}" alt="{{ c }}" class="svg"/>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    <div class="category-breakdown col-xs-6">
+        <div class="title text-center">Hazard areas</div>
+        <div class="content">
+            {% for category, value in summary.breakdown_dict.iteritems %}
+                <div class="breakdown row {{ summary|category_css_class:category }}">
+                    <div class="category col-xs-4 text-right">{{ category|lower|safe }}</div>
+                    <div class="value col-xs-4 text-right">
+                        <div style="width: 100%">{{ value }}</div>
+                    </div>
+                    <div class="value col-xs-4 text-left">
+                        {% with 84.5 as total_width %}
+                        <svg width="{{ total_width }}" height="20">
+                            <rect x="0" rx="10" ry="10" height="20" width="{% widthratio value summary.total total_width %}"></rect>
+                        </svg>
+                        {% endwith %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
