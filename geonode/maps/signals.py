@@ -21,3 +21,4 @@
 from django.dispatch import Signal
 
 map_changed_signal = Signal(providing_args=['what_changed'])
+qgis_map_with_layers = Signal(providing_args=[])

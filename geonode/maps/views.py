@@ -42,6 +42,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 from geonode.layers.models import Layer
 from geonode.maps.models import Map, MapLayer, MapSnapshot
+from geonode.maps.signals import qgis_map_with_layers
 from geonode.layers.views import _resolve_layer
 from geonode.utils import forward_mercator, llbbox_to_mercator
 from geonode.utils import DEFAULT_TITLE
@@ -435,6 +436,12 @@ def new_map_json(request):
                 config=clean_config(body),
                 map=map_obj,
                 user=request.user)
+
+            if 'geonode.qgis_server' in settings.INSTALLED_APPS:
+                # We can't use the default post save map, because we need
+                # MapLayer to be created in the database.
+                qgis_map_with_layers.send(sender=map_obj)
+
         except ValueError as e:
             return HttpResponse(str(e), status=400)
         else:
