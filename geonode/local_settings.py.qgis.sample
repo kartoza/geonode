@@ -25,60 +25,16 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 SITEURL = "http://localhost:8000/"
 
+TIME_ZONE = 'America/Chicago'
+
 DATABASES = {
     'default': {
          'ENGINE': 'django.db.backends.postgresql_psycopg2',
          'NAME': 'geonode',
          'USER': 'geonode',
          'PASSWORD': 'geonode',
-     },
-    # vector datastore for uploads
-    'datastore' : {
-        #'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'ENGINE': '', # Empty ENGINE name disables 
-        'NAME': 'geonode',
-        'USER' : 'geonode',
-        'PASSWORD' : 'geonode',
-        'HOST' : 'localhost',
-        'PORT' : '5432',
-    }
+     }
 }
-
-# OGC (WMS/WFS/WCS) Server Settings
-
-WMS_QGIS_SERVER = GEONODE_BASE_URL + 'qgis-server/'
-
-OGC_SERVER = {
-    'default' : {
-        'BACKEND' : 'geonode.geoserver',
-        'LOCATION' : 'http://localhost:8080/geoserver/',  # or use WMS_QGIS_SERVER
-        'PUBLIC_LOCATION' : 'http://localhost:8080/geoserver/',  # or use WMS_QGIS_SERVER
-        'USER' : 'admin',
-        'PASSWORD' : 'geoserver',
-        'MAPFISH_PRINT_ENABLED' : True,
-        'PRINT_NG_ENABLED' : True,
-        'GEONODE_SECURITY_ENABLED' : True,
-        'GEOGIG_ENABLED' : False,
-        'WMST_ENABLED' : False,
-        'BACKEND_WRITE_ENABLED': True,
-        'WPS_ENABLED' : False,
-        'LOG_FILE': '%s/geoserver/data/logs/geoserver.log' % os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir)),
-        # Set to dictionary identifier of database containing spatial data in DATABASES dictionary to enable
-        'DATASTORE': '', #'datastore',
-    }
-}
-
-# If you want to enable Mosaics use the following configuration
-#UPLOADER = {
-##    'BACKEND': 'geonode.rest',
-#    'BACKEND': 'geonode.importer',
-#    'OPTIONS': {
-#        'TIME_ENABLED': True,
-#        'MOSAIC_ENABLED': True,
-#        'GEOGIG_ENABLED': False,
-#    }
-#}
-
 
 CATALOGUE = {
     'default': {
@@ -103,10 +59,8 @@ CATALOGUE = {
     }
 }
 
-# Default preview library
-#LAYER_PREVIEW_LIBRARY = 'geoext'
-
-# Leaflet config if you use one
+# Leaflet config
+LAYER_PREVIEW_LIBRARY = 'leaflet'
 LEAFLET_CONFIG = {
     'TILES': [
         # Find tiles at:
@@ -147,6 +101,15 @@ LEAFLET_CONFIG = {
     'RESET_VIEW': False
 }
 
+# Legacy from Geoserver
+OGC_SERVER = {
+    'default': {
+        'LOCATION': SITEURL + 'qgis-server/',
+        'PUBLIC_LOCATION': SITEURL + 'qgis-server/'
+    }
+}
+
+# OGC (WMS/WFS/WCS) Server Settings
 tiles_directory = os.path.join(PROJECT_ROOT, "qgis_tiles")
 QGIS_SERVER_CONFIG = {
     'tiles_directory': tiles_directory,
@@ -155,37 +118,6 @@ QGIS_SERVER_CONFIG = {
     'thumbnail_path': tiles_directory + '/%s/thumbnail.png',
     'map_tile_path': os.path.join(
         tiles_directory, '%s', 'map_tiles', '%s', '%s', '%s', '%s.png'),
-    'qgis_server_url': 'http://127.0.0.1:9995/cgi-bin/qgis_mapserv.fcgi',
+    'qgis_server_url': 'http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi',
     'layer_directory': os.path.join(PROJECT_ROOT, "qgis_layer")
-}
-
-# base url used to resolve layer files accessed by InaSAFE Headless
-GEONODE_BASE_URL = 'http://localhost:8000/'
-WMS_QGIS_SERVER = GEONODE_BASE_URL + 'qgis-server/'
-
-
-OGC_SERVER = {
-    'default': {
-        'BACKEND': 'geonode.geoserver',
-        'LOCATION': WMS_QGIS_SERVER,
-        # PUBLIC_LOCATION needs to be kept like this because in dev mode
-        # the proxy won't work and the integration tests will fail
-        # the entire block has to be overridden in the local_settings
-        'PUBLIC_LOCATION': WMS_QGIS_SERVER,
-        # 'LOCATION' : 'http://localhost:8080/geoserver/',  # or use WMS_QGIS_SERVER
-        # 'PUBLIC_LOCATION' : 'http://localhost:8080/geoserver/',  # or use WMS_QGIS_SERVER
-        'USER': 'admin',
-        'PASSWORD': 'geoserver',
-        'MAPFISH_PRINT_ENABLED': False,
-        'PRINT_NG_ENABLED': True,
-        'GEONODE_SECURITY_ENABLED': True,
-        'GEOGIG_ENABLED': False,
-        'WMST_ENABLED': False,
-        'BACKEND_WRITE_ENABLED': True,
-        'WPS_ENABLED': False,
-        'LOG_FILE': '%s/geoserver/data/logs/geoserver.log' % os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir)),
-        # Set to name of database in DATABASES dictionary to enable
-        'DATASTORE': '',  # 'datastore',
-        'TIMEOUT': 10  # number of seconds to allow for HTTP requests
-    }
 }

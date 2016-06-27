@@ -968,13 +968,9 @@ if 'geonode.qgis_server' in INSTALLED_APPS:
         'tile_path': tiles_directory + '/%s/%d/%d/%d.png',
         'legend_path': tiles_directory + '/%s/legend.png',
         'thumbnail_path': tiles_directory + '/%s/thumbnail.png',
-        'qgis_server_url': 'http://127.0.0.1/qgisltr',
+        'qgis_server_url': 'http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi',
         'layer_directory': os.path.join(PROJECT_ROOT, "qgis_layer")
     }
-
-# This settings here is needed to construct url for InaSAFE-Headless celery
-# batch. Note, trailing slash is important
-GEONODE_BASE_URL = 'http://localhost:8000/'
 
 # Load more settings from a file called local_settings.py if it exists
 try:
