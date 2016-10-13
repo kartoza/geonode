@@ -43,14 +43,13 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # Setting debug to true makes Django serve static media and
 # present pretty error pages.
-DEBUG = strtobool(os.getenv('DEBUG', 'False'))
-TEMPLATE_DEBUG = strtobool(os.getenv('TEMPLATE_DEBUG', 'False'))
+DEBUG = strtobool(os.getenv('DEBUG', 'True'))
+TEMPLATE_DEBUG = strtobool(os.getenv('TEMPLATE_DEBUG', 'True'))
 
 # Set to True to load non-minified versions of (static) client dependencies
 # Requires to set-up Node and tools that are required for static development
 # otherwise it will raise errors for the missing non-minified dependencies
 DEBUG_STATIC = strtobool(os.getenv('DEBUG_STATIC', 'False'))
-
 
 # This is needed for integration tests, they require
 # geonode to be listening for GeoServer auth requests.
@@ -62,12 +61,14 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['localhost', 'django'])
 _DEFAULT_SECRET_KEY = 'myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a'
 SECRET_KEY = os.getenv('SECRET_KEY', _DEFAULT_SECRET_KEY)
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///         development.db')
+DATABASE_URL = os.getenv(
+    'DATABASE_URL',
+    'sqlite:///{path}'.format(path=os.path.join(PROJECT_ROOT, 'development.db')))
 
 # Defines settings for development
-DATABASES = {'default':
-              dj_database_url.parse(DATABASE_URL,            conn_max_age=600),
-            } 
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+}
 
 MANAGERS = ADMINS = os.getenv('ADMINS', [])
 
@@ -298,6 +299,7 @@ INSTALLED_APPS = (
     # Utility
     'pagination',
     'taggit',
+    'treebeard',
     'friendlytagloader',
     'geoexplorer',
     'leaflet',
@@ -859,6 +861,7 @@ SEARCH_FILTERS = {
     'CATEGORIES_ENABLED': True,
     'OWNERS_ENABLED': True,
     'KEYWORDS_ENABLED': True,
+    'H_KEYWORDS_ENABLED': True,
     'DATE_ENABLED': True,
     'REGION_ENABLED': True,
     'EXTENT_ENABLED': True,
@@ -867,7 +870,7 @@ SEARCH_FILTERS = {
 # Queue non-blocking notifications.
 NOTIFICATION_QUEUE_ALL = False
 
-BROKER_URL = "django://"
+BROKER_URL = os.getenv('BROKER_URL', "django://")
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_IGNORE_RESULT = True
@@ -934,7 +937,7 @@ except ImportError:
     pass
 
 
-# Load additonal basemaps, see geonode/contrib/api_basemap/README.md 
+# Load additonal basemaps, see geonode/contrib/api_basemap/README.md
 try:
     from geonode.contrib.api_basemaps import *
 except ImportError:
@@ -970,9 +973,3 @@ if 'geonode.geoserver' in INSTALLED_APPS:
     baselayers = MAP_BASELAYERS
     MAP_BASELAYERS = [LOCAL_GEOSERVER]
     MAP_BASELAYERS.extend(baselayers)
-
-# Load more settings from a file called local_settings.py if it exists
-try:
-    from local_settings import *  # noqa
-except ImportError:
-    pass

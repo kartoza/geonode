@@ -261,7 +261,7 @@
             {% if links %}
             <ul>
               {% for link in links %}
-              <li><a href="{{ link.url }}">{% trans link.name %}</a></li>
+              <li><a href="{{ link.url }}" target="_blank">{% trans link.name %}</a></li>
               {% endfor %}
             </ul>
             {% endif %}
@@ -373,7 +373,7 @@
 			</h5>
             <ul>
               {% for link in metadata %}
-                <li><a href="{{ link.url }}">{{ link.name }}</a></li>
+                <li><a href="{{ link.url }}" target="_blank">{{ link.name }}</a></li>
               {% endfor %}
             <ul>
           </div>
@@ -500,6 +500,7 @@
               url: $("#form_post_comment").attr('action'),
               data: $("#form_post_comment").serialize(),
               success: function() {
+                $('#form_post_comment_div').modal().find('form')[0].reset();
                 $('#form_post_comment_div').modal('hide');
                 $('#comments_section').load(window.location.pathname + ' #comments_section',
                 		function(){$(this).children().unwrap()})

@@ -63,13 +63,11 @@ from geonode.security.views import _perms_info_json
 from geonode.documents.models import get_related_documents
 from geonode.utils import build_social_links
 from geonode.geoserver.helpers import cascading_delete, gs_catalog
-
-CONTEXT_LOG_FILE = None
+from geonode.geoserver.helpers import ogc_server_settings
 
 if 'geonode.geoserver' in settings.INSTALLED_APPS:
     from geonode.geoserver.helpers import _render_thumbnail
-    from geonode.geoserver.helpers import ogc_server_settings
-    CONTEXT_LOG_FILE = ogc_server_settings.LOG_FILE
+CONTEXT_LOG_FILE = ogc_server_settings.LOG_FILE
 
 logger = logging.getLogger("geonode.layers.views")
 
@@ -388,7 +386,6 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
     ) and attribute_form.is_valid() and category_form.is_valid():
         new_poc = layer_form.cleaned_data['poc']
         new_author = layer_form.cleaned_data['metadata_author']
-        new_keywords = layer_form.cleaned_data['keywords']
 
         if new_poc is None:
             if poc is None:
@@ -434,7 +431,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
             la.save()
 
         if new_poc is not None and new_author is not None:
-            new_keywords = layer_form.cleaned_data['keywords']
+            new_keywords = [x.strip() for x in layer_form.cleaned_data['keywords']]
             layer.keywords.clear()
             layer.keywords.add(*new_keywords)
             the_layer = layer_form.save()
@@ -465,11 +462,17 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
         layer_form.fields['poc'].initial = poc.id
         poc_form = ProfileForm(prefix="poc")
         poc_form.hidden = True
+    else:
+        poc_form = ProfileForm(prefix="poc")
+        poc_form.hidden = False
 
     if metadata_author is not None:
         layer_form.fields['metadata_author'].initial = metadata_author.id
         author_form = ProfileForm(prefix="author")
         author_form.hidden = True
+    else:
+        author_form = ProfileForm(prefix="author")
+        author_form.hidden = False
 
     return render_to_response(template, RequestContext(request, {
         "layer": layer,
