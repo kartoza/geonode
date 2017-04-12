@@ -241,31 +241,54 @@ def set_geofence_all(instance):
     resource = instance.get_self_resource()
 
     if hasattr(resource, "layer"):
-        try:
-            # Create GeoFence Rules for ANONYMOUS to the Layer
-            """
-            curl -X POST -u admin:geoserver -H "Content-Type: text/xml" -d \
-            "<Rule><workspace>geonode</workspace><layer>{layer}</layer><access>ALLOW</access></Rule>" \
-            http://<host>:<port>/geoserver/geofence/rest/rules
-            """
-            url = settings.OGC_SERVER['default']['LOCATION']
-            user = settings.OGC_SERVER['default']['USER']
-            passwd = settings.OGC_SERVER['default']['PASSWORD']
-            headers = {'Content-type': 'application/xml'}
-            payload = "<Rule><workspace>geonode</workspace><layer>"
-            payload = payload + resource.layer.name
-            payload = payload + "</layer><access>ALLOW</access></Rule>"
+        # Permission checking is only for geoserver backend
+        if 'geonode.geoserver' in settings.INSTALLED_APPS:
+            try:
+                # Create GeoFence Rules for ANONYMOUS to the Layer
+                """
+                curl -X POST -u admin:geoserver -H "Content-Type: text/xml" -d \
+                "<Rule><workspace>geonode</workspace><layer>{layer}</layer><access>ALLOW</access></Rule>" \
+                http://<host>:<port>/geoserver/geofence/rest/rules
+                """
+                url = settings.OGC_SERVER['default']['LOCATION']
+                user = settings.OGC_SERVER['default']['USER']
+                passwd = settings.OGC_SERVER['default']['PASSWORD']
+                headers = {'Content-type': 'application/xml'}
+                payload = "<Rule><workspace>geonode</workspace><layer>"
+                payload = payload + resource.layer.name
+                payload = payload + "</layer><access>ALLOW</access></Rule>"
 
-            r = requests.post(url + 'geofence/rest/rules',
-                              headers=headers,
-                              data=payload,
-                              auth=HTTPBasicAuth(user, passwd))
-            if (r.status_code != 200):
-                logger.warning("Could not ADD GeoServer ANONYMOUS Rule for Layer " + str(resource.layer.name))
+                # Check rules already exists
+                params = {
+                    'workspace': 'geonode',
+                    'layer': resource.layer.name
+                }
 
-        except:
-            tb = traceback.format_exc()
-            logger.debug(tb)
+                r = requests.get(url + 'geofence/rest/rules.json',
+                                 params=params,
+                                 auth=HTTPBasicAuth(user, passwd))
+                if r.status_code == 200:
+                    gs_rules = r.json()
+                    for rule in gs_rules['rules']:
+                        workspace = rule['workspace']
+                        layer = rule['layer']
+                        access = rule['access']
+                        if (workspace == 'geonode' and
+                                layer == resource.layer.name and
+                                access.lower() == 'allow'):
+                            # Do not recreate a rule
+                            return
+
+                r = requests.post(url + 'geofence/rest/rules',
+                                  headers=headers,
+                                  data=payload,
+                                  auth=HTTPBasicAuth(user, passwd))
+                if (r.status_code != 200):
+                    logger.warning("Could not ADD GeoServer ANONYMOUS Rule for Layer " + str(resource.layer.name))
+
+            except:
+                tb = traceback.format_exc()
+                logger.debug(tb)
 
 
 def set_geofence_owner(instance, username, view_perms=False, download_perms=False):
@@ -460,46 +483,48 @@ def remove_object_permissions(instance):
     resource = instance.get_self_resource()
 
     if hasattr(resource, "layer"):
-        try:
-            # Scan GeoFence Rules associated to the Layer
-            """
-            curl -u admin:geoserver
-            http://<host>:<port>/geoserver/geofence/rest/rules.json?workspace=geonode&layer={layer}
-            """
-            url = settings.OGC_SERVER['default']['LOCATION']
-            user = settings.OGC_SERVER['default']['USER']
-            passwd = settings.OGC_SERVER['default']['PASSWORD']
-            headers = {'Content-type': 'application/json'}
+        # Permission checking is only for geoserver backend
+        if 'geonode.geoserver' in settings.INSTALLED_APPS:
+            try:
+                # Scan GeoFence Rules associated to the Layer
+                """
+                curl -u admin:geoserver
+                http://<host>:<port>/geoserver/geofence/rest/rules.json?workspace=geonode&layer={layer}
+                """
+                url = settings.OGC_SERVER['default']['LOCATION']
+                user = settings.OGC_SERVER['default']['USER']
+                passwd = settings.OGC_SERVER['default']['PASSWORD']
+                headers = {'Content-type': 'application/json'}
 
-            r = requests.get(url + 'geofence/rest/rules.json?workspace=geonode&layer=' + resource.layer.name,
-                             headers=headers,
-                             auth=HTTPBasicAuth(user, passwd))
-            if (r.status_code >= 200):
-                gs_rules = r.json()
-                r_ids = []
-                if gs_rules and gs_rules['rules']:
-                    for r in gs_rules['rules']:
-                        if r['layer'] and r['layer'] == resource.layer.name:
-                            r_ids.append(r['id'])
+                r = requests.get(url + 'geofence/rest/rules.json?workspace=geonode&layer=' + resource.layer.name,
+                                 headers=headers,
+                                 auth=HTTPBasicAuth(user, passwd))
+                if (r.status_code >= 200):
+                    gs_rules = r.json()
+                    r_ids = []
+                    if gs_rules and gs_rules['rules']:
+                        for r in gs_rules['rules']:
+                            if r['layer'] and r['layer'] == resource.layer.name:
+                                r_ids.append(r['id'])
 
-                # Delete GeoFence Rules associated to the Layer
-                # curl -X DELETE -u admin:geoserver http://<host>:<port>/geoserver/geofence/rest/rules/id/{r_id}
-                for i, r_id in enumerate(r_ids):
-                    r = requests.delete(url + 'geofence/rest/rules/id/' + str(r_id),
-                                        headers=headers,
-                                        auth=HTTPBasicAuth(user, passwd))
-                    if (r.status_code != 200):
-                        msg = "Could not DELETE GeoServer Rule for Layer "
-                        msg = msg + str(resource.layer.name)
-                        logger.warning(msg)
+                    # Delete GeoFence Rules associated to the Layer
+                    # curl -X DELETE -u admin:geoserver http://<host>:<port>/geoserver/geofence/rest/rules/id/{r_id}
+                    for i, r_id in enumerate(r_ids):
+                        r = requests.delete(url + 'geofence/rest/rules/id/' + str(r_id),
+                                            headers=headers,
+                                            auth=HTTPBasicAuth(user, passwd))
+                        if (r.status_code != 200):
+                            msg = "Could not DELETE GeoServer Rule for Layer "
+                            msg = msg + str(resource.layer.name)
+                            logger.warning(msg)
 
-            UserObjectPermission.objects.filter(content_type=ContentType.objects.get_for_model(resource.layer),
-                                                object_pk=instance.id).delete()
-            GroupObjectPermission.objects.filter(content_type=ContentType.objects.get_for_model(resource.layer),
-                                                 object_pk=instance.id).delete()
-        except:
-            tb = traceback.format_exc()
-            logger.debug(tb)
+                UserObjectPermission.objects.filter(content_type=ContentType.objects.get_for_model(resource.layer),
+                                                    object_pk=instance.id).delete()
+                GroupObjectPermission.objects.filter(content_type=ContentType.objects.get_for_model(resource.layer),
+                                                     object_pk=instance.id).delete()
+            except:
+                tb = traceback.format_exc()
+                logger.debug(tb)
 
     UserObjectPermission.objects.filter(content_type=ContentType.objects.get_for_model(resource),
                                         object_pk=instance.id).delete()
