@@ -25,6 +25,7 @@ env:
 branches:
   only:
     - master
+    - master-qgis_server
 
 before_install:
   - ifconfig
