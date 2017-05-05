@@ -35,10 +35,10 @@
         var secondProjection = proj4('EPSG:4326');  // WGS84 web mercator
 
         /* transform {{resource}} point coordinates from google mercator to WSG84 system */
-        var point_wsg84 = proj4(firstProjection,secondProjection,[{{ resource.center_x }}, {{ resource.center_y }}]);
+        var point_wgs84 = proj4(firstProjection,secondProjection,[{{ resource.center_x }}, {{ resource.center_y }}]);
 
         /* initialize the map on the "the_map" div with a given center and zoom */
-        map = L.map('the_map').setView([point_wsg84[1], point_wsg84[0]],6);;
+        map = L.map('the_map').setView([point_wgs84[1], point_wgs84[0]],6);
         map.setZoom({{ resource.zoom }});
 
         /* add initial base layer to the map */
@@ -59,7 +59,7 @@
                 });   
                 /* add wmsLayer to the overlay_layers{} and to the map object itself */
                 if (wmsLayer != null) {
-                    overlay_layers["{{ resource.title }}"] = wmsLayer;
+                    overlay_layers["{{ layer.name }}"] = wmsLayer;
                     map.addLayer(wmsLayer);
                 }
             }

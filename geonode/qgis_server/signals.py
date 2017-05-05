@@ -98,8 +98,11 @@ def qgis_server_post_save(instance, sender, **kwargs):
     base_filename, original_ext = os.path.splitext(geonode_layer_path)
     extensions = QGISServerLayer.accepted_format
 
+    used_ext = None
+
     for ext in extensions:
         if os.path.exists(base_filename + '.' + ext):
+            used_ext = ext
             logger.debug('Copying %s' % base_filename + '.' + ext)
             try:
                 if created:
@@ -171,6 +174,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
     if data != 'OK':
         logger.debug('Result : %s' % data)
 
+    # Link for tile url
     tile_url = reverse(
         'qgis-server-tile',
         kwargs={
@@ -195,22 +199,38 @@ def qgis_server_post_save(instance, sender, **kwargs):
         )
     )
 
-    # geotiff link
-    geotiff_url = reverse(
-        'qgis-server-geotiff', kwargs={'layername': instance.name})
-    geotiff_url = urljoin(base_url, geotiff_url)
-    logger.debug('geotif_url: %s' % geotiff_url)
-
+    # Link for OGC WMS
+    ogc_wms_path = reverse('qgis-server-request')
+    ogc_wms_url = urljoin(settings.SITEURL, ogc_wms_path)
+    ogc_wms_name = 'OGC WMS: %s Service' % instance.workspace
     Link.objects.get_or_create(
         resource=instance.resourcebase_ptr,
-        url=geotiff_url,
-        defaults=dict(
-            extension='tif',
-            name="GeoTIFF",
-            mime='image/tif',
-            link_type='image'
+        url=ogc_wms_url,
+        defaults={
+            'extension': 'html',
+            'name': ogc_wms_name,
+            'url': ogc_wms_url,
+            'mime': 'text/html',
+            'link_type': 'OGC:WMS'
+        })
+
+    # geotiff link
+    if used_ext in QGISServerLayer.geotiff_format:
+        geotiff_url = reverse(
+            'qgis-server-geotiff', kwargs={'layername': instance.name})
+        geotiff_url = urljoin(base_url, geotiff_url)
+        logger.debug('geotif_url: %s' % geotiff_url)
+
+        Link.objects.get_or_create(
+            resource=instance.resourcebase_ptr,
+            url=geotiff_url,
+            defaults=dict(
+                extension='tif',
+                name="GeoTIFF",
+                mime='image/tif',
+                link_type='image'
+            )
         )
-    )
 
     # Create legend link
     legend_url = reverse(

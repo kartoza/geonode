@@ -38,10 +38,7 @@
     </style>
 {% endblock extra_head %}
 
-{% block body %}
-    </div>
-    </div>
-    </div>
+{% block middle %}
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-3 pad0">
@@ -112,7 +109,7 @@
             </div>
         </div>
     </div>
-{% endblock body %}
+{% endblock middle %}
 
 {% block footer %}
 
@@ -247,11 +244,16 @@
                 data: {},
                 dataType: 'json',
                 success: function (json) {
-                    var layer_url = json['url'];
+                    var layer_url = json['ows_url'];
                     var layer_title = json['title'];
 
                     // Add layer to leaflet
-                    var tile_layer = L.tileLayer(layer_url);
+                    var tile_layer = L.tileLayer.wms(layer_url, {
+                        format: 'image/png',
+                        transparent: true,
+                        layers: layer_typename,
+                        opacity: 0.8
+                    });
                     if (tile_layer != null) {
                         // Set view to new added layer
                         zoom_to_box(map, [
