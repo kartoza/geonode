@@ -746,7 +746,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
         """Return URL for OGC WMS server None if it does not exist.
         """
         try:
-            ows_link = self.link_set.get(name='OGC:WMS')
+            ows_link = self.link_set.get(link_type='OGC:WMS')
         except Link.DoesNotExist:
             return None
         else:

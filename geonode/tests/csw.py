@@ -23,7 +23,11 @@ import os
 from unittest import TestCase
 from lxml import etree
 import gisdata
+from django.conf import settings
+from geonode import geoserver
+from geonode import qgis_server
 from geonode.catalogue import get_catalogue
+from geonode.utils import check_ogc_backend
 
 
 class GeoNodeCSWTest(TestCase):
@@ -96,6 +100,41 @@ class GeoNodeCSWTest(TestCase):
             16,
             'Expected 16 records against ISO typename')
 
+    def check_ogc_links(self, link_list, scheme_func, url_func):
+        """Helper to check ogc links.
+
+        :param link_list: the list of links
+        :type link_list: list
+
+        :param scheme_func: a function to get the scheme
+        :type scheme_func: function
+
+        :param url_func: a function to get the url
+        :type url_func: function
+        """
+        # Check for geoserver backend
+        if check_ogc_backend(geoserver.BACKEND_PACKAGE):
+            ogc_url = settings.OGC_SERVER['default']['LOCATION']
+            for link in link_list:
+                if scheme_func(link) == 'OGC:WMS':
+                    self.assertEqual(url_func(link),
+                                     '{ogc_url}geonode/wms'.format(
+                                         ogc_url=ogc_url),
+                                     'Expected a specific OGC:WMS URL')
+                elif scheme_func(link) == 'OGC:WFS':
+                    self.assertEqual(url_func(link),
+                                     '{ogc_url}geonode/wfs'.format(
+                                         ogc_url=ogc_url),
+                                     'Expected a specific OGC:WFS URL')
+        # Check for QGIS Server backend
+        elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+            ogc_url = settings.OGC_SERVER['default']['LOCATION']
+            for link in link_list:
+                if scheme_func(link) == 'OGC:WMS' or scheme_func(link) == 'OGC:WFS':
+                    self.assertEqual(url_func(link),
+                                     '{ogc_url}ows'.format(ogc_url=ogc_url),
+                                     'Expected a specific OGC URL')
+
     def test_csw_outputschema_dc(self):
         """Verify that GeoNode CSW can handle ISO metadata with Dublin Core outputSchema"""
 
@@ -119,15 +158,10 @@ class GeoNodeCSWTest(TestCase):
                          'Expected a specific abstract in Dublin Core model')
 
         # test for correct service link articulation
-        for link in record.references:
-            if link['scheme'] == 'OGC:WMS':
-                self.assertEqual(link['url'],
-                                 'http://localhost:8080/geoserver/geonode/wms',
-                                 'Expected a specific OGC:WMS URL')
-            elif link['scheme'] == 'OGC:WFS':
-                self.assertEqual(link['url'],
-                                 'http://localhost:8080/geoserver/geonode/wfs',
-                                 'Expected a specific OGC:WFS URL')
+        self.check_ogc_links(
+            record.references,
+            lambda link: link['scheme'],
+            lambda link: link['url'])
 
     def test_csw_outputschema_iso(self):
         """Verify that GeoNode CSW can handle ISO metadata with ISO outputSchema"""
@@ -174,15 +208,10 @@ class GeoNodeCSWTest(TestCase):
             'Expected a specific maxy coordinate value in ISO model')
 
         # test for correct link articulation
-        for link in record.distribution.online:
-            if link.protocol == 'OGC:WMS':
-                self.assertEqual(link.url,
-                                 'http://localhost:8080/geoserver/geonode/wms',
-                                 'Expected a specific OGC:WMS URL')
-            elif link.protocol == 'OGC:WFS':
-                self.assertEqual(link.url,
-                                 'http://localhost:8080/geoserver/geonode/wfs',
-                                 'Expected a specific OGC:WFS URL')
+        self.check_ogc_links(
+            record.distribution.online,
+            lambda link: link.protocol,
+            lambda link: link.url)
 
     def test_csw_outputschema_dc_bbox(self):
         """Verify that GeoNode CSW can handle ISO metadata BBOX model with Dublin Core outputSchema"""

@@ -84,7 +84,7 @@ urlpatterns = patterns(
         name='qgis-server-map-thumbnail'
     ),
     url(
-        r'^qgis-server/wms/$',
+        r'^qgis-server/ows$',
         qgis_server_request,
         name='qgis-server-request'
     ),
