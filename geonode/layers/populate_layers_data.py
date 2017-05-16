@@ -20,11 +20,13 @@
 
 from geonode.layers.models import Style, Attribute, Layer
 import notification
+from django.conf import settings
 from django.utils.translation import ugettext as _
 
+ogc_location = settings.OGC_SERVER['default']['LOCATION']
 
 styles = [{"name": "test_style_1",
-           "sld_url": "http://localhost:8080/geoserver/rest/styles/test_style.sld",
+           "sld_url": "{ogc_location}rest/styles/test_style.sld".format(ogc_location=ogc_location),
            "sld_body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sld:StyledLayerDescriptor \
             xmlns=\"http://www.opengis.net/sld\" xmlns:sld=\"http://www.opengis.net/sld\" \
             xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:gml=\"http://www.opengis.net/gml\" \
@@ -37,7 +39,7 @@ styles = [{"name": "test_style_1",
             </sld:NamedLayer></sld:StyledLayerDescriptor>",
            },
           {"name": "test_style_2",
-           "sld_url": "http://localhost:8080/geoserver/rest/styles/test_style.sld",
+           "sld_url": "{ogc_location}rest/styles/test_style.sld".format(ogc_location=ogc_location),
            "sld_body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sld:StyledLayerDescriptor \
            xmlns=\"http://www.opengis.net/sld\" xmlns:sld=\"http://www.opengis.net/sld\" \
            xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:gml=\"http://www.opengis.net/gml\" \
@@ -49,7 +51,7 @@ styles = [{"name": "test_style_1",
            </sld:Rule></sld:FeatureTypeStyle></sld:UserStyle></sld:NamedLayer></sld:StyledLayerDescriptor>",
            },
           {"name": "test_style_3",
-           "sld_url": "http://localhost:8080/geoserver/rest/styles/test_style.sld",
+           "sld_url": "{ogc_location}rest/styles/test_style.sld".format(ogc_location=ogc_location),
            "sld_body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sld:StyledLayerDescriptor \
            xmlns=\"http://www.opengis.net/sld\" xmlns:sld=\"http://www.opengis.net/sld\" \
            xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:gml=\"http://www.opengis.net/gml\" \
@@ -61,7 +63,7 @@ styles = [{"name": "test_style_1",
            </sld:FeatureTypeStyle></sld:UserStyle></sld:NamedLayer></sld:StyledLayerDescriptor>",
            },
           {"name": "Evaluación",
-           "sld_url": "http://localhost:8080/geoserver/rest/styles/test_style.sld",
+           "sld_url": "{ogc_location}rest/styles/test_style.sld".format(ogc_location=ogc_location),
            "sld_body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sld:StyledLayerDescriptor \
            xmlns=\"http://www.opengis.net/sld\" xmlns:sld=\"http://www.opengis.net/sld\" \
            xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:gml=\"http://www.opengis.net/gml\" version=\"1.0.0\">\
