@@ -98,10 +98,6 @@ slave
 
 # virtual env
 venv
-
-celerybeat-*
-manage.py
-
 geonode/bin/
 geonode/djcelery/
 geonode/include/

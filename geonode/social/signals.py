@@ -23,11 +23,10 @@
     relationships, actstream user_messages and potentially others
 """
 import logging
-import datetime
 from collections import defaultdict
 from dialogos.models import Comment
+
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import signals
 from django.utils.translation import ugettext as _
 
@@ -36,8 +35,8 @@ from django.utils.translation import ugettext as _
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.documents.models import Document
-from geonode.people.models import Profile
-from geonode.tasks.email import send_queued_notifications
+from geonode.notifications_helper import (send_notification, queue_notification,
+                                          has_notifications, get_notification_recipients)
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +44,6 @@ activity = None
 if "actstream" in settings.INSTALLED_APPS:
     from actstream import action as activity
     from actstream.actions import follow, unfollow
-
-notification_app = None
-if "notification" in settings.INSTALLED_APPS:
-    notification_app = True
-    from notification import models as notification
-    from notification.models import NoticeSetting
 
 relationships = None
 if "relationships" in settings.INSTALLED_APPS:
@@ -61,33 +54,6 @@ ratings = None
 if "agon_ratings" in settings.INSTALLED_APPS:
     ratings = True
     from agon_ratings.models import Rating
-
-
-def json_serializer_producer(dictionary):
-    output = {}
-    # pop no useful information for others services which wants to connect to geonode
-    if 'supplemental_information_en' in dictionary.keys():
-        dictionary.pop('supplemental_information_en', None)
-    if 'supplemental_information' in dictionary.keys():
-        dictionary.pop('supplemental_information', None)
-    if 'doc_file' in dictionary.keys():
-        file_object = dictionary['doc_file']
-        dictionary['doc_file'] = str(file_object)
-    if 'keywords' in dictionary.keys():
-        keys = dictionary['keywords']
-        dictionary['keywords'] = str(keys)
-    for (x, y) in dictionary.items():
-        if not y:
-            # this is used to solve
-            # TypeError: [] is not JSON serializable when it is null
-            y = str(y)
-        # check datetime object
-        # TODO: Use instanceof
-        if type(y) == datetime.datetime:
-            y = str(y)
-
-        output[x] = y
-    return output
 
 
 def activity_post_modify_object(sender, instance, created=None, **kwargs):
@@ -169,7 +135,7 @@ def relationship_pre_delete_actstream(instance, sender, **kwargs):
 
 
 def relationship_post_save(instance, sender, created, **kwargs):
-    notification.queue([instance.to_user], "user_follow", {"from_user": instance.from_user})
+    queue_notification([instance.to_user], "user_follow", {"from_user": instance.from_user})
 
 
 if activity:
@@ -181,88 +147,54 @@ if activity:
     signals.post_delete.connect(activity_post_modify_object, sender=Map)
 
 
-if notification_app:
+def notification_post_save_resource(instance, sender, created, **kwargs):
+    """ Send a notification when a layer, map or document is created or
+    updated
+    """
+    notice_type_label = '%s_created' if created else '%s_updated'
+    notice_type_label = notice_type_label % instance.class_name.lower()
+    recipients = get_notification_recipients(notice_type_label)
+    send_notification(recipients, notice_type_label, {'resource': instance})
 
-    def notification_post_save_resource(instance, sender, created, **kwargs):
-        from geonode.messaging.producer import notifications_send
-        from django.forms.models import model_to_dict
 
-        ct = ContentType.objects.get_for_model(sender)
-        instance_dict = model_to_dict(instance)
-        instance_dict['app_label'] = ct.app_label
-        instance_dict['model'] = ct.model
-        payload = json_serializer_producer(instance_dict)
-        notifications_send(payload, created=created)
+def notification_post_delete_resource(instance, sender, **kwargs):
+    """ Send a notification when a layer, map or document is deleted
+    """
+    notice_type_label = '%s_deleted' % instance.class_name.lower()
+    recipients = get_notification_recipients(notice_type_label)
+    send_notification(recipients, notice_type_label, {'resource': instance})
 
-    def notification_post_save_resource2(instance_id, app_label, model, created, **kwargs):
-        """ Send a notification when a layer, map or document is created or
-        updated
-        """
-        # TODO: There is a potential race condition where this code gets
-        # called but there is no information in the database yet.
-        import time
-        time.sleep(4)
 
-        ct = ContentType.objects.get(app_label=app_label, model=model)
-        instance_class = ct.model_class()
-        instance = instance_class.objects.get(id=instance_id)
-        notice_type_label = '%s_created' if created else '%s_updated'
-        notice_type_label = notice_type_label % instance.class_name.lower()
-        recipients = get_notification_recipients(notice_type_label)
-        notification.send(recipients, notice_type_label, {'resource': instance})
+def rating_post_save(instance, sender, created, **kwargs):
+    """ Send a notification when rating a layer, map or document
+    """
+    notice_type_label = '%s_rated' % instance.content_object.class_name.lower()
+    recipients = get_notification_recipients(notice_type_label, instance.user)
+    send_notification(recipients, notice_type_label, {"instance": instance})
 
-        send_queued_notifications.delay()
 
-    def notification_post_delete_resource(instance, sender, **kwargs):
-        """ Send a notification when a layer, map or document is deleted
-        """
-        notice_type_label = '%s_deleted' % instance.class_name.lower()
-        recipients = get_notification_recipients(notice_type_label)
-        notification.send(recipients, notice_type_label, {'resource': instance})
-        send_queued_notifications.delay()
+def comment_post_save(instance, sender, created, **kwargs):
+    """ Send a notification when a comment to a layer, map or document has
+    been submitted
+    """
+    notice_type_label = '%s_comment' % instance.content_object.class_name.lower()
+    recipients = get_notification_recipients(notice_type_label, instance.author)
+    send_notification(recipients, notice_type_label, {"instance": instance})
 
-    def rating_post_save(instance, sender, created, **kwargs):
-        """ Send a notification when rating a layer, map or document
-        """
-        notice_type_label = '%s_rated' % instance.content_object.class_name.lower()
-        recipients = get_notification_recipients(notice_type_label, instance.user)
-        notification.send(recipients, notice_type_label, {"instance": instance})
-        send_queued_notifications.delay()
 
-    def comment_post_save(instance, sender, created, **kwargs):
-        """ Send a notification when a comment to a layer, map or document has
-        been submitted
-        """
-        notice_type_label = '%s_comment' % instance.content_object.class_name.lower()
-        recipients = get_notification_recipients(notice_type_label, instance.author)
-        notification.send(recipients, notice_type_label, {"instance": instance})
-        send_queued_notifications.delay()
+# signals
+# layer/map/document notifications
+for resource in (Layer, Map, Document):
+    signals.post_save.connect(notification_post_save_resource, sender=resource)
+    signals.post_delete.connect(notification_post_delete_resource, sender=resource)
 
-    def get_notification_recipients(notice_type_label, exclude_user=None):
-        """ Get notification recipients
-        """
-        recipients_ids = NoticeSetting.objects \
-            .filter(notice_type__label=notice_type_label) \
-            .values('user')
-        profiles = Profile.objects.filter(id__in=recipients_ids)
-        if exclude_user:
-            profiles.exclude(username=exclude_user.username)
-        return profiles
+signals.post_save.connect(comment_post_save, sender=Comment)
 
-    # signals
-    # layer/map/document notifications
-    for resource in (Layer, Map, Document):
-        signals.post_save.connect(notification_post_save_resource, sender=resource)
-        signals.post_delete.connect(notification_post_delete_resource, sender=resource)
-
-    signals.post_save.connect(comment_post_save, sender=Comment)
-
-    # rating notifications
-    if ratings and notification_app:
-        signals.post_save.connect(rating_post_save, sender=Rating)
-
+# rating notifications
+if ratings and has_notifications:
+    signals.post_save.connect(rating_post_save, sender=Rating)
 if relationships and activity:
     signals.post_save.connect(relationship_post_save_actstream, sender=Relationship)
     signals.pre_delete.connect(relationship_pre_delete_actstream, sender=Relationship)
-if relationships and notification_app:
+if relationships and has_notifications:
     signals.post_save.connect(relationship_post_save, sender=Relationship)

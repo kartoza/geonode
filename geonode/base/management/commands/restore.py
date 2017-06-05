@@ -18,6 +18,10 @@
 #
 #########################################################################
 
+try:
+    import json
+except ImportError:
+    from django.utils import simplejson as json
 import traceback
 import os
 import time
@@ -25,7 +29,6 @@ import shutil
 import requests
 import helpers
 import tempfile
-import simplejson as json
 
 from requests.auth import HTTPBasicAuth
 from optparse import make_option
@@ -142,10 +145,13 @@ class Command(BaseCommand):
                 if (helpers.GS_DUMP_RASTER_DATA):
                     # Restore '$GS_DATA_DIR/data/geonode'
                     gs_data_root = os.path.join(helpers.GS_DATA_DIR, 'data', 'geonode')
+                    if not os.path.isabs(gs_data_root):
+                        gs_data_root = os.path.join(settings.PROJECT_ROOT, '..', gs_data_root)
                     gs_data_folder = os.path.join(target_folder, 'gs_data_dir', 'data', 'geonode')
 
                     try:
                         shutil.rmtree(gs_data_root)
+                        print 'Cleaned out old GeoServer Data Dir: ' + gs_data_root
                     except:
                         pass
 
@@ -155,6 +161,20 @@ class Command(BaseCommand):
                     helpers.copy_tree(gs_data_folder, gs_data_root)
                     helpers.chmod_tree(gs_data_root)
                     print "GeoServer Uploaded Data Restored to '"+gs_data_root+"'."
+
+                    # Cleanup '$GS_DATA_DIR/gwc-layers'
+                    gwc_layers_root = os.path.join(helpers.GS_DATA_DIR, 'gwc-layers')
+                    if not os.path.isabs(gwc_layers_root):
+                        gwc_layers_root = os.path.join(settings.PROJECT_ROOT, '..', gwc_layers_root)
+
+                    try:
+                        shutil.rmtree(gwc_layers_root)
+                        print 'Cleaned out old GeoServer GWC Layers Config: ' + gwc_layers_root
+                    except:
+                        pass
+
+                    if not os.path.exists(gwc_layers_root):
+                        os.makedirs(gwc_layers_root)
 
             if (helpers.GS_DUMP_VECTOR_DATA):
                 # Restore Vectorial Data from DB

@@ -469,7 +469,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
 
     keywords = TaggableManager(_('keywords'), through=TaggedContentItem, blank=True, help_text=keywords_help_text,
                                manager=_HierarchicalTagManager)
-    tkeywords = models.ManyToManyField(ThesaurusKeyword, help_text=tkeywords_help_text, blank=True, null=True)
+    tkeywords = models.ManyToManyField(ThesaurusKeyword, help_text=tkeywords_help_text, blank=True)
     regions = models.ManyToManyField(Region, verbose_name=_('keywords region'), blank=True,
                                      help_text=regions_help_text)
 
@@ -572,6 +572,8 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
     @property
     def license_light(self):
         a = []
+        if not self.license:
+            return ''
         if (not (self.license.name is None)) and (len(self.license.name) > 0):
             a.append(self.license.name)
         if (not (self.license.url is None)) and (len(self.license.url) > 0):
@@ -872,6 +874,11 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
             the_ma = None
         return the_ma
 
+    def handle_moderated_uploads(self):
+        if settings.ADMIN_MODERATE_UPLOADS:
+            self.is_published = False
+            self.save()
+
     metadata_author = property(_get_metadata_author, _set_metadata_author)
 
     objects = ResourceBaseManager()
@@ -1145,8 +1152,9 @@ def do_logout(sender, user, request, **kwargs):
         try:
             urllib2.urlopen(gs_request)
         except:
-            traceback.print_exc()
-            pass
+            tb = traceback.format_exc()
+            if tb:
+                logger.debug(tb)
 
         if 'access_token' in request.session:
             del request.session['access_token']

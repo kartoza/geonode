@@ -41,7 +41,6 @@ from geoserver.catalog import FailedRequestError, UploadError
 
 # from geonode.security.models import *
 from geonode.layers.models import Layer
-from geonode.geoserver.signals import geoserver_post_save2
 from geonode.maps.models import Map
 from geonode import GeoNodeException
 from geonode.layers.utils import (
@@ -56,7 +55,6 @@ from geonode.geoserver.helpers import cascading_delete, set_attributes_from_geos
 # from geonode.geoserver.helpers import get_wms
 # from geonode.geoserver.helpers import set_time_info
 from geonode.geoserver.signals import gs_catalog
-from geonode.geoserver.signals import geoserver_delete
 
 
 LOGIN_URL = "/accounts/login/"
@@ -105,12 +103,6 @@ $ geonode migrate
 $ geonode createsuperuser
 
 """
-
-
-def sync():
-    call_command('loaddata', 'default_oauth_apps.json', verbosity=0)
-    call_command('loaddata', 'initial_data', verbosity=0)
-    call_command('layer_notice_types', verbosity=0)
 
 
 class GeoNodeCoreTest(TestCase):
@@ -180,7 +172,6 @@ class GeoNodeMapTest(TestCase):
 
     def setUp(self):
         call_command('loaddata', 'people_data', verbosity=0)
-        sync()
 
     def tearDown(self):
         pass
@@ -195,9 +186,6 @@ class GeoNodeMapTest(TestCase):
         """Test that the wcs links are correctly created for a raster"""
         filename = os.path.join(gisdata.GOOD_DATA, 'raster/test_grid.tif')
         uploaded = file_upload(filename)
-
-        geoserver_post_save2(uploaded.id)
-
         wcs_link = False
         for link in uploaded.link_set.all():
             if link.mime == 'image/tiff':
@@ -323,7 +311,7 @@ class GeoNodeMapTest(TestCase):
 
         self.assertEqual(
             uploaded.title,
-            'Air_Runways',
+            'Air Runways',
             'Expected specific title from uploaded layer XML metadata')
 
         self.assertEqual(
@@ -453,9 +441,6 @@ class GeoNodeMapTest(TestCase):
             gisdata.VECTOR_DATA,
             'san_andres_y_providencia_poi.shp')
         shp_layer = file_upload(shp_file, overwrite=True)
-
-        shp_layer = geoserver_post_save2(shp_layer.id)
-
         ws = gs_cat.get_workspace(shp_layer.workspace)
         shp_store = gs_cat.get_store(shp_layer.store, ws)
         shp_store_name = shp_store.name
@@ -468,9 +453,6 @@ class GeoNodeMapTest(TestCase):
         # Test Uploading then Deleting a TIFF file from GeoServer
         tif_file = os.path.join(gisdata.RASTER_DATA, 'test_grid.tif')
         tif_layer = file_upload(tif_file)
-
-        tif_layer = geoserver_post_save2(tif_layer.id)
-
         ws = gs_cat.get_workspace(tif_layer.workspace)
         tif_store = gs_cat.get_store(tif_layer.store, ws)
         tif_layer.delete()
@@ -495,11 +477,6 @@ class GeoNodeMapTest(TestCase):
             gisdata.VECTOR_DATA,
             'san_andres_y_providencia_poi.shp')
         shp_layer = file_upload(shp_file)
-
-        shp_layer = geoserver_post_save2(shp_layer.id)
-
-        time.sleep(20)
-
         shp_layer_id = shp_layer.pk
         ws = gs_cat.get_workspace(shp_layer.workspace)
         shp_store = gs_cat.get_store(shp_layer.store, ws)
@@ -509,8 +486,6 @@ class GeoNodeMapTest(TestCase):
 
         # Delete it with the Layer.delete() method
         shp_layer.delete()
-
-        geoserver_delete(shp_layer.typename)
 
         # Verify that it no longer exists in GeoServer
         # self.assertIsNone(gs_cat.get_resource(name, store=shp_store))
@@ -549,19 +524,11 @@ class GeoNodeMapTest(TestCase):
             'san_andres_y_providencia_poi.shp')
         shp_layer = file_upload(shp_file)
 
-        shp_layer = geoserver_post_save2(shp_layer.id)
-
-        time.sleep(20)
-
         # Save the names of the Resource/Store/Styles
-        self.assertIsNotNone(shp_layer.name)
         resource_name = shp_layer.name
-        self.assertIsNotNone(shp_layer.workspace)
         ws = gs_cat.get_workspace(shp_layer.workspace)
-        self.assertIsNotNone(shp_layer.store)
         store = gs_cat.get_store(shp_layer.store, ws)
         store_name = store.name
-        self.assertIsNotNone(resource_name)
         layer = gs_cat.get_layer(resource_name)
         styles = layer.styles + [layer.default_style]
 
@@ -704,6 +671,27 @@ class GeoNodeMapTest(TestCase):
              })
         self.assertEquals(response.status_code, 401)
 
+    def test_importlayer_mgmt_command(self):
+            """Test layer import management command
+            """
+            vector_file = os.path.join(
+                gisdata.VECTOR_DATA,
+                'san_andres_y_providencia_administrative.shp')
+
+            call_command('importlayers', vector_file, overwrite=True,
+                         keywords="test, import, san andreas",
+                         title="Test San Andres y Providencia Administrative",
+                         verbosity=1)
+
+            lyr = Layer.objects.get(title='Test San Andres y Providencia Administrative')
+            self.assertIsNotNone(lyr)
+            self.assertEqual(lyr.name, "test_san_andres_y_providencia_administrative")
+            self.assertEqual(lyr.title, "Test San Andres y Providencia Administrative")
+            self.assertEqual(
+                lyr.keyword_list(), [
+                    u'import', u'san andreas', u'test'])
+            lyr.delete()
+
 
 class GeoNodePermissionsTest(TestCase):
 
@@ -712,7 +700,6 @@ class GeoNodePermissionsTest(TestCase):
 
     def setUp(self):
         call_command('loaddata', 'people_data', verbosity=0)
-        sync()
 
     def tearDown(self):
         pass
@@ -841,9 +828,6 @@ xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.
             gisdata.VECTOR_DATA,
             'san_andres_y_providencia_poi.shp')
         layer = file_upload(thefile, overwrite=True)
-
-        layer = geoserver_post_save2(layer.id)
-
         layer.set_default_permissions()
         check_layer(layer)
 
@@ -873,9 +857,6 @@ xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.
                 gisdata.VECTOR_DATA,
                 'san_andres_y_providencia_administrative.shp')
             layer = file_upload(thefile, overwrite=True)
-
-            layer = geoserver_post_save2(layer.id)
-
             layer.set_default_permissions()
             check_layer(layer)
 
@@ -897,8 +878,6 @@ xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.
             resource.is_published = True
             resource.save()
 
-            layer = geoserver_post_save2(layer.id)
-
             request = urllib2.Request(url)
             response = urllib2.urlopen(request)
             self.assertTrue(any(str_to_check in s for s in response.readlines()))
@@ -914,7 +893,6 @@ class GeoNodeThumbnailTest(TestCase):
 
     def setUp(self):
         call_command('loaddata', 'people_data', verbosity=0)
-        sync()
 
     def tearDown(self):
         pass
@@ -936,9 +914,6 @@ class GeoNodeThumbnailTest(TestCase):
             user=norman,
             overwrite=True,
         )
-
-        if 'geonode.geoserver' in settings.INSTALLED_APPS:
-            saved_layer = geoserver_post_save2(saved_layer.id)
 
         thumbnail_url = saved_layer.get_thumbnail_url()
 
@@ -977,7 +952,6 @@ class GeoNodeMapPrintTest(TestCase):
 
     def setUp(self):
         call_command('loaddata', 'people_data', verbosity=0)
-        sync()
 
     def tearDown(self):
         pass
@@ -1071,7 +1045,6 @@ class GeoNodeGeoServerSync(TestCase):
 
     def setUp(self):
         call_command('loaddata', 'people_data', verbosity=0)
-        sync()
 
     def tearDown(self):
         pass

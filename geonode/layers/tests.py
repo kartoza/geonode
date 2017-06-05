@@ -24,7 +24,10 @@ import tempfile
 import unittest
 import zipfile
 import StringIO
+import contextlib
+import json
 
+import gisdata
 from django.conf import settings
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -47,7 +50,9 @@ from geonode.people.utils import get_valid_user
 from geonode.base.models import TopicCategory
 from geonode.base.populate_test_data import create_models, all_public
 from geonode.layers.forms import JSONField, LayerUploadForm
-from .populate_layers_data import create_layer_data, create_notifications
+from .populate_layers_data import create_layer_data
+from geonode.tests.utils import NotificationsTestsHelper
+from geonode.layers import LayersAppConfig
 
 
 class LayersTest(TestCase):
@@ -62,7 +67,6 @@ class LayersTest(TestCase):
         self.passwd = 'admin'
         create_models(type='layer')
         create_layer_data()
-        create_notifications()
         self.anonymous_user = get_anonymous_user()
 
     # Data Tests
@@ -762,18 +766,14 @@ class UnpublishedObjectTests(TestCase):
     fixtures = ['initial_data.json', 'bobby']
 
     def setUp(self):
-        self.user = 'admin'
-        self.passwd = 'admin'
-        create_models(type='layer')
-        create_layer_data()
-        create_notifications()
-        self.anonymous_user = get_anonymous_user()
+        super(UnpublishedObjectTests, self).setUp()
 
         self.list_url = reverse(
             'api_dispatch_list',
             kwargs={
                 'api_name': 'api',
                 'resource_name': 'layers'})
+        create_models(type='layer')
         all_public()
 
     def test_unpublished_layer(self):
@@ -811,3 +811,123 @@ class UnpublishedObjectTests(TestCase):
 
         layer.is_published = True
         layer.save()
+
+
+class LayerModerationTestCase(TestCase):
+
+    fixtures = ['initial_data.json', 'bobby']
+
+    def setUp(self):
+        super(LayerModerationTestCase, self).setUp()
+        self.user = 'admin'
+        self.passwd = 'admin'
+        create_models(type='layer')
+        create_layer_data()
+        self.anonymous_user = get_anonymous_user()
+        self.u = get_user_model().objects.get(username=self.user)
+        self.u.email = 'test@email.com'
+        self.u.is_active = True
+        self.u.save()
+
+    def _get_input_paths(self):
+        base_name = 'single_point'
+        suffixes = 'shp shx dbf prj'.split(' ')
+        base_path = gisdata.GOOD_DATA
+        paths = [os.path.join(base_path, 'vector', '{}.{}'.format(base_name, suffix)) for suffix in suffixes]
+        return paths, suffixes,
+
+    def test_moderated_upload(self):
+        """
+        Test if moderation flag works
+        """
+
+        with self.settings(ADMIN_MODERATE_UPLOADS=False):
+            layer_upload_url = reverse('layer_upload')
+            self.client.login(username=self.user, password=self.passwd)
+
+            # we get list of paths to shp files and list of suffixes
+            input_paths, suffixes = self._get_input_paths()
+
+            # we need file objects from above..
+            input_files = [open(fp, 'rb') for fp in input_paths]
+
+            # ..but also specific mapping for upload
+            files = dict(zip(['{}_file'.format(s) for s in suffixes], input_files))
+
+            # don't forget about renaming main file
+            files['base_file'] = files.pop('shp_file')
+
+            with contextlib.nested(*input_files):
+                files['permissions'] = '{}'
+                files['charset'] = 'utf-8'
+                files['layer_title'] = 'test layer'
+                resp = self.client.post(layer_upload_url, data=files)
+            self.assertEqual(resp.status_code, 200)
+            data = json.loads(resp.content)
+            lname = data['url'].split(':')[-1]
+            l = Layer.objects.get(name=lname)
+
+            self.assertTrue(l.is_published)
+
+        with self.settings(ADMIN_MODERATE_UPLOADS=True):
+            layer_upload_url = reverse('layer_upload')
+            self.client.login(username=self.user, password=self.passwd)
+
+            # we get list of paths to shp files and list of suffixes
+            input_paths, suffixes = self._get_input_paths()
+
+            # we need file objects from above..
+            input_files = [open(fp, 'rb') for fp in input_paths]
+
+            # ..but also specific mapping for upload
+            files = dict(zip(['{}_file'.format(s) for s in suffixes], input_files))
+
+            # don't forget about renaming main file
+            files['base_file'] = files.pop('shp_file')
+
+            with contextlib.nested(*input_files):
+                files['permissions'] = '{}'
+                files['charset'] = 'utf-8'
+                files['layer_title'] = 'test layer'
+                resp = self.client.post(layer_upload_url, data=files)
+            self.assertEqual(resp.status_code, 200)
+            data = json.loads(resp.content)
+            lname = data['url'].split(':')[-1]
+            l = Layer.objects.get(name=lname)
+
+            self.assertFalse(l.is_published)
+
+
+class LayerNotificationsTestCase(NotificationsTestsHelper):
+
+    fixtures = ['initial_data.json', 'bobby']
+
+    def setUp(self):
+        super(LayerNotificationsTestCase, self).setUp()
+        self.user = 'admin'
+        self.passwd = 'admin'
+        create_models(type='layer')
+        create_layer_data()
+        self.anonymous_user = get_anonymous_user()
+        self.u = get_user_model().objects.get(username=self.user)
+        self.u.email = 'test@email.com'
+        self.u.is_active = True
+        self.u.save()
+        self.setup_notifications_for(LayersAppConfig.NOTIFICATIONS, self.u)
+
+    def testLayerNotifications(self):
+        with self.settings(NOTIFICATION_QUEUE_ALL=True):
+            self.clear_notifications_queue()
+            l = Layer.objects.create(name='test notifications')
+            l.name = 'test notifications 2'
+            l.save()
+            self.assertTrue(self.check_notification_out('layer_updated', self.u))
+
+            from dialogos.models import Comment
+            lct = ContentType.objects.get_for_model(l)
+            comment = Comment(author=self.u, name=self.u.username,
+                              content_type=lct, object_id=l.id,
+                              content_object=l, comment='test comment')
+            comment.save()
+
+            self.assertTrue(self.check_notification_out('layer_comment', self.u))

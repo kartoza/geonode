@@ -20,6 +20,7 @@
 
 # Django settings for the GeoNode project.
 import os
+import sys
 import re
 
 from kombu import Queue
@@ -53,6 +54,15 @@ DEBUG_STATIC = strtobool(os.getenv('DEBUG_STATIC', 'False'))
 
 #Define email service on GeoNode
 EMAIL_ENABLE = strtobool(os.getenv('EMAIL_ENABLE', 'True'))
+
+if EMAIL_ENABLE:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 25
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+    EMAIL_USE_TLS = False
+    DEFAULT_FROM_EMAIL = 'GeoNode <no-reply@geonode.org>'
 
 # This is needed for integration tests, they require
 # geonode to be listening for GeoServer auth requests.
@@ -268,7 +278,6 @@ GEONODE_APPS = (
     'geonode.geoserver',
     'geonode.upload',
     'geonode.tasks',
-    'geonode.messaging'
 
 )
 
@@ -285,7 +294,7 @@ GEONODE_CONTRIB_APPS = (
 )
 
 # Uncomment the following line to enable contrib apps
-GEONODE_APPS = GEONODE_APPS + GEONODE_CONTRIB_APPS
+GEONODE_APPS = GEONODE_CONTRIB_APPS + GEONODE_APPS
 
 INSTALLED_APPS = (
 
@@ -322,13 +331,14 @@ INSTALLED_APPS = (
     'autocomplete_light',
     'mptt',
     # 'modeltranslation',
+    # 'djkombu',
     'djcelery',
-    'djkombu',
+    'kombu.transport.django',
+
     'storages',
     'floppyforms',
 
     # Theme
-    "pinax_theme_bootstrap_account",
     "pinax_theme_bootstrap",
     'django_forms_bootstrap',
 
@@ -337,7 +347,6 @@ INSTALLED_APPS = (
     'avatar',
     'dialogos',
     'agon_ratings',
-    'notification',
     'announcements',
     'actstream',
     'user_messages',
@@ -518,8 +527,10 @@ ACTSTREAM_SETTINGS = {
     'GFK_FETCH_DEPTH': 1,
 }
 
-# Settings for Social Apps
-REGISTRATION_OPEN = strtobool(os.getenv('REGISTRATION_OPEN', 'False'))
+
+# prevent signing up by default
+ACCOUNT_OPEN_SIGNUP = True
+
 ACCOUNT_EMAIL_CONFIRMATION_EMAIL = strtobool(
     os.getenv('ACCOUNT_EMAIL_CONFIRMATION_EMAIL', 'False')
 )
@@ -543,6 +554,8 @@ THEME_ACCOUNT_CONTACT_EMAIL = os.getenv(
 # some problematic 3rd party apps
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
+
+TEST = 'test' in sys.argv
 # Arguments for the test runner
 NOSE_ARGS = [
     '--nocapture',
@@ -733,7 +746,19 @@ MAP_BASELAYERS = [{
     "visibility": False,
     "fixed": True,
     "group":"background"
-}, {
+},
+# {
+#     "source": {"ptype": "gxp_olsource"},
+#     "type": "OpenLayers.Layer.XYZ",
+#     "title": "TEST TILE",
+#     "args": ["TEST_TILE", "http://test_tiles/tiles/${z}/${x}/${y}.png"],
+#     "name": "background",
+#     "attribution": "&copy; TEST TILE",
+#     "visibility": False,
+#     "fixed": True,
+#     "group":"background"
+# },
+{
     "source": {"ptype": "gxp_osmsource"},
     "type": "OpenLayers.Layer.OSM",
     "name": "mapnik",
@@ -777,11 +802,11 @@ CKAN_ORIGINS = [{
 # Setting TWITTER_CARD to True will enable Twitter Cards
 # https://dev.twitter.com/cards/getting-started
 # Be sure to replace @GeoNode with your organization or site's twitter handle.
-TWITTER_CARD = True
+TWITTER_CARD = strtobool(os.getenv('TWITTER_CARD', 'True'))
 TWITTER_SITE = '@GeoNode'
 TWITTER_HASHTAGS = ['geonode']
 
-OPENGRAPH_ENABLED = True
+OPENGRAPH_ENABLED =  strtobool(os.getenv('OPENGRAPH_ENABLED', 'True'))
 
 # Enable Licenses User Interface
 # Regardless of selection, license field stil exists as a field in the
@@ -819,11 +844,11 @@ PROXY_URL = '/proxy/?url=' if DEBUG else None
 # - pip install pyelasticsearch
 # Set HAYSTACK_SEARCH to True
 # Run "python manage.py rebuild_index"
-HAYSTACK_SEARCH = False
+HAYSTACK_SEARCH = strtobool(os.getenv('HAYSTACK_SEARCH', 'False'))
 # Avoid permissions prefiltering
-SKIP_PERMS_FILTER = False
+SKIP_PERMS_FILTER = strtobool(os.getenv('SKIP_PERMS_FILTER', 'False'))
 # Update facet counts from Haystack
-HAYSTACK_FACET_COUNTS = False
+HAYSTACK_FACET_COUNTS = strtobool(os.getenv('HAYSTACK_FACET_COUNTS', 'False'))
 # HAYSTACK_CONNECTIONS = {
 #    'default': {
 #        'ENGINE': 'haystack.backends.elasticsearch_backend.'
@@ -858,7 +883,7 @@ DOWNLOAD_FORMATS_RASTER = [
     'GZIP'
 ]
 
-ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = False
+ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = strtobool(os.getenv('ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE', 'False'))
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
 
@@ -867,15 +892,12 @@ AUTO_GENERATE_AVATAR_SIZES = (
     20, 30, 32, 40, 50, 65, 70, 80, 100, 140, 200, 240
 )
 
-# notification settings
-NOTIFICATION_LANGUAGE_MODULE = "account.Account"
-
 # Number of results per page listed in the GeoNode search pages
-CLIENT_RESULTS_LIMIT = 100
+CLIENT_RESULTS_LIMIT = int (os.getenv('CLIENT_RESULTS_LIMIT','100'))
 
 # Number of items returned by the apis 0 equals no limit
-API_LIMIT_PER_PAGE = 0
-API_INCLUDE_REGIONS_COUNT = False
+API_LIMIT_PER_PAGE = int(os.getenv('API_LIMIT_PER_PAGE','0'))
+API_INCLUDE_REGIONS_COUNT = strtobool(os.getenv('API_INCLUDE_REGIONS_COUNT', 'False'))
 
 LEAFLET_CONFIG = {
     'TILES': [
@@ -924,8 +946,8 @@ EXIF_ENABLED = False
 # Settings for NLP contrib app
 NLP_ENABLED = False
 NLP_LOCATION_THRESHOLD = 1.0
-NLP_LIBRARY_PATH = "/opt/MITIE/mitielib"
-NLP_MODEL_PATH = "/opt/MITIE/MITIE-models/english/ner_model.dat"
+NLP_LIBRARY_PATH = os.getenv('NLP_LIBRARY_PATH',"/opt/MITIE/mitielib")
+NLP_MODEL_PATH = os.getenv('NLP_MODEL_PATH',"/opt/MITIE/MITIE-models/english/ner_model.dat")
 
 # Settings for Slack contrib app
 SLACK_ENABLED = False
@@ -968,8 +990,27 @@ SEARCH_FILTERS = {
     'EXTENT_ENABLED': True,
 }
 
+# Make Free-Text Kaywords writable from users or read-only
+# - if True only admins can edit free-text kwds from admin dashboard
+FREETEXT_KEYWORDS_READONLY = False
+
+# notification settings
+NOTIFICATION_ENABLED = False or TEST
+NOTIFICATION_LANGUAGE_MODULE = "account.Account"
+
 # Queue non-blocking notifications.
 NOTIFICATION_QUEUE_ALL = False
+
+# pinax.notifications
+# or notification
+NOTIFICATIONS_MODULE = 'pinax.notifications'
+
+# set to true to have multiple recipients in /message/create/
+USER_MESSAGES_ALLOW_MULTIPLE_RECIPIENTS = False
+
+if NOTIFICATION_ENABLED:
+    INSTALLED_APPS += (NOTIFICATIONS_MODULE, )
+
 BROKER_URL = os.getenv('BROKER_URL', "django://")
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
@@ -1083,6 +1124,10 @@ if 'geonode.geoserver' in INSTALLED_APPS:
 # THESAURI = [{'name':'inspire_themes', 'required':False, 'filter':True}]
 THESAURI = []
 
-if EMAIL_ENABLE:
-    #Setting up email backend
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# use when geonode.contrib.risks is in installed apps.
+RISKS = {'DEFAULT_LOCATION': None,
+         'PDF_GENERATOR': {'NAME': 'wkhtml2pdf',
+                           'BIN': '/usr/bin/wkhtml2pdf',
+                           'ARGS': []}}
+
+ADMIN_MODERATE_UPLOADS = False

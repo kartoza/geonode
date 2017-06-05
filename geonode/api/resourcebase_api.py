@@ -47,7 +47,7 @@ from geonode.base.models import HierarchicalKeyword
 
 from .authorization import GeoNodeAuthorization
 
-from .api import TagResource, RegionResource, ProfileResource
+from .api import TagResource, RegionResource, OwnersResource
 from .api import ThesaurusKeywordResource
 from .api import TopicCategoryResource
 from .api import FILTER_TYPES
@@ -86,7 +86,7 @@ class CommonModelApi(ModelResource):
         'category',
         null=True,
         full=True)
-    owner = fields.ToOneField(ProfileResource, 'owner', full=True)
+    owner = fields.ToOneField(OwnersResource, 'owner', full=True)
     tkeywords = fields.ToManyField(ThesaurusKeywordResource, 'tkeywords', null=True)
     VALUES = [
         # fields in the db

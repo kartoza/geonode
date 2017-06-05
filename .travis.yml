@@ -27,6 +27,8 @@ env:
 branches:
   only:
     - master
+    - 2.7.x
+    - 2.6.x
     - master-qgis_server
 
 before_install:

@@ -97,44 +97,50 @@ setup(name='GeoNode',
         "awesome-slugify>=1.6.2",
         "dj-database-url >=0.4.0",
         "pinax-theme-bootstrap>=3.0a11",
-        "pinax-theme-bootstrap-account>=1.0b2",
         "django-forms-bootstrap>=3.0.1",
         "django-friendly-tag-loader>=1.2.1",
         "django-activity-stream>=0.6.1",
-        "kombu>=3,<4a0",
-        "django-kombu>=0.9.4",
-        "django-downloadview>=1.2",
-        "django-tastypie>=0.12.2",
-
-        "django-polymorphic>=0.9.2",
         "django-leaflet>=0.13.7",
         "django-autocomplete-light>=2.3.3, <3.0a0",
         "django-modeltranslation>=0.11",  # python-django-modeltranslation (0.11 Debian)
 
         # GeoNode org maintained apps.
-        "django-geoexplorer>=4.0.5",
+        "django-geoexplorer>=4.0.8",
         "geonode-user-messages>=0.1.4",  # (0.1.3 in ppa) FIXME
         "geonode-avatar>=2.1.6",  # (2.1.5 in ppa) FIXME
         "geonode-announcements>=1.0.8",
         "geonode-agon-ratings>=0.3.5",  # (0.3.1 in ppa) FIXME
-        "geonode-user-accounts>=1.0.13",  # (1.0.11 in ppa) FIXME
+        "pinax-notifications<4.0",
+        "django-user-accounts==2.0.2dev",
+        # we can't use django-user-account until upstream merge changes for geonode.
+        # this is temporary solution
+        # "git+https://github.com/cezio/django-user-accounts/archive/252_255_mixed.zip",
         "geonode-arcrest>=10.2",
-        "geonode-notification>=1.1.3",
         "geonode-dialogos>=0.5",
         "gsconfig>=1.0.6",  # (1.0.3 in ppa) FIXME
         "gsimporter>=1.0.0",  # (0.1 in ppa) FIXME
         "gisdata>=0.5.4",
 
         # haystack/elasticsearch, uncomment to use
-        "django-haystack>=2.4.1",  # missing from ppa FIXME
-        "elasticsearch>=2.4.0",
-        "pyelasticsearch>=0.6.1",
+        "django-haystack==2.6.0",  # missing from ppa FIXME
+        "elasticsearch==2.4.0",
+        "pyelasticsearch==0.6.1",
 
         # datetimepicker widget
         "django-bootstrap3-datetimepicker>=2.2.3",
 
         # AWS S3 dependencies
-        "django-storages>=1.1.8"
+        "django-storages>=1.1.8",
+
+        # Contribs
+        "xlrd==1.0.0",
+        # tests
+        "factory_boy",
+        # "WeasyPrint",
+
         ],
       zip_safe=False,
+      dependency_links=[
+        'https://github.com/cezio/django-user-accounts/archive/252_255_mixed.zip#egg=django-user-accounts-2.0.2dev'
+      ]
       )

@@ -22,6 +22,7 @@ from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib import auth
 from django.db.models import signals
 from django.conf import settings
 
@@ -29,13 +30,11 @@ from taggit.managers import TaggableManager
 
 from geonode.base.enumerations import COUNTRIES
 from geonode.groups.models import GroupProfile
+from geonode.notifications_helper import has_notifications, send_notification
 
 from account.models import EmailAddress
 
 from .utils import format_address
-
-if 'notification' in settings.INSTALLED_APPS:
-    from notification import models as notification
 
 
 class ProfileUserManager(UserManager):
@@ -150,6 +149,9 @@ def profile_post_save(instance, sender, **kwargs):
     from django.contrib.auth.models import Group
     anon_group, created = Group.objects.get_or_create(name='anonymous')
     instance.groups.add(anon_group)
+    # do not create email, when user-account signup code is in use
+    if getattr(instance, '_disable_account_creation', False):
+        return
     # keep in sync Profile email address with Account email address
     if instance.email not in [u'', '', None] and not kwargs.get('raw', False):
         address, created = EmailAddress.objects.get_or_create(
@@ -168,11 +170,20 @@ def profile_pre_save(instance, sender, **kw):
     matching_profiles = Profile.objects.filter(id=instance.id)
     if matching_profiles.count() == 0:
         return
-    if instance.is_active and not matching_profiles.get().is_active and \
-            'notification' in settings.INSTALLED_APPS:
-        notification.send([instance, ], "account_active")
+    if instance.is_active and not matching_profiles.get().is_active:
+        send_notification((instance,), "account_active")
+
+
+def profile_signed_up(user, form, **kwargs):
+    staff = auth.get_user_model().objects.filter(is_staff=True)
+    send_notification(staff, "account_approve", {"from_user": user})
 
 
 signals.pre_save.connect(profile_pre_save, sender=Profile)
 signals.post_save.connect(profile_post_save, sender=Profile)
 signals.post_save.connect(email_post_save, sender=EmailAddress)
+
+if has_notifications and 'account' in settings.INSTALLED_APPS and getattr(settings, 'ACCOUNT_APPROVAL_REQUIRED', False):
+    from account import signals as s
+    from account.forms import SignupForm
+    s.user_signed_up.connect(profile_signed_up, sender=SignupForm)

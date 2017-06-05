@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 #########################################################################
 #
@@ -200,6 +199,7 @@ def layer_upload(request, template='upload/layer_upload.html'):
                 permissions = form.cleaned_data["permissions"]
                 if permissions is not None and len(permissions.keys()) > 0:
                     saved_layer.set_permissions(permissions)
+                saved_layer.handle_moderated_uploads()
             finally:
                 if tempdir is not None:
                     shutil.rmtree(tempdir)
@@ -255,15 +255,11 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
             ows_url=layer.ows_url,
             layer_params=json.dumps(config))
 
-    ###
-    # counting layer views
-    ###
-
     # Update count for popularity ranking,
     # but do not includes admins or resource owners
     if request.user != layer.owner and not request.user.is_superuser:
-        from geonode.messaging import producer
-        producer.viewing_layer(str(request.user), str(layer.owner), layer.id)
+        Layer.objects.filter(
+            id=layer.id).update(popular_count=F('popular_count') + 1)
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = GXPMap(projection=getattr(settings, 'DEFAULT_MAP_CRS', 'EPSG:900913'))
@@ -557,41 +553,48 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html', aj
             la.display_order = form["display_order"]
             la.save()
 
-        if new_poc is not None and new_author is not None:
-            # layer.poc = new_poc
-            # layer.metadata_author = new_author
-            new_keywords = [x.strip() for x in layer_form.cleaned_data['keywords']]
+        if new_poc is not None or new_author is not None:
+            if new_poc is not None:
+                layer.poc = new_poc
+            if new_author is not None:
+                layer.metadata_author = new_author
+
+        new_keywords = [x.strip() for x in layer_form.cleaned_data['keywords']]
+        if new_keywords is not None:
             layer.keywords.clear()
             layer.keywords.add(*new_keywords)
-            try:
-                the_layer = layer_form.save()
-            except:
-                tb = traceback.format_exc()
-                if tb:
-                    logger.debug(tb)
-                the_layer = layer
 
-            up_sessions = UploadSession.objects.filter(layer=the_layer.id)
-            if up_sessions.count() > 0 and up_sessions[0].user != the_layer.owner:
-                up_sessions.update(user=the_layer.owner)
+        try:
+            the_layer = layer_form.save()
+        except:
+            tb = traceback.format_exc()
+            if tb:
+                logger.debug(tb)
+            the_layer = layer
+
+        up_sessions = UploadSession.objects.filter(layer=the_layer.id)
+        if up_sessions.count() > 0 and up_sessions[0].user != the_layer.owner:
+            up_sessions.update(user=the_layer.owner)
+
+        if new_category is not None:
             Layer.objects.filter(id=the_layer.id).update(
                 category=new_category
                 )
 
-            if getattr(settings, 'SLACK_ENABLED', False):
-                try:
-                    from geonode.contrib.slack.utils import build_slack_message_layer, send_slack_messages
-                    send_slack_messages(build_slack_message_layer("layer_edit", the_layer))
-                except:
-                    print "Could not send slack message."
+        if getattr(settings, 'SLACK_ENABLED', False):
+            try:
+                from geonode.contrib.slack.utils import build_slack_message_layer, send_slack_messages
+                send_slack_messages(build_slack_message_layer("layer_edit", the_layer))
+            except:
+                print "Could not send slack message."
 
-            if not ajax:
-                return HttpResponseRedirect(
-                    reverse(
-                        'layer_detail',
-                        args=(
-                            layer.service_typename,
-                        )))
+        if not ajax:
+            return HttpResponseRedirect(
+                reverse(
+                    'layer_detail',
+                    args=(
+                       layer.service_typename,
+                    )))
 
         message = layer.typename
 
@@ -669,9 +672,10 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html', aj
         "category_form": category_form,
         "tkeywords_form": tkeywords_form,
         "viewer": viewer,
-        "preview":  getattr(settings, 'LAYER_PREVIEW_LIBRARY', 'leaflet'),
-        "crs":  getattr(settings, 'DEFAULT_MAP_CRS', 'EPSG:900913'),
-        "metadataxsl": metadataxsl
+        "preview": getattr(settings, 'LAYER_PREVIEW_LIBRARY', 'leaflet'),
+        "crs": getattr(settings, 'DEFAULT_MAP_CRS', 'EPSG:900913'),
+        "metadataxsl": metadataxsl,
+        "freetext_readonly": getattr(settings, 'FREETEXT_KEYWORDS_READONLY', False)
     }))
 
 
@@ -789,6 +793,7 @@ def layer_remove(request, layername, template='layers/layer_remove.html'):
             with transaction.atomic():
                 delete_layer.delay(object_id=layer.id)
         except Exception as e:
+            traceback.print_exc()
             message = '{0}: {1}.'.format(_('Unable to delete layer'), layer.typename)
 
             if 'referenced by layer group' in getattr(e, 'message', ''):
@@ -823,6 +828,7 @@ def layer_granule_remove(request, granule_id, layername, template='layers/layer_
             coverages = cat.mosaic_coverages(store)
             cat.mosaic_delete_granule(coverages['coverages']['coverage'][0]['name'], store, granule_id)
         except Exception as e:
+            traceback.print_exc()
             message = '{0}: {1}.'.format(_('Unable to delete layer'), layer.typename)
 
             if 'referenced by layer group' in getattr(e, 'message', ''):
@@ -896,12 +902,6 @@ def layer_metadata_detail(request, layername, template='layers/layer_metadata_de
         "resource": layer,
         'SITEURL': settings.SITEURL[:-1]
     }))
-
-
-def layer_view_counter(layer_id):
-    Layer.objects.filter(
-        id=layer_id).update(popular_count=F('popular_count') + 1)
-    return
 
 
 def layer_metadata_upload(request, layername, template='layers/layer_metadata_upload.html'):

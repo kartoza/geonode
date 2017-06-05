@@ -23,6 +23,8 @@ from geonode import get_version
 from geonode.catalogue import default_catalogue_backend
 from django.contrib.sites.models import Site
 
+from geonode.notifications_helper import has_notifications
+
 
 def resource_urls(request):
     """Global values to pass to templates"""
@@ -30,7 +32,7 @@ def resource_urls(request):
     defaults = dict(
         STATIC_URL=settings.STATIC_URL,
         CATALOGUE_BASE_URL=default_catalogue_backend()['URL'],
-        REGISTRATION_OPEN=settings.REGISTRATION_OPEN,
+        ACCOUNT_OPEN_SIGNUP=settings.ACCOUNT_OPEN_SIGNUP,
         VERSION=get_version(),
         SITE_NAME=site.name,
         SITE_DOMAIN=site.domain,
@@ -114,7 +116,7 @@ def resource_urls(request):
             dict()).get(
             'METADATA',
             'never'),
-        USE_NOTIFICATIONS=('notification' in settings.INSTALLED_APPS),
+        USE_NOTIFICATIONS=has_notifications,
         DEFAULT_ANONYMOUS_VIEW_PERMISSION=getattr(settings, 'DEFAULT_ANONYMOUS_VIEW_PERMISSION', False),
         DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION=getattr(settings, 'DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION', False),
         EXIF_ENABLED=getattr(
@@ -132,5 +134,7 @@ def resource_urls(request):
         ),
         THESAURI_FILTERS=[t['name'] for t in settings.THESAURI if t.get('filter')],
     )
+    defaults['message_create_url'] = 'message_create' if not settings.USER_MESSAGES_ALLOW_MULTIPLE_RECIPIENTS\
+        else 'message_create_multiple'
 
     return defaults
