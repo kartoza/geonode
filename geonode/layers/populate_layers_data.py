@@ -19,6 +19,10 @@
 #########################################################################
 
 from geonode.layers.models import Style, Attribute, Layer
+from django.conf import settings
+
+ogc_location = settings.OGC_SERVER['default']['LOCATION']
+
 
 from django.conf import settings
 

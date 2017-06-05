@@ -45,6 +45,8 @@ class QGISServerLayer(models.Model):
 
     geotiff_format = ['tif', 'tiff']
 
+    ascii_format = ['asc']
+
     layer = models.OneToOneField(
         Layer,
         primary_key=True,
@@ -79,5 +81,6 @@ class QGISServerLayer(models.Model):
             rmtree(path)
         except OSError:
             pass
+
 
 from geonode.qgis_server import signals  # noqa: F402.F401

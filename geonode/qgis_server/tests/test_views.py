@@ -18,20 +18,24 @@
 #
 #########################################################################
 
-BACKEND_PACKAGE = 'geonode.geoserver'
-
-from django.utils.translation import ugettext_noop as _
-from geonode.notifications_helper import NotificationsAppConfigBase
+from django.test import TestCase
 
 
-class GeoserverAppConfig(NotificationsAppConfigBase):
-    name = 'geonode.geoserver'
-    NOTIFICATIONS = (("layer_uploaded", _("Layer Uploaded"), _("A layer was uploaded"),),
-                     ("layer_comment", _("Comment on Layer"), _("A layer was commented on"),),
-                     ("layer_rated", _("Rating for Layer"), _("A rating was given to a layer"),),
-                     )
+class ViewsTest(TestCase):
 
+    def test_default_context(self):
+        """Test default context provided by qgis_server."""
 
-default_app_config = 'geonode.geoserver.GeoserverAppConfig'
+        response = self.client.get('/')
 
-BACKEND_PACKAGE = 'geonode.geoserver'
+        context = response.context
+
+        # Necessary context to ensure compatibility with views
+        # Some view needs these context to do some javascript logic.
+        self.assertIn('UPLOADER_URL', context)
+        self.assertIn('MAPFISH_PRINT_ENABLED', context)
+        self.assertIn('PRINT_NG_ENABLED', context)
+        self.assertIn('GEONODE_SECURITY_ENABLED', context)
+        self.assertIn('GEOGIG_ENABLED', context)
+        self.assertIn('TIME_ENABLED', context)
+        self.assertIn('MOSAIC_ENABLED', context)

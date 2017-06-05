@@ -24,12 +24,11 @@ from geonode.qgis_server.views import (
     download_zip,
     tile,
     legend,
-    thumbnail,
-    map_thumbnail,
     qgis_server_request,
     qgis_server_pdf,
     qgis_server_map_print,
-    geotiff
+    geotiff,
+    ascii
 )
 
 
@@ -61,6 +60,14 @@ urlpatterns = patterns(
         name='qgis-server-geotiff'
     ),
     url(
+        r'^qgis-server/ascii/'
+        r'(?P<layername>[\w]*)'
+        r'[\?]?'
+        r'(?:&access_token=(?P<access_token>[\w]*))?$',
+        ascii,
+        name='qgis-server-ascii'
+    ),
+    url(
         r'^qgis-server/legend/(?P<layername>[\w]*)'
         r'(?:/(?P<layertitle>[\w]*))?'
         r'[\?]?'
@@ -73,18 +80,15 @@ urlpatterns = patterns(
     #     legend,
     #     name='qgis-server-legend'
     # ),
-    url(
-        r'^qgis-server/thumbnail/(?P<layername>[\w]*)$',
-        thumbnail,
-        name='qgis-server-thumbnail'
-    ),
-    url(
-        r'^qgis-server/map/thumbnail/(?P<map_id>[\w]*)$',
-        map_thumbnail,
-        name='qgis-server-map-thumbnail'
-    ),
+    # WMS entry point, this URL is not specific to WMS, you should remove it ?
     url(
         r'^qgis-server/wms/$',
+        qgis_server_request,
+        name='qgis-server-request'
+    ),
+    # Generic OGC entry points
+    url(
+        r'^qgis-server/ogc/$',
         qgis_server_request,
         name='qgis-server-request'
     ),
