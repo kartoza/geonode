@@ -21,6 +21,7 @@
 from django.conf.urls import patterns, url
 
 from geonode.qgis_server.views import (
+    layer_ogc_request,
     download_zip,
     tile,
     tile_404,
@@ -86,6 +87,11 @@ urlpatterns = patterns(
     ),
 
     # Generic for OGC
+    url(
+        r'^qgis-server/ogc/(?P<layername>[\w]+)$',
+        layer_ogc_request,
+        name='qgis-server-layer-request'
+    ),
     # WMS entry point, this URL is not specific to WMS, you should remove it ?
     url(
         r'^wms/$',
