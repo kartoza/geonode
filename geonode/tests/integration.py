@@ -21,7 +21,6 @@
 import os
 import json
 import datetime
-import unittest
 import urllib2
 # import base64
 import time
@@ -431,10 +430,7 @@ class GeoNodeMapTest(TestCase):
 
     # geonode.maps.views
 
-    @unittest.skipIf(
-        hasattr(settings, 'SKIP_GEOSERVER_TEST') and
-        settings.SKIP_GEOSERVER_TEST,
-        'Temporarily skip this test until fixed')
+    @on_ogc_backend(geoserver.BACKEND_PACKAGE)
     def test_layer_delete_from_geoserver(self):
         """Verify that layer is correctly deleted from GeoServer
         """
@@ -471,10 +467,7 @@ class GeoNodeMapTest(TestCase):
                 shp_layer.name,
                 store=tif_store))
 
-    @unittest.skipIf(
-        hasattr(settings, 'SKIP_GEOSERVER_TEST') and
-        settings.SKIP_GEOSERVER_TEST,
-        'Temporarily skip this test until fixed')
+    @on_ogc_backend(geoserver.BACKEND_PACKAGE)
     def test_delete_layer(self):
         """Verify that the 'delete_layer' pre_delete hook is functioning
         """
@@ -507,7 +500,7 @@ class GeoNodeMapTest(TestCase):
         self.assertRaises(ObjectDoesNotExist,
                           lambda: Layer.objects.get(pk=shp_layer_id))
 
-    # geonode.geoserver.helpers
+        # geonode.geoserver.helpers
         # If catalogue is installed, then check that it is deleted from there
         # too.
         if 'geonode.catalogue' in settings.INSTALLED_APPS:

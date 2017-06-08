@@ -18,12 +18,12 @@
 #
 #########################################################################
 
-import os
 import logging
+import os
 from shutil import rmtree
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 from geonode import qgis_server
 from geonode.layers.models import Layer
@@ -113,4 +113,4 @@ class QGISServerLayer(models.Model):
             pass
 
 
-from geonode.qgis_server import signals  # noqa: F402.F401
+from geonode.qgis_server import signals  # noqa: F402,F401
