@@ -24,6 +24,10 @@ from django.conf import settings
 ogc_location = settings.OGC_SERVER['default']['LOCATION']
 
 
+from django.conf import settings
+
+ogc_location = settings.OGC_SERVER['default']['LOCATION']
+
 styles = [{"name": "test_style_1",
            "sld_url": "{ogc_location}rest/styles/test_style.sld".format(ogc_location=ogc_location),
            "sld_body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sld:StyledLayerDescriptor \

@@ -18,6 +18,8 @@
 #
 #########################################################################
 
+BACKEND_PACKAGE = 'geonode.geoserver'
+
 from django.utils.translation import ugettext_noop as _
 from geonode.notifications_helper import NotificationsAppConfigBase
 

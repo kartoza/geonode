@@ -29,9 +29,9 @@ env:
 branches:
   only:
     - master
-    - master-qgis_server
     - 2.7.x
     - 2.6.x
+    - master-qgis_server
 
 before_install:
   - scripts/misc/qgis_server_setup.sh before_install
