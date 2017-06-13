@@ -3,6 +3,7 @@ up:
 	docker-compose up -d
 
 build:
+	docker pull geonode/django
 	docker-compose build django
 	docker-compose build celery
 
