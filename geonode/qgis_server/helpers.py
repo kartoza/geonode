@@ -120,11 +120,15 @@ def tile_url(layer_name):
     return url
 
 
-def map_thumbnail_url(instance):
+def map_thumbnail_url(instance, bbox=None):
     """Construct QGIS Server Url to fetch remote map thumbnail.
 
     :param instance: Map object
     :type instance: geonode.maps.models.Map
+
+    :param bbox: Bounding box of thumbnail in 4 tuple format
+        [xmin,ymin,xmax,ymax]
+    :type bbox: list(float)
 
     :return: thumbnail url
     :rtype: str
@@ -139,16 +143,21 @@ def map_thumbnail_url(instance):
         logger.debug(msg)
         return None
 
-    # We get the extent of these layers.
-    bbox = [float(i) for i in instance.bbox_string.split(',')]
+    if not bbox:
+        # We get the extent of these layers.
+        bbox = [float(i) for i in instance.bbox_string.split(',')]
     return thumbnail_url(bbox, layers, qgis_project)
 
 
-def layer_thumbnail_url(instance):
+def layer_thumbnail_url(instance, bbox=None):
     """Construct QGIS Server Url to fetch remote layer thumbnail.
 
     :param instance: Layer object
     :type instance: geonode.layers.models.Layer
+
+    :param bbox: Bounding box of thumbnail in 4 tuple format
+        [xmin,ymin,xmax,ymax]
+    :type bbox: list(float)
 
     :return: Thumbnail URL.
     :rtype: str
@@ -164,12 +173,13 @@ def layer_thumbnail_url(instance):
     qgis_project = basename + '.qgs'
     layers = instance.name
 
-    # We get the extent of the layer.
-    x_min = instance.resourcebase_ptr.bbox_x0
-    x_max = instance.resourcebase_ptr.bbox_x1
-    y_min = instance.resourcebase_ptr.bbox_y0
-    y_max = instance.resourcebase_ptr.bbox_y1
-    bbox = [x_min, y_min, x_max, y_max]
+    if not bbox:
+        # We get the extent of the layer.
+        x_min = instance.resourcebase_ptr.bbox_x0
+        x_max = instance.resourcebase_ptr.bbox_x1
+        y_min = instance.resourcebase_ptr.bbox_y0
+        y_max = instance.resourcebase_ptr.bbox_y1
+        bbox = [x_min, y_min, x_max, y_max]
 
     return thumbnail_url(bbox, layers, qgis_project)
 

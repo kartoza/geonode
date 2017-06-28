@@ -30,7 +30,7 @@ from geonode.qgis_server.views import (
     qgis_server_pdf,
     qgis_server_map_print,
     geotiff,
-    qml_style)
+    qml_style, set_thumbnail)
 
 
 urlpatterns = patterns(
@@ -106,5 +106,10 @@ urlpatterns = patterns(
         r'^style/(?P<layername>[^/]*)$',
         qml_style,
         name='download-qml'
+    ),
+    url(
+        r'^thumbnail/set/(?P<layername>[^/]*)$',
+        set_thumbnail,
+        name='set-thumbnail'
     ),
 )

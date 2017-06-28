@@ -32,8 +32,9 @@ from django.contrib.gis.gdal import SpatialReference, CoordTransform
 from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
-from django.http.response import HttpResponseBadRequest, \
-    HttpResponseServerError, HttpResponseRedirect
+from django.http.response import (
+    HttpResponseBadRequest,
+    HttpResponseServerError)
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
@@ -43,6 +44,7 @@ from geonode.qgis_server.forms import QGISLayerStyleUploadForm
 from geonode.qgis_server.gis_tools import num2deg
 from geonode.qgis_server.helpers import tile_url, create_qgis_project
 from geonode.qgis_server.models import QGISServerLayer
+from geonode.qgis_server.tasks.update import create_qgis_server_thumbnail
 
 logger = logging.getLogger('geonode.qgis_server.views')
 
@@ -340,7 +342,8 @@ def qgis_server_request(request):
 
     # As we have one project per layer, we add the MAP path if the request is
     # specific for one layer.
-    if params.get('LAYERS') or params.get('TYPENAME'):
+    map_param = params.get('MAP')
+    if not map_param and (params.get('LAYERS') or params.get('TYPENAME')):
         # LAYERS is for WMS, TYPENAME for WFS
         layer_name = params.get('LAYERS') or params.get('TYPENAME')
 
@@ -427,7 +430,7 @@ def qgis_server_map_print(request):
         json.dumps(temp), content_type="application/json")
 
 
-def qml_style(request, layername=None):
+def qml_style(request, layername):
     """Update/Retrieve QML style of a given QGIS Layer.
 
     :param layername: The layer name in Geonode.
@@ -452,6 +455,11 @@ def qml_style(request, layername=None):
         except:
             return HttpResponseServerError()
     elif request.method == 'POST':
+
+        # For people who uses API request
+        if not request.user.has_perm(
+                'change_resourcebase', layer.get_self_resource()):
+            return HttpResponse(status=401)
 
         form = QGISLayerStyleUploadForm(request.POST, request.FILES)
 
@@ -517,3 +525,37 @@ def qml_style(request, layername=None):
             return HttpResponseServerError()
 
     return HttpResponseBadRequest()
+
+
+def set_thumbnail(request, layername):
+    """Update thumbnail based on map extent
+
+    :param layername: The layer name in Geonode.
+    :type layername: basestring
+    :return:
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest()
+
+    try:
+        layer = get_object_or_404(Layer, name=layername)
+
+        # For people who uses API request
+        if not request.user.has_perm(
+                'change_resourcebase', layer.get_self_resource()):
+            return HttpResponse(status=401)
+
+        # extract bbox
+        bbox_string = request.POST['bbox']
+        # BBox should be in the format: [xmin,ymin,xmax,ymax]
+        bbox = bbox_string.split(',')
+        bbox = [float(s) for s in bbox]
+
+        create_qgis_server_thumbnail.delay(layer, overwrite=True, bbox=bbox)
+        retval = {
+            'success': True
+        }
+        return HttpResponse(
+            json.dumps(retval), content_type="application/json")
+    except:
+        return HttpResponseServerError()
