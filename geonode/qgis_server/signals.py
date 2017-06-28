@@ -35,7 +35,7 @@ from geonode.base.models import Link
 from geonode.layers.models import Layer
 from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import set_attributes
-from geonode.qgis_server.helpers import tile_url
+from geonode.qgis_server.helpers import tile_url, create_qgis_project
 from geonode.qgis_server.models import QGISServerLayer
 from geonode.qgis_server.tasks.update import create_qgis_server_thumbnail
 from geonode.utils import check_ogc_backend
@@ -210,15 +210,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
         )
 
     # Create the QGIS Project
-    qgis_server = settings.QGIS_SERVER_CONFIG['qgis_server_url']
-    basename, _ = os.path.splitext(qgis_layer.base_layer_path)
-    query_string = {
-        'SERVICE': 'MAPCOMPOSITION',
-        'PROJECT': '%s.qgs' % basename,
-        'FILES': qgis_layer.base_layer_path,
-        'NAMES': instance.name
-    }
-    response = requests.get(qgis_server, params=query_string)
+    response = create_qgis_project(instance, qgis_layer)
 
     logger.debug('Creating the QGIS Project : %s' % response.url)
     if response.content != 'OK':

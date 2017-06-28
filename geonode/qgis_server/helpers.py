@@ -19,6 +19,8 @@
 #########################################################################
 import logging
 import os
+
+import requests
 from requests import Request
 from urlparse import urljoin
 
@@ -225,3 +227,28 @@ def thumbnail_url(bbox, layers, qgis_project):
     }
     url = Request('GET', qgis_server_url, params=query_string).prepare().url
     return url
+
+
+def create_qgis_project(layer, qgis_layer=None):
+    """Create a new QGS Project for a given layer.
+
+    :param layer: Layer
+    :type layer: geonode.layers.models.Layer
+
+    :param qgis_layer: QGIS Layer model
+    :type qgis_layer: geonode.qgis_server.models.QGISServerLayer
+
+    """
+    qgis_server = settings.QGIS_SERVER_CONFIG['qgis_server_url']
+    if not qgis_layer:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    basename, _ = os.path.splitext(qgis_layer.base_layer_path)
+    query_string = {
+        'SERVICE': 'MAPCOMPOSITION',
+        'PROJECT': '%s.qgs' % basename,
+        'FILES': qgis_layer.base_layer_path,
+        'NAMES': layer.name,
+        'OVERWRITE': 'true',
+    }
+    response = requests.get(qgis_server, params=query_string)
+    return response

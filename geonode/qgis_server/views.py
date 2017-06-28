@@ -32,13 +32,16 @@ from django.contrib.gis.gdal import SpatialReference, CoordTransform
 from django.contrib.gis.geos import Point
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
+from django.http.response import HttpResponseBadRequest, \
+    HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
 
 from geonode.layers.models import Layer
+from geonode.qgis_server.forms import QGISLayerStyleUploadForm
 from geonode.qgis_server.gis_tools import num2deg
-from geonode.qgis_server.helpers import tile_url
+from geonode.qgis_server.helpers import tile_url, create_qgis_project
 from geonode.qgis_server.models import QGISServerLayer
 
 logger = logging.getLogger('geonode.qgis_server.views')
@@ -422,3 +425,95 @@ def qgis_server_map_print(request):
         print '--------'
     return HttpResponse(
         json.dumps(temp), content_type="application/json")
+
+
+def qml_style(request, layername=None):
+    """Update/Retrieve QML style of a given QGIS Layer.
+
+    :param layername: The layer name in Geonode.
+    :type layername: basestring
+    :return:
+    """
+    layer = get_object_or_404(Layer, name=layername)
+    if request.method == 'GET':
+        try:
+
+            base_file_path, __ = layer.get_base_file()
+            base_file_path, __ = os.path.splitext(base_file_path.file.path)
+            qml_path = '{path}.qml'.format(path=base_file_path)
+
+            response = HttpResponse(
+                open(qml_path), content_type="application/xml")
+            # ..and correct content-disposition
+            response['Content-Disposition'] = (
+                'attachment; filename={filename}'.format(
+                    filename=os.path.basename(qml_path)))
+            return response
+        except:
+            return HttpResponseServerError()
+    elif request.method == 'POST':
+
+        form = QGISLayerStyleUploadForm(request.POST, request.FILES)
+
+        if not form.is_valid():
+            return TemplateResponse(
+                request,
+                'qgis_server/forms/qml_style.html',
+                {
+                    'resource': layer,
+                    'style_upload_form': form
+                },
+                status=200).render()
+
+        try:
+            uploaded_qml = request.FILES['qml']
+
+            # update qml in uploaded media folder
+            base_file_path, __ = layer.get_base_file()
+            file_name, __ = os.path.splitext(base_file_path.file.path)
+            qml_path = '{file_name}.qml'.format(file_name=file_name)
+
+            content = uploaded_qml.read()
+
+            with open(qml_path, mode='w') as f:
+                f.write(content)
+
+            # update qml in QGIS Layer folder
+            QGIS_layer_directory = settings.QGIS_SERVER_CONFIG['layer_directory']
+            base_file_path = os.path.basename(base_file_path.file.path)
+            file_name, __ = os.path.splitext(base_file_path)
+            qml_path = '{file_name}.qml'.format(file_name=file_name)
+            qml_path = os.path.join(QGIS_layer_directory, qml_path)
+
+            with open(qml_path, mode='w') as f:
+                f.write(content)
+
+            # update QGIS Project files
+            response = create_qgis_project(layer)
+            if not response.content == 'OK':
+                return HttpResponseServerError()
+
+            # Because we update a style, we need to recache
+            QGIS_tiles_directory = settings.QGIS_SERVER_CONFIG['tiles_directory']
+            qgis_layer = get_object_or_404(QGISServerLayer, layer=layer)
+            basename, _ = os.path.splitext(qgis_layer.base_layer_path)
+            basename = os.path.basename(basename)
+
+            layer_tiles_path = os.path.join(QGIS_tiles_directory, basename)
+
+            shutil.rmtree(layer_tiles_path)
+
+            return TemplateResponse(
+                request,
+                'qgis_server/forms/qml_style.html',
+                {
+                    'resource': layer,
+                    'style_upload_form': form,
+                    'success': True
+                },
+                status=200).render()
+
+        except:
+            return HttpResponseServerError()
+
+    return HttpResponseBadRequest()
