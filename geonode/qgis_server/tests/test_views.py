@@ -23,6 +23,7 @@ import json
 import os
 import urlparse
 import zipfile
+from imghdr import what
 
 import gisdata
 from django.conf import settings
@@ -206,6 +207,7 @@ class ThumbnailGenerationTest(LiveServerTestCase):
 
         # Check thumbnail created
         self.assertTrue(os.path.exists(thumbnail_path))
+        self.assertEqual(what(thumbnail_path), 'png')
 
         # Check that now we have thumbnail
         self.assertTrue(layer.has_thumbnail())
@@ -343,6 +345,7 @@ class ThumbnailGenerationTest(LiveServerTestCase):
 
         # Check thumbnail created
         self.assertTrue(os.path.exists(thumbnail_path))
+        self.assertEqual(what(thumbnail_path), 'png')
 
         # Check that now we have thumbnail
         self.assertTrue(map.has_thumbnail())

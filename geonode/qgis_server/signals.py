@@ -49,9 +49,9 @@ if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
 qgis_map_with_layers = Signal(providing_args=[])
 
 
-def qgis_server_layer_pre_delete(instance, sender, **kwargs):
+def qgis_server_layer_post_delete(instance, sender, **kwargs):
     """Removes the layer from Local Storage."""
-    logger.debug('QGIS Server Layer Pre Delete')
+    logger.debug('QGIS Server Layer Post Delete')
     instance.delete_qgis_layer()
 
 
@@ -209,8 +209,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
             )
         )
 
+    # if layer has overwrite attribute, then it probably comes from
+    # importlayers management command and needs to be overwritten
+    overwrite = getattr(instance, 'overwrite', False)
+
     # Create the QGIS Project
-    response = create_qgis_project(instance, qgis_layer)
+    response = create_qgis_project(instance, qgis_layer, overwrite)
 
     logger.debug('Creating the QGIS Project : %s' % response.url)
     if response.content != 'OK':
@@ -265,7 +269,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
 
     # Create thumbnail
     create_qgis_server_thumbnail.delay(
-        instance, overwrite=True)
+        instance, overwrite=overwrite)
 
     # Attributes
     set_attributes(instance)
@@ -286,6 +290,17 @@ def qgis_server_post_save(instance, sender, **kwargs):
             }
             update_xml(xml_file_path, new_values)
         except (TypeError, AttributeError):
+            pass
+
+    # Remove existing tile caches if overwrite
+    if overwrite:
+        tiles_directory = settings.QGIS_SERVER_CONFIG['tiles_directory']
+        basename, _ = os.path.splitext(qgis_layer.base_layer_path)
+        basename = os.path.basename(basename)
+        tiles_cache_path = os.path.join(tiles_directory, basename)
+        try:
+            shutil.rmtree(tiles_cache_path)
+        except:
             pass
 
 
@@ -377,7 +392,7 @@ if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
         qgis_server_post_save_map,
         dispatch_uid='Map-qgis_server_post_save_map',
         sender=Map)
-    signals.pre_delete.connect(
-        qgis_server_layer_pre_delete,
-        dispatch_uid='QGISServerLayer-qgis_server_layer_pre_delete',
+    signals.post_delete.connect(
+        qgis_server_layer_post_delete,
+        dispatch_uid='QGISServerLayer-qgis_server_layer_post_delete',
         sender=QGISServerLayer)

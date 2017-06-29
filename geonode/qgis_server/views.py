@@ -509,7 +509,10 @@ def qml_style(request, layername):
 
             layer_tiles_path = os.path.join(QGIS_tiles_directory, basename)
 
-            shutil.rmtree(layer_tiles_path)
+            try:
+                shutil.rmtree(layer_tiles_path)
+            except:
+                pass
 
             return TemplateResponse(
                 request,
