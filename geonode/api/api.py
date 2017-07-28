@@ -516,9 +516,11 @@ class QGISStyleResource(Resource):
         kwargs = {}
 
         if isinstance(bundle_or_obj, Bundle):
-            kwargs[self._meta.detail_uri_name] = getattr(bundle_or_obj.obj, self._meta.detail_uri_name)
+            kwargs[self._meta.detail_uri_name] = getattr(
+                bundle_or_obj.obj, self._meta.detail_uri_name)
         else:
-            kwargs[self._meta.detail_uri_name] = getattr(bundle_or_obj, self._meta.detail_uri_name)
+            kwargs[self._meta.detail_uri_name] = getattr(
+                bundle_or_obj, self._meta.detail_uri_name)
 
         return kwargs
 

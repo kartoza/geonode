@@ -32,7 +32,7 @@ from requests.compat import urljoin
 
 from geonode import qgis_server
 from geonode.base.models import Link
-from geonode.layers.models import Layer
+from geonode.layers.models import Layer, LayerFile
 from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import set_attributes
 from geonode.qgis_server.helpers import tile_url_format, create_qgis_project
@@ -86,6 +86,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
 
     This hook also creates QGIS Project. Which is essentials for QGIS Server.
     There are also several Geonode Links generated, like thumbnail and legends
+
+    :param instance: geonode Layer
+    :type instance: Layer
+
+    :param sender: geonode Layer type
+    :type sender: type(Layer)
     """
     if not sender == Layer:
         return
@@ -240,6 +246,14 @@ def qgis_server_post_save(instance, sender, **kwargs):
     response = create_qgis_project(
         instance, qgis_layer.qgis_project_path, overwrite=overwrite,
         internal=True)
+
+    # Remove QML file if necessary
+    try:
+        qml_file = instance.upload_session.layerfile_set.get(name='qml')
+        if not os.path.exists(qml_file.file.path):
+            qml_file.delete()
+    except LayerFile.DoesNotExist:
+        pass
 
     logger.debug('Creating the QGIS Project : %s' % response.url)
     if response.content != 'OK':

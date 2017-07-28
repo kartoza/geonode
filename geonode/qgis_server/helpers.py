@@ -18,26 +18,30 @@
 #
 #########################################################################
 import logging
+import math
 import os
 import re
 import shutil
 import urllib
 from urlparse import urljoin
 
-import math
 import requests
 from django.conf import settings
 from django.contrib.gis.gdal import CoordTransform, SpatialReference
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
+from lxml import etree
 from requests import Request
 
 from geonode import qgis_server
 from geonode.geoserver.helpers import OGC_Servers_Handler
 from geonode.layers.models import Layer
 from geonode.qgis_server.gis_tools import num2deg
-from geonode.qgis_server.models import QGISServerLayer, QGISServerMap
+from geonode.qgis_server.models import (
+    QGISServerLayer,
+    QGISServerMap,
+    QGISServerStyle)
 
 logger = logging.getLogger(__file__)
 ogc_server_settings = OGC_Servers_Handler(settings.OGC_SERVER)['default']
@@ -425,6 +429,241 @@ def legend_url(layer, layertitle=False, internal=True):
     return url
 
 
+def wms_get_capabilities_url(layer=None, internal=True):
+    """Construct WMS GetCapabilities request.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: QGIS Server request url
+    :rtype: str
+    """
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    qgis_project_path = qgis_layer.qgis_project_path
+
+    query_string = {
+        'MAP': qgis_project_path,
+        'SERVICE': 'WMS',
+        'VERSION': '1.3.0',
+        'REQUEST': 'GetCapabilities',
+        'LAYER': layer.name
+    }
+
+    qgis_server_url = qgis_server_endpoint(internal)
+    url = Request('GET', qgis_server_url, params=query_string).prepare().url
+    return url
+
+
+def style_get_url(layer, style_name, internal=True):
+    """Get QGIS Server style as xml.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param style_name: Style name as given by QGIS Server
+    :type style_name: str
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: QGIS Server request url
+    :rtype: str
+    """
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    qgis_project_path = qgis_layer.qgis_project_path
+
+    query_string = {
+        'PROJECT': qgis_project_path,
+        'SERVICE': 'STYLEMANAGER',
+        'REQUEST': 'GetStyle',
+        'LAYER': layer.name,
+        'NAME': style_name
+    }
+
+    qgis_server_url = qgis_server_endpoint(internal)
+    url = Request('GET', qgis_server_url, params=query_string).prepare().url
+    return url
+
+
+def style_add_url(layer, style_name, internal=True):
+    """Add QGIS Server style to QGIS Project.
+
+    This style file is stored on qml LayerFile in upload_session.
+    After the file is uploaded, it has to be deleted.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param style_name: Style name as given by QGIS Server
+    :type style_name: str
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: QGIS Server request url
+    :rtype: str
+    """
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    qgis_project_path = qgis_layer.qgis_project_path
+
+    # QML File is taken from uploaded file
+    query_string = {
+        'SERVICE': 'STYLEMANAGER',
+        'PROJECT': qgis_project_path,
+        'REQUEST': 'AddStyle',
+        'LAYER': layer.name,
+        'NAME': style_name,
+        'QML': qgis_layer.qml_path,
+        'REMOVEQML': 'TRUE'
+    }
+
+    qgis_server_url = qgis_server_endpoint(internal)
+    url = Request('GET', qgis_server_url, params=query_string).prepare().url
+    return url
+
+
+def style_remove_url(layer, style_name, internal=True):
+    """Remove QGIS Server style from QGIS Project.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param style_name: Style name as given by QGIS Server
+    :type style_name: str
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: QGIS Server request url
+    :rtype: str
+    """
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    qgis_project_path = qgis_layer.qgis_project_path
+
+    query_string = {
+        'SERVICE': 'STYLEMANAGER',
+        'PROJECT': qgis_project_path,
+        'REQUEST': 'RemoveStyle',
+        'LAYER': layer.name,
+        'NAME': style_name
+    }
+
+    qgis_server_url = qgis_server_endpoint(internal)
+    url = Request('GET', qgis_server_url, params=query_string).prepare().url
+    return url
+
+
+def style_set_default_url(layer, style_name, internal=True):
+    """Remove QGIS Server style from QGIS Project.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param style_name: Style name as given by QGIS Server
+    :type style_name: str
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: QGIS Server request url
+    :rtype: str
+    """
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    qgis_project_path = qgis_layer.qgis_project_path
+
+    query_string = {
+        'SERVICE': 'STYLEMANAGER',
+        'PROJECT': qgis_project_path,
+        'REQUEST': 'SetDefaultStyle',
+        'LAYER': layer.name,
+        'NAME': style_name
+    }
+
+    qgis_server_url = qgis_server_endpoint(internal)
+    url = Request('GET', qgis_server_url, params=query_string).prepare().url
+    return url
+
+
+def style_list(layer, internal=True):
+    """Query list of styles from QGIS Server.
+
+    :param layer: Layer to inspect
+    :type layer: Layer
+
+    :param internal: Flag to switch between public url and internal url.
+        Public url will be served by Django Geonode (proxified).
+    :type internal: bool
+
+    :return: List of QGISServerStyle
+    :rtype: list(QGISServerStyle)
+    """
+    # We get the list of style from GetCapabilities request
+    # Must call from public URL because we need public LegendURL
+    url = wms_get_capabilities_url(layer, internal=internal)
+    response = requests.get(url)
+
+    root_xml = etree.fromstring(response.content)
+    styles_xml = root_xml.xpath(
+        'wms:Capability/wms:Layer/wms:Layer/wms:Style',
+        namespaces={
+            'xlink': 'http://www.w3.org/1999/xlink',
+            'wms': 'http://www.opengis.net/wms'
+        })
+
+    # Fetch styles body
+    try:
+        qgis_layer = QGISServerLayer.objects.get(layer=layer)
+    except QGISServerLayer.DoesNotExist:
+        msg = 'No QGIS Server Layer for existing layer {0}'.format(layer.name)
+        logger.debug(msg)
+        raise
+
+    styles_obj = [
+        QGISServerStyle.from_get_capabilities_style_xml(
+            qgis_layer, style_xml)[0]
+        for style_xml in styles_xml]
+
+    return styles_obj
+
+
 def create_qgis_project(
         layer, qgis_project_path, overwrite=False, internal=True):
     """Create a new QGS Project for a given layer.
@@ -468,6 +707,7 @@ def create_qgis_project(
         'FILES': files,
         'NAMES': names,
         'OVERWRITE': overwrite,
+        'REMOVEQML': 'TRUE'
     }
     qgis_server_url = qgis_server_endpoint(internal)
     response = requests.get(qgis_server_url, params=query_string)
