@@ -20,7 +20,6 @@
 
 import json
 import time
-import urlparse
 
 from django.conf.urls import url
 from django.contrib.auth import get_user_model
@@ -35,7 +34,6 @@ from guardian.shortcuts import get_objects_for_user
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 
-from geonode import geoserver, qgis_server
 from geonode.base.models import ResourceBase
 from geonode.base.models import TopicCategory
 from geonode.base.models import Region
@@ -53,8 +51,6 @@ from tastypie import fields
 from tastypie.resources import ModelResource, Resource
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.utils import trailing_slash
-
-from geonode.utils import check_ogc_backend
 
 FILTER_TYPES = {
     'layer': Layer,

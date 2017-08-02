@@ -247,7 +247,6 @@ class QGISServerViewsTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(get_capabilities_content, response.content)
 
-
         # WMS GetMap
         query_string = {
             'SERVICE': 'WMS',
@@ -285,6 +284,14 @@ class QGISServerStyleManagerTest(LiveServerTestCase):
         """:type: geonode.layers.models.Layer"""
 
         actual_list_style = style_list(layer, internal=False)
+        expected_list_style = ['default']
+
+        # There will be a default style
+        self.assertEqual(
+            set(expected_list_style),
+            set([style.name for style in actual_list_style])
+        )
+
 
 class ThumbnailGenerationTest(LiveServerTestCase):
 

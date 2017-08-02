@@ -148,7 +148,11 @@ def qgis_server_endpoint(internal=True):
         # The generated URL is not a direct URL to QGIS Server,
         # but it was a proxy from django instead.
         endpoint_url = reverse('qgis_server:request')
-        site_url = settings.SITEURL
+
+        if hasattr(settings, 'TESTING') and settings.TESTING:
+            site_url = 'http://localhost:8000'
+        else:
+            site_url = settings.SITEURL
         qgis_server_url = urljoin(site_url, endpoint_url)
         return qgis_server_url
 

@@ -22,7 +22,6 @@ import StringIO
 import json
 import logging
 import os
-import shutil
 import zipfile
 from imghdr import what as image_format
 
@@ -31,7 +30,6 @@ import re
 import datetime
 import requests
 from django.conf import settings
-from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, Http404
@@ -46,7 +44,6 @@ from geonode.layers.models import Layer, LayerFile
 from geonode.qgis_server.forms import QGISLayerStyleUploadForm
 from geonode.qgis_server.helpers import (
     tile_url_format,
-    create_qgis_project,
     legend_url,
     tile_url,
     qgis_server_endpoint, style_get_url, style_list, style_add_url,

@@ -219,7 +219,7 @@ class QGISServerStyle(models.Model):
 
         filter_dict = {
             'name': style_xml.xpath(
-                'wms:Style/wms:Name', namespaces=namespaces)[0].text,
+                'wms:Name', namespaces=namespaces)[0].text,
 
             'layer_default_style': qgis_layer
         }
@@ -235,10 +235,10 @@ class QGISServerStyle(models.Model):
 
         default_dict = {
             'title': style_xml.xpath(
-                'wms:Style/wms:Title', namespaces=namespaces)[0].text,
+                'wms:Title', namespaces=namespaces)[0].text,
 
             'style_legend_url': style_xml.xpath(
-                'wms:Style/wms:LegendURL/wms:OnlineResource',
+                'wms:LegendURL/wms:OnlineResource',
                 namespaces=namespaces)[0].attrib[
                 '{http://www.w3.org/1999/xlink}href'],
 
@@ -247,10 +247,19 @@ class QGISServerStyle(models.Model):
             'body': style_body
         }
 
-        filter_dict['defaults'] = default_dict
+        # filter_dict['defaults'] = default_dict
 
-        style_obj, created = QGISServerLayer.objects.get_or_create(
-            **filter_dict)
+        # Can't use get_or_create function for some reason.
+        # So use regular query
+
+        try:
+            style_obj = QGISServerStyle.objects.get(**filter_dict)
+            created = False
+        except QGISServerStyle.DoesNotExist:
+            style_obj = QGISServerStyle(**default_dict)
+            style_obj.name = filter_dict['name']
+            style_obj.save()
+            created = True
 
         if not created and synchronize:
             # Try to synchronize this model with the given parameters

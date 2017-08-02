@@ -13,7 +13,7 @@
 {% trans "You may also use browser reload." %}
 </p>
 {% else %}
-<form id="qgis-server-style-edit-form" method="post" action="{% url "qgis_server:update-qml" layername=resource.name %}" enctype="multipart/form-data">
+<form id="qgis-server-style-edit-form" method="post" action="{% url "qgis_server:upload-qml" layername=resource.name %}" enctype="multipart/form-data">
     {% csrf_token %}
     {{ style_upload_form|as_bootstrap }}
     {% if use_qml_style %}

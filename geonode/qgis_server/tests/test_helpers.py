@@ -155,13 +155,12 @@ class HelperTest(LiveServerTestCase):
 
         # it has to contains qgis tags
         style_xml = etree.fromstring(response.content)
-        for child in style_xml:
-            self.assertTrue('qgis' in child.tag)
+        self.assertTrue('qgis' in style_xml.tag)
 
         # Add new style
         # change default style slightly
         self.assertTrue('WhiteToBlack' not in response.content)
-        self.assertInHTML('BlackToWhite', response.content)
+        self.assertTrue('BlackToWhite' in response.content)
         new_style_xml = etree.fromstring(
             response.content.replace('BlackToWhite', 'WhiteToBlack'))
         new_xml_content = etree.tostring(new_style_xml, pretty_print=True)
@@ -191,7 +190,7 @@ class HelperTest(LiveServerTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers.get('Content-Type'), 'text/xml')
-        self.assertInHTML('WhiteToBlack', response.content)
+        self.assertTrue('WhiteToBlack' in response.content)
 
         # Set default style
         style_url = style_set_default_url(
