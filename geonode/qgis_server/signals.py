@@ -35,7 +35,8 @@ from geonode.base.models import Link
 from geonode.layers.models import Layer, LayerFile
 from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import set_attributes
-from geonode.qgis_server.helpers import tile_url_format, create_qgis_project
+from geonode.qgis_server.helpers import tile_url_format, create_qgis_project, \
+    style_list
 from geonode.qgis_server.models import QGISServerLayer, QGISServerMap
 from geonode.qgis_server.tasks.update import create_qgis_server_thumbnail
 from geonode.qgis_server.xml_utilities import update_xml
@@ -184,12 +185,11 @@ def qgis_server_post_save(instance, sender, **kwargs):
         link_mime = 'ZIP'
 
     # Zip file
-    Link.objects.get_or_create(
+    Link.objects.update_or_create(
         resource=instance.resourcebase_ptr,
-        url=zip_download_url,
+        name=link_name,
         defaults=dict(
             extension='zip',
-            name=link_name,
             mime=link_mime,
             url=zip_download_url,
             link_type='data'
@@ -203,13 +203,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
             'qgis_server:layer-request', kwargs={'layername': instance.name}))
     ogc_wms_name = 'OGC WMS: %s Service' % instance.workspace
     ogc_wms_link_type = 'OGC:WMS'
-    Link.objects.get_or_create(
+    Link.objects.update_or_create(
         resource=instance.resourcebase_ptr,
-        url=ogc_wms_url,
+        name=ogc_wms_name,
         link_type=ogc_wms_link_type,
         defaults=dict(
             extension='html',
-            name=ogc_wms_name,
             url=ogc_wms_url,
             mime='text/html',
             link_type=ogc_wms_link_type
@@ -225,13 +224,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
                 kwargs={'layername': instance.name}))
         ogc_wfs_name = 'OGC WFS: %s Service' % instance.workspace
         ogc_wfs_link_type = 'OGC:WFS'
-        Link.objects.get_or_create(
+        Link.objects.update_or_create(
             resource=instance.resourcebase_ptr,
-            url=ogc_wfs_url,
+            name=ogc_wfs_name,
             link_type=ogc_wfs_link_type,
             defaults=dict(
                 extension='html',
-                name=ogc_wfs_name,
                 url=ogc_wfs_url,
                 mime='text/html',
                 link_type=ogc_wfs_link_type
@@ -259,12 +257,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
     if response.content != 'OK':
         logger.debug('Result : %s' % response.content)
 
-    Link.objects.get_or_create(
+    Link.objects.update_or_create(
         resource=instance.resourcebase_ptr,
-        url=tile_url_format(instance.name),
+        name="Tiles",
         defaults=dict(
+            url=tile_url_format(instance.name),
             extension='tiles',
-            name="Tiles",
             mime='image/png',
             link_type='image'
         )
@@ -277,12 +275,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
         geotiff_url = urljoin(base_url, geotiff_url)
         logger.debug('geotif_url: %s' % geotiff_url)
 
-        Link.objects.get_or_create(
+        Link.objects.update_or_create(
             resource=instance.resourcebase_ptr,
-            url=geotiff_url,
+            name="GeoTIFF",
             defaults=dict(
                 extension=original_ext.split('.')[-1],
-                name="GeoTIFF",
+                url=geotiff_url,
                 mime='image/tiff',
                 link_type='image'
             )
@@ -294,12 +292,11 @@ def qgis_server_post_save(instance, sender, **kwargs):
         kwargs={'layername': instance.name}
     )
     legend_url = urljoin(base_url, legend_url)
-    Link.objects.get_or_create(
+    Link.objects.update_or_create(
         resource=instance.resourcebase_ptr,
-        url=legend_url,
+        name='Legend',
         defaults=dict(
             extension='png',
-            name='Legend',
             url=legend_url,
             mime='image/png',
             link_type='image',
@@ -344,6 +341,9 @@ def qgis_server_post_save(instance, sender, **kwargs):
             update_xml(xml_file_path, new_values)
         except (TypeError, AttributeError):
             pass
+
+    # Generate style cache
+    style_list(instance, internal=False)
 
     # Remove existing tile caches if overwrite
     if overwrite:

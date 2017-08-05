@@ -58,7 +58,7 @@ class QGISServerLayer(models.Model):
     layer = models.OneToOneField(
         Layer,
         primary_key=True,
-        name='layer'
+        related_name='qgis_layer'
     )
     base_layer_path = models.CharField(
         name='base_layer_path',
@@ -171,11 +171,15 @@ class QGISServerLayer(models.Model):
         except OSError:
             pass
 
+        # Removing orphaned styles
+        for style in QGISServerStyle.objects.filter(layer_styles=None):
+            style.delete()
+
 
 class QGISServerStyle(models.Model):
     """Model wrapper for QGIS Server styles."""
 
-    name = models.CharField(_('style name'), max_length=255, unique=True)
+    name = models.CharField(_('style name'), max_length=255)
     title = models.CharField(max_length=255, null=True, blank=True)
     body = models.TextField(_('style xml'), null=True, blank=True)
     style_url = models.CharField(_('style url'), null=True, max_length=1000)
@@ -221,13 +225,14 @@ class QGISServerStyle(models.Model):
             'name': style_xml.xpath(
                 'wms:Name', namespaces=namespaces)[0].text,
 
-            'layer_default_style': qgis_layer
+            'layer_styles': qgis_layer
         }
 
         # if style_body is none, try fetch it from QGIS Server
         if not style_url:
             from geonode.qgis_server.helpers import style_get_url
-            style_url = style_get_url(qgis_layer.layer, filter_dict['name'])
+            style_url = style_get_url(
+                qgis_layer.layer, filter_dict['name'], internal=False)
 
         response = requests.get(style_url)
         style_body = etree.tostring(
@@ -261,10 +266,9 @@ class QGISServerStyle(models.Model):
             style_obj.save()
             created = True
 
-        if not created and synchronize:
+        if created or synchronize:
             # Try to synchronize this model with the given parameters
             style_obj.name = filter_dict['name']
-            style_obj.layer_default_style = filter_dict['layer_default_style']
 
             style_obj.style_url = default_dict['style_url']
             style_obj.body = default_dict['body']
@@ -272,7 +276,25 @@ class QGISServerStyle(models.Model):
             style_obj.style_legend_url = default_dict['style_legend_url']
             style_obj.save()
 
+            style_obj.layer_styles.add(qgis_layer)
+            style_obj.save()
+
         return style_obj, created
+
+    @property
+    def style_tile_cache_path(self):
+        """Returned the location of tile cache for this layer style.
+
+        Example base path: /usr/src/app/geonode/qgis_layer/jakarta_flood.shp
+
+        QGIS cache path: /usr/src/app/geonode/qgis_tiles/jakarta_flood/
+            default_style
+
+        :return: Base path of layer cache
+        :rtype: str
+        """
+        return os.path.join(
+            QGIS_TILES_DIRECTORY, self.layer_styles.first().layer.name, self.name)
 
 
 class QGISServerMap(models.Model):

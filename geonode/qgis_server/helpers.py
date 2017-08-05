@@ -157,7 +157,7 @@ def qgis_server_endpoint(internal=True):
         return qgis_server_url
 
 
-def tile_url_format(layer_name):
+def tile_url_format(layer_name, style=None):
     """Construct proxied QGIS Server URL format for tiles.
 
     This url is not an actual request, but rather a format url
@@ -170,11 +170,14 @@ def tile_url_format(layer_name):
     :return: Tile url
     :rtype: basestring
     """
+    url_kwargs = {
+        'layername': layer_name
+    }
+    if style:
+        url_kwargs['style'] = style
     url = reverse(
         'qgis_server:tile',
-        kwargs={
-            'layername': layer_name
-        })
+        kwargs=url_kwargs)
     # unquote url
     # so that {z}/{x}/{y} is not quoted
     url = urllib.unquote(url)
@@ -182,7 +185,7 @@ def tile_url_format(layer_name):
     return url
 
 
-def tile_url(layer, z, x, y, internal=True):
+def tile_url(layer, z, x, y, style=None, internal=True):
     """Construct actual tile request to QGIS Server.
 
     Different than tile_url_format, this method will return url for requesting
@@ -199,6 +202,9 @@ def tile_url(layer, z, x, y, internal=True):
 
     :param y: TMS coordinate, latitude parameter
     :type y: int, str
+
+    :param style: Layer style to choose
+    :type style: str
 
     :param internal: Flag to switch between public url and internal url.
         Public url will be served by Django Geonode (proxified).
@@ -236,6 +242,12 @@ def tile_url(layer, z, x, y, internal=True):
 
     bbox = ','.join([str(val) for val in [left, bottom, right, top]])
 
+    if not style:
+        style = 'default'
+
+    if style not in [s.name for s in qgis_layer.styles.all()]:
+        style = qgis_layer.default_style.name
+
     query_string = {
         'SERVICE': 'WMS',
         'VERSION': '1.3.0',
@@ -246,7 +258,7 @@ def tile_url(layer, z, x, y, internal=True):
         'HEIGHT': '256',
         'MAP': qgis_layer.qgis_project_path,
         'LAYERS': layer.name,
-        'STYLES': 'default',
+        'STYLE': style,
         'FORMAT': 'image/png',
         'TRANSPARENT': 'true',
         'DPI': '96',
@@ -297,11 +309,14 @@ def map_thumbnail_url(instance, bbox=None, internal=True):
         bbox, qgis_map.qgis_map_name, qgis_project, internal=internal)
 
 
-def layer_thumbnail_url(instance, bbox=None, internal=True):
+def layer_thumbnail_url(instance, style=None, bbox=None, internal=True):
     """Construct QGIS Server Url to fetch remote layer thumbnail.
 
     :param instance: Layer object
     :type instance: geonode.layers.models.Layer
+
+    :param style: Layer style to choose
+    :type style: str
 
     :param bbox: Bounding box of thumbnail in 4 tuple format
         [xmin,ymin,xmax,ymax]
@@ -325,15 +340,21 @@ def layer_thumbnail_url(instance, bbox=None, internal=True):
     qgis_project = qgis_layer.qgis_project_path
     layers = instance.name
 
+    if not style:
+        style = 'default'
+
+    if style not in [s.name for s in qgis_layer.styles.all()]:
+        style = qgis_layer.default_style.name
+
     if not bbox:
         # We get the extent of the layer.
         # Reproject, in case of different CRS
         bbox = transform_layer_bbox(instance, 4326)
 
-    return thumbnail_url(bbox, layers, qgis_project, internal=internal)
+    return thumbnail_url(bbox, layers, qgis_project, style=style, internal=internal)
 
 
-def thumbnail_url(bbox, layers, qgis_project, internal=True):
+def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     """Internal function to generate the URL for the thumbnail.
 
     :param bbox: The bounding box to use in the format [left,bottom,right,top].
@@ -345,6 +366,9 @@ def thumbnail_url(bbox, layers, qgis_project, internal=True):
     :param qgis_project: The path to the QGIS project.
     :type qgis_project: basestring
 
+    :param style: Layer style to choose
+    :type style: str
+
     :param internal: Flag to switch between public url and internal url.
         Public url will be served by Django Geonode (proxified).
     :type internal: bool
@@ -352,6 +376,7 @@ def thumbnail_url(bbox, layers, qgis_project, internal=True):
     :return: The WMS URL to fetch the thumbnail.
     :rtype: basestring
     """
+
     x_min, y_min, x_max, y_max = bbox
     # We calculate the margins according to 10 percent.
     percent = 10
@@ -378,7 +403,7 @@ def thumbnail_url(bbox, layers, qgis_project, internal=True):
         'HEIGHT': '250',
         'MAP': qgis_project,
         'LAYERS': layers,
-        'STYLES': 'default',
+        'STYLE': style,
         'FORMAT': 'image/png',
         'TRANSPARENT': 'true',
         'DPI': '96',
@@ -390,7 +415,7 @@ def thumbnail_url(bbox, layers, qgis_project, internal=True):
     return url
 
 
-def legend_url(layer, layertitle=False, internal=True):
+def legend_url(layer, layertitle=False, style=None, internal=True):
     """Construct QGIS Server url to fetch legend.
 
     :param layer: Layer to use
@@ -398,6 +423,9 @@ def legend_url(layer, layertitle=False, internal=True):
 
     :param layertitle: Layer title flag. Set to True to include layer title
     :type layertitle: bool
+
+    :param style: Layer style to choose
+    :type style: str
 
     :param internal: Flag to switch between public url and internal url.
         Public url will be served by Django Geonode (proxified).
@@ -415,6 +443,12 @@ def legend_url(layer, layertitle=False, internal=True):
 
     qgis_project_path = qgis_layer.qgis_project_path
 
+    if not style:
+        style = 'default'
+
+    if style not in [s.name for s in qgis_layer.styles.all()]:
+        style = qgis_layer.default_style.name
+
     query_string = {
         'MAP': qgis_project_path,
         'SERVICE': 'WMS',
@@ -423,6 +457,7 @@ def legend_url(layer, layertitle=False, internal=True):
         'LAYER': layer.name,
         'LAYERTITLE': str(layertitle).lower(),
         'FORMAT': 'image/png',
+        'STYLE': style,
         'TILED': 'true',
         'TRANSPARENT': 'true',
         'LEGEND_OPTIONS': (
@@ -665,6 +700,27 @@ def style_list(layer, internal=True):
             qgis_layer, style_xml)[0]
         for style_xml in styles_xml]
 
+    # Manage orphaned styles
+    style_names = [s.name for s in styles_obj]
+    for style in qgis_layer.styles.all():
+        if style.name not in style_names:
+            if style == qgis_layer.default_style:
+                qgis_layer.default_style = None
+                qgis_layer.save()
+            style.delete()
+
+    # Set default style if not yet set
+    set_default_style = False
+    try:
+        if not qgis_layer.default_style:
+            set_default_style = True
+    except:
+        set_default_style = True
+
+    if set_default_style and styles_obj:
+        qgis_layer.default_style = styles_obj[0]
+        qgis_layer.save()
+
     return styles_obj
 
 
@@ -711,7 +767,7 @@ def create_qgis_project(
         'FILES': files,
         'NAMES': names,
         'OVERWRITE': overwrite,
-        'REMOVEQML': 'TRUE'
+        'REMOVEQML': True
     }
     qgis_server_url = qgis_server_endpoint(internal)
     response = requests.get(qgis_server_url, params=query_string)
