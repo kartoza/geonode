@@ -245,6 +245,9 @@ def qgis_server_post_save(instance, sender, **kwargs):
         instance, qgis_layer.qgis_project_path, overwrite=overwrite,
         internal=True)
 
+    # Generate style model cache
+    style_list(instance, internal=False)
+
     # Remove QML file if necessary
     try:
         qml_file = instance.upload_session.layerfile_set.get(name='qml')
@@ -341,9 +344,6 @@ def qgis_server_post_save(instance, sender, **kwargs):
             update_xml(xml_file_path, new_values)
         except (TypeError, AttributeError):
             pass
-
-    # Generate style cache
-    style_list(instance, internal=False)
 
     # Remove existing tile caches if overwrite
     if overwrite:

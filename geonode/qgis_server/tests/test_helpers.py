@@ -117,7 +117,7 @@ class HelperTest(LiveServerTestCase):
             'WIDTH': '256',
             'HEIGHT': '256',
             'LAYERS': 'test_grid',
-            'STYLES': 'default',
+            'STYLE': 'default',
             'FORMAT': 'image/png',
             'TRANSPARENT': 'true',
             'DPI': '96',
