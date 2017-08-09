@@ -126,7 +126,10 @@ def legend(request, layername, layertitle=False, style=None):
     # get default style name
     if not style:
         # generate style cache
-        style_list(layer)
+        if not qgis_layer.default_style:
+            style_list(layer, internal=False)
+            # refresh values
+            qgis_layer.refresh_from_db()
         style = qgis_layer.default_style.name
 
     legend_path = QGIS_SERVER_CONFIG['legend_path']
@@ -210,7 +213,10 @@ def tile(request, layername, z, x, y, style=None):
     # get default style name
     if not style:
         # generate style cache
-        style_list(layer)
+        if not qgis_layer.default_style:
+            style_list(layer, internal=False)
+            # refresh values
+            qgis_layer.refresh_from_db()
         style = qgis_layer.default_style.name
 
     tile_path = QGIS_SERVER_CONFIG['tile_path']

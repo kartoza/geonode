@@ -43,7 +43,7 @@ from geonode.qgis_server.models import (
     QGISServerMap,
     QGISServerStyle)
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger("geonode.qgis_server.helpers")
 ogc_server_settings = OGC_Servers_Handler(settings.OGC_SERVER)['default']
 
 
@@ -661,7 +661,7 @@ def style_set_default_url(layer, style_name, internal=True):
     return url
 
 
-def style_list(layer, internal=True):
+def style_list(layer, internal=True, generating_qgis_capabilities=False):
     """Query list of styles from QGIS Server.
 
     :param layer: Layer to inspect
@@ -670,6 +670,12 @@ def style_list(layer, internal=True):
     :param internal: Flag to switch between public url and internal url.
         Public url will be served by Django Geonode (proxified).
     :type internal: bool
+
+    :param generating_qgis_capabilities: internal Flag for the method to tell
+        that this function were executed to generate QGIS GetCapabilities
+        request for querying Style list. This flag is used for recursion.
+        Default to False as recursion base.
+    :type generating_qgis_capabilities: bool
 
     :return: List of QGISServerStyle
     :rtype: list(QGISServerStyle)
@@ -699,6 +705,36 @@ def style_list(layer, internal=True):
         QGISServerStyle.from_get_capabilities_style_xml(
             qgis_layer, style_xml)[0]
         for style_xml in styles_xml]
+
+    # Only tried to generate/fix QGIS GetCapabilities to return correct style
+    # list, if:
+    # - the current request return empty styles_obj (no styles, not possible)
+    # - does not currently tried to generate QGIS GetCapabilities to fix this
+    #   problem
+    if not styles_obj and not generating_qgis_capabilities:
+        # It's not possible to have empty style. There will always be default
+        # style.
+        # Initiate a dummy requests to trigger build style list on QGIS Server
+        # side
+
+        # write an empty file if it doesn't exists
+        open(qgis_layer.qml_path, 'a').close()
+
+        # Basically add a new style then deletes it to force QGIS to refresh
+        # style list in project properties. We don't care the request result.
+        dummy_style_name = '__tmp__dummy__name__'
+        style_url = style_add_url(layer, dummy_style_name)
+        requests.get(style_url)
+        style_url = style_remove_url(layer, dummy_style_name)
+        requests.get(style_url)
+
+        # End the requests and rely on the next request to build style models
+        # to avoid infinite recursion
+
+        # Set generating_qgis_capabilities flag to True to avoid next
+        # recursion
+        return style_list(
+            layer, internal=internal, generating_qgis_capabilities=True)
 
     # Manage orphaned styles
     style_names = [s.name for s in styles_obj]
