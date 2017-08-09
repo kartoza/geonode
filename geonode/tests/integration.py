@@ -564,7 +564,7 @@ class GeoNodeMapTest(TestCase):
         shp_layer = file_upload(shp_file)
 
         # get layer and QGIS Server Layer object
-        qgis_layer = shp_layer.qgisserverlayer
+        qgis_layer = shp_layer.qgis_layer
         base_path = qgis_layer.base_layer_path
         base_name, _ = os.path.splitext(base_path)
 

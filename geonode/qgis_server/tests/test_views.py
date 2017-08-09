@@ -140,10 +140,25 @@ class QGISServerViewsTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 404)
 
         # QML Styles
+        # Request list of styles
         response = self.client.get(
             reverse('qgis_server:download-qml', kwargs=params))
-        self.assertEqual(response.status_code, 404)
-        # TODO: Upload qml
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Type'), 'application/json')
+        # Should return a default style list
+        actual_result = json.loads(response.content)
+        actual_result = [s['name'] for s in actual_result]
+        expected_result = ['default']
+        self.assertEqual(set(expected_result), set(actual_result))
+
+        # Get single styles
+        response = self.client.get(
+            reverse('qgis_server:download-qml', kwargs={
+                'layername': params['layername'],
+                'style_name': 'default'
+            }))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Type'), 'text/xml')
 
         # Set thumbnail from viewed bbox
         response = self.client.get(
@@ -243,7 +258,7 @@ class QGISServerViewsTest(LiveServerTestCase):
 
         # Check get capabilities using helper returns the same thing
         response = requests.get(wms_get_capabilities_url(
-            uploaded, internal=True))
+            uploaded, internal=False))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(get_capabilities_content, response.content)
 
