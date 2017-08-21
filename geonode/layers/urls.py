@@ -21,10 +21,17 @@
 from django.conf.urls import patterns, url
 from django.conf import settings
 from django.views.generic import TemplateView
+from layer_uploader import upload_chunk
 
 js_info_dict = {
     'packages': ('geonode.layers',),
 }
+
+
+api_urls = patterns(
+    '',
+    url(r'^api/chunk-file-uploader/(?P<uuid>.+)$',upload_chunk),
+)
 
 urlpatterns = patterns(
     'geonode.layers.views',
@@ -32,7 +39,7 @@ urlpatterns = patterns(
         TemplateView.as_view(template_name='layers/layer_list.html'),
         {'facet_type': 'layers', 'is_layer': True},
         name='layer_browse'),
-    url(r'^upload$', 'layer_upload', name='layer_upload'),
+    url(r'^upload', 'layer_upload', name='layer_upload'),
     url(r'^upload_metadata$', 'layer_metadata_upload', name='layer_metadata_upload'),
     url(r'^(?P<layername>[^/]*)$', 'layer_detail', name="layer_detail"),
     url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata', name="layer_metadata"),
@@ -50,7 +57,7 @@ urlpatterns = patterns(
     # url(r'^api/batch_permissions/?$', 'batch_permissions',
     #    name='batch_permssions'),
     # url(r'^api/batch_delete/?$', 'batch_delete', name='batch_delete'),
-)
+) + api_urls
 
 # -- Deprecated url routes for Geoserver authentication -- remove after GeoNode 2.1
 # -- Use /gs/acls, gs/resolve_user/, gs/download instead

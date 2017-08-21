@@ -22,6 +22,9 @@ define(function (require, exports) {
         this.name     = null;
         this.files    = null;
 
+        //list of filename that has been chunked
+        this.chunked_files = null;
+
         this.type     = null;
         this.main     = null;
 
@@ -259,14 +262,26 @@ define(function (require, exports) {
 			}
         }
 
-        form_data.append('base_file', this.main);
+        // get base file name that match the extension
+        var file_index = arrayContainsString(this.chunked_files,this.main.name);
+        if(file_index > -1){
+            form_data.append('base_file', this.chunked_files[file_index]);
+        }else{
+            form_data.append('base_file', this.main.name);
+        }
         form_data.append('permissions', JSON.stringify(perm));
+        form_data.append('file_uuid', $("#file_uuid").val());
 
         for (i = 0; i < this.files.length; i += 1) {
             file = this.files[i];
             if (file.name !== this.name) {
                 ext = path.getExt(file);
-                form_data.append(ext + '_file', file);
+                file_index = arrayContainsString(this.chunked_files,file.name);
+                if(file_index > -1){
+                    form_data.append(ext + '_file', this.chunked_files[file_index]);
+                }else{
+                    form_data.append(ext + '_file', file.name);
+                }
             }
         }
 
@@ -289,6 +304,15 @@ define(function (require, exports) {
         options.element = this.element.find('#status');
         common.logStatus(options);
     };
+
+    function arrayContainsString(array, string){
+        for(var i=0; i< array.length ; i++){
+            if(array[i].indexOf(string) > -1 ){
+                return i;
+            }
+        }
+        return -1;
+    }
 
     /** Function to mark errors in the the status
      *
@@ -476,6 +500,106 @@ define(function (require, exports) {
             self.doFinal(resp);
         }
     };
+
+    LayerInfo.prototype.sendData = function(data, url, done){
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false
+        }).done(function(data){
+            done(data);
+        });
+
+    }
+
+    LayerInfo.prototype._chunkUpload = function(file, url, uuid, onSuccess) {
+        var loaded = 0;
+        var step = 1024; // Size of a chunk
+        var total = file.size;
+        var start = 0;
+        var stepCount = 0;
+        var reader = new FileReader();
+        var blob = file.slice(start,step);// Read each chunk
+        reader.readAsArrayBuffer(blob);
+        var self = this;
+
+        // this function will be invoked each time a file reader read a file
+        // Thus will be recursively called for each chunk
+        reader.onload = function(e){
+            console.log("Step Count: " + stepCount++ + " for file: " + file.name);
+            //create a blob from reader
+            var blob =  new Blob([reader.result]);
+            //create form data to send to server
+            var formData = new FormData();
+            formData.append("file", blob);
+            formData.append("filename", file.name);
+            formData.append("offset", loaded);
+            formData.append("file_size", total);
+
+            //send it via ajax
+            self.sendData(formData, url + "/" + uuid, function(data){
+                //if ajax done, do it recursively
+                //we already upload another step of file, add it to total uploaded
+                loaded += step;
+                if(loaded < total){
+                    //read again the file
+                    blob = file.slice(loaded, loaded + step);
+                    reader.readAsArrayBuffer(blob);
+                    //after read the blob, reader.onload will be revoked again
+                }else{
+                    //file is uploaded completely
+                    loaded = total; // just to stop the loop
+                    //call the callback function
+                    onSuccess(data);
+                }
+
+            });
+        }
+    }
+
+    function guid() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    }
+
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+
+    LayerInfo.prototype.chunkUpload = function(index, uuid) {
+        //get all files that listed with this layer
+        var files = this.files;
+        var self = this;
+        var url = "/layers/api/chunk-file-uploader";
+        if(!index) index = 0;
+        if(index == 0){
+            this.chunked_files = [];
+        }
+        if(!uuid){
+            //add uuid to determine which file is being uploaded
+            uuid = guid();
+            $("#file_uuid").val(uuid);
+        }
+        // Queue all files to upload
+        this._chunkUpload(files[index],url, uuid, function(data){
+            data = JSON.parse(data);
+           //set filename to array
+            self.chunked_files.push(data.name);
+           if(index == files.length - 1){
+               self.uploadFiles();
+               console.log("Finish Upload File")
+           }else{
+               //upload next file
+               self.chunkUpload(++index, uuid);
+           }
+        });
+    }
 
     /** Function to upload the files against the specified endpoint
      *

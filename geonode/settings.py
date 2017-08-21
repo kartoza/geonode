@@ -1157,3 +1157,6 @@ RISKS = {'DEFAULT_LOCATION': None,
                            'ARGS': []}}
 
 ADMIN_MODERATE_UPLOADS = False
+
+# Upload chunk temporary folder settings
+TEMP_FOLDER = "/tmp"

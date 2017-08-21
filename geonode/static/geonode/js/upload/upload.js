@@ -309,7 +309,8 @@ define(['underscore',
             alert(gettext('You are trying to upload an incomplete set of files or not all mandatory options have been validated.\n\nPlease check for errors in the form!'));
         } else {
             $.each(layers, function (name, layerinfo) {
-                layerinfo.uploadFiles();
+                //before uploading file, chunk upload first
+                layerinfo.chunkUpload();
             });
         }
         return false;

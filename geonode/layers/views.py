@@ -141,10 +141,12 @@ def _resolve_layer(request, typename, permission='base.view_resourcebase',
 def layer_upload(request, template='upload/layer_upload.html'):
     if request.method == 'GET':
         mosaics = Layer.objects.filter(is_mosaic=True).order_by('name')
+        form = NewLayerUploadForm()
         ctx = {
             'mosaics': mosaics,
             'charsets': CHARSETS,
             'is_layer': True,
+            'form': form
         }
         return render_to_response(template, RequestContext(request, ctx))
     elif request.method == 'POST':
@@ -161,7 +163,7 @@ def layer_upload(request, template='upload/layer_upload.html'):
                 name_base = title
             else:
                 name_base, __ = os.path.splitext(
-                    form.cleaned_data["base_file"].name)
+                    form.cleaned_data["base_file"])
             name = slugify(name_base.replace(".", "_"))
             try:
                 # Moved this inside the try/except block because it can raise
