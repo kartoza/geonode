@@ -71,7 +71,8 @@ class QGISServerLayer(models.Model):
         'QGISServerStyle',
         related_name='layer_default_style',
         default=None,
-        null=True)
+        null=True,
+        on_delete=models.SET_NULL)
     styles = models.ManyToManyField(
         'QGISServerStyle',
         related_name='layer_styles')
