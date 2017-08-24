@@ -47,4 +47,3 @@ class Command(BaseCommand):
 
                 print 'Successfully fetch %d style(s)' % len(styles)
                 print ''
-
