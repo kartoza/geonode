@@ -53,6 +53,7 @@ from geonode.qgis_server.models import QGISServerLayer
 from geonode.qgis_server.tasks.update import (
     create_qgis_server_thumbnail,
     cache_request)
+from xml.etree import ElementTree as ET
 
 logger = logging.getLogger('geonode.qgis_server.views')
 
@@ -740,3 +741,70 @@ def set_thumbnail(request, layername):
     }
     return HttpResponse(
         json.dumps(retval), content_type="application/json")
+
+
+def download_qlr(request, layername):
+    """Download a zip file containing every files we have about the layer including qlr.
+    This function serves to generate qlr from qgs assuming qlr is never generated before.
+
+    :param request: The GET request from the frontend.
+    :type request: HttpRequest
+    :param layername: The layer name in Geonode.
+    :type layername: basestring
+
+    :return: The HTTPResponse with a ZIP.
+    """
+
+    if request.method == 'POST':
+        return HttpResponseBadRequest('Invalid request for downloading qlr')
+
+    layer = get_object_or_404(Layer, name=layername)
+    qgis_layer = get_object_or_404(QGISServerLayer, layer=layer)
+    # Files (local path) to put in the .zip
+    filenames = qgis_layer.files
+
+    # Folder name in ZIP archive which contains the above files
+    # E.g [thearchive.zip]/somefiles/file2.txt
+    zip_subdir = layer.name
+    zip_filename = "%s.zip" % zip_subdir
+
+    # Open StringIO to grab in-memory ZIP contents
+    s = StringIO.StringIO()
+
+    # The zip compressor
+    zf = zipfile.ZipFile(s, "w")
+
+    for fpath in filenames:
+        fdir, fname = os.path.split(fpath)
+
+        # starts convert qgs to qlr
+        if fpath.endswith('.qgs'):
+            tree = ET.parse(fpath)
+            root = tree.getroot()
+            # first, remove id attribute
+            id_elem = root.findall("./layer-tree-group/layer-tree-layer")
+            del id_elem[0].attrib['id']
+            # second, fix the path of datasource
+            ds_elem = root.findall("./projectlayers/maplayer/datasource")[0].text
+            ds_dir, ds_name = os.path.split(ds_elem)
+            root.findall("./projectlayers/maplayer/datasource")[0].text = ds_name
+            # finally, save the changes
+            fname_wo_ext, ext = fname.split('.')
+            fname = fname_wo_ext + '.qlr'
+            fpath = fdir + '/' + fname
+            tree.write(fpath)
+
+        zip_path = os.path.join(zip_subdir, fname)
+        # Add file, at correct path
+        zf.write(fpath, zip_path)
+
+    # Must close zip for all contents to be written
+    zf.close()
+
+    # Grab ZIP file from in-memory, make response with correct MIME-type
+    resp = HttpResponse(
+        s.getvalue(), content_type="application/x-zip-compressed")
+    # ..and correct content-disposition
+    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+
+    return resp
