@@ -740,3 +740,55 @@ def set_thumbnail(request, layername):
     }
     return HttpResponse(
         json.dumps(retval), content_type="application/json")
+
+
+def download_qgs(request, layername):
+    """Download a zip file containing qgs and every files of a layer.
+
+    :param request: The request from the frontend.
+    :type request: HttpRequest
+    :param layername: The layer name in Geonode.
+    :type layername: basestring
+
+    :return: The HTTPResponse with a ZIP.
+    """
+    if request.method != 'GET':
+        return HttpResponseBadRequest()
+
+    layer = get_object_or_404(Layer, name=layername)
+    qgis_layer = get_object_or_404(QGISServerLayer, layer=layer)
+    # Files (local path) to put in the .zip
+    filenames = qgis_layer.files
+    # Exclude qgis project files, because it contains server specific path
+    # filenames = [f for f in filenames if not f.endswith('.qgs')]
+
+    # Folder name in ZIP archive which contains the above files
+    # E.g [thearchive.zip]/somefiles/file2.txt
+    zip_subdir = layer.name
+    zip_filename = "%s.zip" % zip_subdir
+
+    # Open StringIO to grab in-memory ZIP contents
+    s = StringIO.StringIO()
+
+    # The zip compressor
+    zf = zipfile.ZipFile(s, "w")
+
+    for fpath in filenames:
+        # Calculate path for file in zip
+        fdir, fname = os.path.split(fpath)
+
+        zip_path = os.path.join(zip_subdir, fname)
+
+        # Add file, at correct path
+        zf.write(fpath, zip_path)
+
+    # Must close zip for all contents to be written
+    zf.close()
+
+    # Grab ZIP file from in-memory, make response with correct MIME-type
+    resp = HttpResponse(
+        s.getvalue(), content_type="application/x-zip-compressed")
+    # ..and correct content-disposition
+    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+
+    return resp
