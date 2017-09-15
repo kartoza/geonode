@@ -103,7 +103,12 @@ def insert_xml_element(root, element_path):
         element = root.find(path, XML_NS)
         if element is None:
             # if a parent is missing insert it at the right place
-            element = ElementTree.SubElement(parent, tag)
+            try:
+                element = ElementTree.SubElement(parent, tag)
+            except:
+                # In some cases we can't add parent because the tag name is
+                # not specific
+                pass
         parent = element
     return element
 
