@@ -36,11 +36,15 @@ existing_map_view = 'map_view'
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
     new_map_view = 'new_map'
     existing_map_view = 'map_view'
+    # TODO qlr for geoserver
+    map_download_qlr = 'map_download_qlr'
     map_embed = 'map_embed'
 
 elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
     new_map_view = MapCreateView.as_view()
     existing_map_view = MapDetailView.as_view()
+    from geonode.maps.qgis_server_views import map_download_qlr
+    map_download_qlr = map_download_qlr
     map_embed = MapEmbedView.as_view()
 
 urlpatterns = patterns(
@@ -49,6 +53,9 @@ urlpatterns = patterns(
         TemplateView.as_view(template_name='maps/map_list.html'),
         {'facet_type': 'maps'},
         name='maps_browse'),
+    url(r'^(?P<mapid>[^/]+)/qlr$',
+        map_download_qlr,
+        name='map_download_qlr'),
     url(r'^new$', new_map_view, name="new_map"),
     url(r'^new/data$', 'new_map_json', name='new_map_json'),
     url(r'^checkurl/?$', 'ajax_url_lookup'),

@@ -27,6 +27,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseServerError
+from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render_to_response, get_object_or_404
 from django.conf import settings
 from django.template import RequestContext
@@ -131,6 +132,7 @@ def map_detail(request, mapid, snapshot=None, template='maps/map_detail.html'):
 
     config = json.dumps(config)
     layers = MapLayer.objects.filter(map=map_obj.id)
+    links = map_obj.link_set.download()
 
     context_dict = {
         'config': config,
@@ -139,6 +141,7 @@ def map_detail(request, mapid, snapshot=None, template='maps/map_detail.html'):
         'perms_list': get_perms(request.user, map_obj.get_self_resource()),
         'permissions_json': _perms_info_json(map_obj),
         "documents": get_related_documents(map_obj),
+        'links': links,
     }
 
     context_dict["preview"] = getattr(
@@ -783,6 +786,14 @@ def map_download(request, mapid, template='maps/map_download.html'):
         "downloadable_layers": downloadable_layers,
         "site": settings.SITEURL
     }))
+
+
+def map_download_qlr(request):
+    """
+    This function serves as geoserver compatibility.
+    We might need to use QLR on geoserver in the future.
+    """
+    return HttpResponseBadRequest('Sorry, QLR extension has not supported yet')
 
 
 def map_download_check(request):

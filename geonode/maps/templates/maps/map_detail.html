@@ -103,8 +103,12 @@
               </div>
               <div class="modal-body">
                 <ul>
-                  <li><a href="{% url "map_download" resource.pk %}">{% trans "Download Data Layers" %}</a></li>
-                  <li><a href="{% url "map_wmc" resource.pk %}" target="_new">{% trans "Download Web Map Context" %}</a></li>
+                    {% if links %}
+                        {% for link in links %}
+                            <li><a href="{{ link.url }}">{{ link.name }}</a></li>
+                        {% endfor %}
+
+                    {% endif %}
                 <ul>
               </div>
               <div class="modal-footer">
