@@ -311,6 +311,12 @@
                         $("#qgis-server-style-add-form").on('submit', edit_style_on_submit);
                     });
                 }
+            },
+            error: function(jqXhr, textStatus, errorThrown){
+                $("#qgis-server-style-edit .modal-body").html(jqXhr.responseText);
+                $(document).ready(function() {
+                    $("#qgis-server-style-add-form").on('submit', edit_style_on_submit);
+                });
             }
         });
         return false;
