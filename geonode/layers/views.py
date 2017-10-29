@@ -26,6 +26,11 @@ import base64
 import traceback
 import uuid
 import decimal
+
+import re
+
+from django.contrib.gis.geos import GEOSGeometry
+from django.template.response import TemplateResponse
 from lxml import etree
 from requests import Request
 from itertools import chain
@@ -43,6 +48,9 @@ from django.shortcuts import render_to_response
 from django.conf import settings
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
+
+from geonode import geoserver, qgis_server
+
 try:
     import json
 except ImportError:
@@ -63,7 +71,7 @@ from geonode.base.enumerations import CHARSETS
 from geonode.base.models import TopicCategory
 from geonode.groups.models import GroupProfile
 
-from geonode.utils import default_map_config
+from geonode.utils import default_map_config, check_ogc_backend
 from geonode.utils import GXPLayer
 from geonode.utils import GXPMap
 from geonode.layers.utils import file_upload, is_raster, is_vector
@@ -77,9 +85,12 @@ from geonode.geoserver.helpers import ogc_server_settings, save_style
 from geonode.base.views import batch_modify
 from geonode.base.models import Thesaurus
 from geonode.maps.models import Map
+from geonode.geoserver.helpers import _invalidate_geowebcache_layer
 
 if 'geonode.geoserver' in settings.INSTALLED_APPS:
     from geonode.geoserver.helpers import _render_thumbnail
+if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+    from geonode.qgis_server.models import QGISServerLayer
 CONTEXT_LOG_FILE = ogc_server_settings.LOG_FILE
 
 logger = logging.getLogger("geonode.layers.views")
@@ -250,6 +261,10 @@ def layer_upload(request, template='upload/layer_upload.html'):
                                 saved_layer.default_style = save_style(style)
                         except Exception as e:
                             logger.exception(e)
+
+                    # Invalidate GeoWebCache for the updated resource
+                    _invalidate_geowebcache_layer(saved_layer.alternate)
+
             except Exception as e:
                 exception_type, error, tb = sys.exc_info()
                 logger.exception(e)
@@ -282,6 +297,7 @@ def layer_upload(request, template='upload/layer_upload.html'):
                         'type': 'name',
                         'properties': saved_layer.srid
                     }
+                out['ogc_backend'] = settings.OGC_SERVER['default']['BACKEND']
                 upload_session = saved_layer.upload_session
                 if upload_session:
                     upload_session.processed = True
@@ -394,6 +410,11 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
             granules = {"features": []}
             all_granules = {"features": []}
 
+    # a flag to be used for geosafe
+    show_popup = False
+    if 'show_popup' in request.GET and request.GET["show_popup"]:
+        show_popup = True
+
     context_dict = {
         "resource": layer,
         'perms_list': get_perms(request.user, layer.get_self_resource()),
@@ -404,6 +425,7 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
         "wps_enabled": settings.OGC_SERVER['default']['WPS_ENABLED'],
         "granules": granules,
         "all_granules": all_granules,
+        "show_popup": show_popup,
         "filter": filter,
     }
 
@@ -423,6 +445,14 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
         settings,
         'DEFAULT_MAP_CRS',
         'EPSG:900913')
+
+    # provide bbox in EPSG:4326 for leaflet
+    if context_dict["preview"] == 'leaflet':
+        srid, wkt = layer.geographic_bounding_box.split(';')
+        srid = re.findall(r'\d+', srid)
+        geom = GEOSGeometry(wkt, srid=int(srid[0]))
+        geom.transform(4326)
+        context_dict["layer_bbox"] = ','.join([str(c) for c in geom.extent])
 
     if layer.storeType == 'dataStore':
         links = layer.link_set.download().filter(
@@ -506,7 +536,8 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
     # maps owned by user needed to fill the "add to existing map section" in template
     if request.user.is_authenticated():
         context_dict["maps"] = Map.objects.filter(owner=request.user)
-    return render_to_response(template, RequestContext(request, context_dict))
+    return TemplateResponse(
+        request, template, RequestContext(request, context_dict))
 
 
 # Loads the data using the OWS lib when the "Do you want to filter it" button is clicked.
@@ -899,7 +930,7 @@ def layer_metadata(
     else:
         all_metadata_author_groups = chain(
             request.user.group_list_all().distinct(),
-            GroupProfile.objects.exclude(access="private"))
+            GroupProfile.objects.exclude(access="private").exclude(access="public-invite"))
         [metadata_author_groups.append(item) for item in all_metadata_author_groups
             if item not in metadata_author_groups]
 
@@ -994,9 +1025,20 @@ def layer_replace(request, layername, template='layers/layer_replace.html'):
                     out['errors'] = _(
                         "You are attempting to replace a raster layer with a vector.")
                 else:
-                    # delete geoserver's store before upload
-                    cat = gs_catalog
-                    cascading_delete(cat, layer.alternate)
+                    if check_ogc_backend(geoserver.BACKEND_PACKAGE):
+                        # delete geoserver's store before upload
+                        cat = gs_catalog
+                        cascading_delete(cat, layer.typename)
+                        out['ogc_backend'] = geoserver.BACKEND_PACKAGE
+                    elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+                        try:
+                            qgis_layer = QGISServerLayer.objects.get(
+                                layer=layer)
+                            qgis_layer.delete()
+                        except QGISServerLayer.DoesNotExist:
+                            pass
+                        out['ogc_backend'] = qgis_server.BACKEND_PACKAGE
+
                     saved_layer = file_upload(
                         base_file,
                         name=layer.name,

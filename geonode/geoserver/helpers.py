@@ -49,6 +49,7 @@ from django.db.models.signals import pre_delete
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 import geoserver
+from geonode.maps.models import Map
 from geoserver.catalog import Catalog
 from geoserver.catalog import ConflictingDataError
 from geoserver.catalog import FailedRequestError, UploadError
@@ -239,6 +240,10 @@ def fixup_style(cat, resource, style):
             lyr.default_style = cat.get_style(name)
             logger.info("Saving changes to %s", lyr)
             cat.save(lyr)
+
+            # Invalidate GeoWebCache for the updated resource
+            _invalidate_geowebcache_layer(resource)
+
             logger.info("Successfully updated %s", lyr)
 
 
@@ -786,6 +791,12 @@ def set_styles(layer, gs_catalog):
         style_set.append(save_style(alt_style))
 
     layer.styles = style_set
+
+    # Update default style to database
+    to_update = {
+        'default_style': layer.default_style
+    }
+    Layer.objects.filter(id=layer.id).update(**to_update)
     return layer
 
 
@@ -1155,9 +1166,7 @@ def geoserver_upload(
                 'successful import to GeoSever', name)
 
     # Verify the resource was created
-    # print("*********************{}******************************".format(gs_resource))
     if gs_resource is not None:
-        # print(" *********************{}/{}*****************".format(gs_resource.name, name))
         assert gs_resource.name == name
     else:
         msg = ('GeoNode encountered problems when creating layer %s.'
@@ -1813,7 +1822,7 @@ def create_gs_thumbnail(instance, overwrite=False):
     """
     Create a thumbnail with a GeoServer request.
     """
-    if instance.class_name == 'Map':
+    if isinstance(instance, Map):
         local_layers = []
         for layer in instance.layers:
             if layer.local:
