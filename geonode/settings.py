@@ -903,6 +903,8 @@ DOWNLOAD_FORMATS_METADATA = [
 DOWNLOAD_FORMATS_VECTOR = [
     'JPEG', 'PDF', 'PNG', 'Zipped Shapefile', 'GML 2.0', 'GML 3.1.1', 'CSV',
     'Excel', 'GeoJSON', 'KML', 'View in Google Earth', 'Tiles',
+    'QGIS layer file (.qlr)',
+    'QGIS project file (.qgs)',
 ]
 DOWNLOAD_FORMATS_RASTER = [
     'JPEG',
@@ -916,7 +918,10 @@ DOWNLOAD_FORMATS_RASTER = [
     'View in Google Earth',
     'Tiles',
     'GML',
-    'GZIP'
+    'GZIP',
+    'QGIS layer file (.qlr)',
+    'QGIS project file (.qgs)',
+    'Zipped All Files'
 ]
 
 ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = strtobool(os.getenv('ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE', 'False'))
