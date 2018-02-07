@@ -493,7 +493,7 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
             'map_download_qlr',
             kwargs={'mapid': instance.id}))
     logger.debug('qlr_map_download_url: %s' % ogc_qlr_url)
-    link_name = 'Download QLR Layer file'
+    link_name = 'Download QGIS layer file (.qlr)'
     link_mime = 'application/xml'
     Link.objects.update_or_create(
         resource=instance.resourcebase_ptr,
