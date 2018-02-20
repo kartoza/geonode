@@ -168,6 +168,51 @@ community."
         self.assertEquals(map_obj.abstract, "Abstract2")
         self.assertEquals(map_obj.layer_set.all().count(), 1)
 
+    @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
+    def test_map_json_on_qgis_server(self):
+        json_payload = InitialSetup.generate_initial_map()
+        # First, create a map with two layers (and 2 background layers)
+        # Need to log in for saving a map
+        self.client.login(username='admin', password='admin')
+
+        result_new_map = self.client.post(
+            reverse('new_map_json'),
+            json.dumps(json_payload),
+            content_type='application/json')
+        # the new map is successfully saved
+        self.assertEqual(result_new_map.status_code, 200)
+
+        map_id = json.loads(result_new_map.content).get('id')
+        old_map_obj = Map.objects.get(id=map_id)
+
+        # try to update by removing one layer
+        layers = json_payload['map']['layers']
+        before_remove = len(layers)
+        after_remove = before_remove - 1
+        layer = layers[0]
+        layers.remove(layer)
+
+        # update the map
+        result_update_map = self.client.post(
+            reverse('map_json', kwargs={'mapid': map_id}),
+            data=json.dumps(json_payload),
+            content_type='application/json')
+        # successfully updated
+        self.assertEqual(result_update_map.status_code, 200)
+        new_map_obj = Map.objects.get(id=map_id)
+        # check if the layer is eliminated from the map
+        # the number of layers on the map decrease by 1
+        self.assertEqual(
+            len(result_update_map.context_data['map'].layers),
+            after_remove)
+        # new thumbnail exist and has the same url with the old one
+        self.assertEqual(
+            old_map_obj.get_thumbnail_url(),
+            new_map_obj.get_thumbnail_url())
+
+        # clean up
+        Map.objects.get(id=map_id).delete()
+
     def test_map_save(self):
         """POST /maps/new/data -> Test saving a new map"""
 
@@ -791,6 +836,82 @@ community."
         for resource in resources:
             for word in resource.keywords.all():
                 self.assertTrue(word.name in keywords.split(','))
+
+
+class InitialSetup():
+
+    @classmethod
+    def generate_initial_map(cls):
+        # construct json request for new map
+        json_payload = {
+            "sources": {
+                "source_OpenMapSurfer Roads": {
+                    "url": "http://korona.geog.uni-heidelberg.de/tiles"
+                           "/roads/x={x}&y={y}&z={z}"
+                },
+                "source_OpenStreetMap": {
+                    "url": "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+                },
+                "source_san_andres_y_providencia_administrative": {
+                    "url": "http://geonode.dev/qgis-server/tiles"
+                           "/san_andres_y_providencia_administrative/"
+                           "{z}/{x}/{y}.png"
+                },
+                "source_relief_san_andres": {
+                    "url": "http://geonode.dev/qgis-server/tiles"
+                           "/relief_san_andres/{z}/{x}/{y}.png"
+                }
+            },
+            "about": {
+                "title": "San Andreas",
+                "abstract": "San Andreas sample map"
+            },
+            "map": {
+                "center": [12.91890657418042, -81.298828125],
+                "zoom": 6,
+                "projection": "",
+                "layers": [
+                    {
+                        "name": "OpenMapSurfer_Roads",
+                        "title": "OpenMapSurfer Roads",
+                        "visibility": True,
+                        "url": "http://korona.geog.uni-heidelberg.de/tiles/"
+                               "roads/x={x}&y={y}&z={z}",
+                        "group": "background",
+                        "source": "source_OpenMapSurfer Roads"
+                    },
+                    {
+                        "name": "osm",
+                        "title": "OpenStreetMap",
+                        "visibility": False,
+                        "url": "http://{s}.tile.osm.org/{z}/{x}/{y}.png",
+                        "group": "background",
+                        "source": "source_OpenStreetMap"
+                    },
+                    {
+                        "name": "geonode:"
+                                "san_andres_y_providencia_administrative",
+                        "title": "san_andres_y_providencia_administrative",
+                        "visibility": True,
+                        "url": "http://geonode.dev/qgis-server/tiles"
+                               "/san_andres_y_providencia_administrative/"
+                               "{z}/{x}/{y}.png",
+                        "source": "source_"
+                                  "san_andres_y_providencia_administrative"
+                    },
+                    {
+                        "name": "geonode:relief_san_andres",
+                        "title": "relief_san_andres",
+                        "visibility": True,
+                        "url": "http://geonode.dev/qgis-server/tiles"
+                               "/relief_san_andres/{z}/{x}/{y}.png",
+                        "source": "source_relief_san_andres"
+                    }
+                ]
+            }
+        }
+
+        return json_payload
 
 
 class MapModerationTestCase(TestCase):
