@@ -379,11 +379,21 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     """
 
     x_min, y_min, x_max, y_max = bbox
-    # We calculate the margins according to 10 percent.
-    percent = 5
-    delta_x = (x_max - x_min) / 100 * percent
+    # The thumbnail proportion is calculated based on the x- and y-axes
+    len_x = x_max - x_min
+    len_y = y_max - y_min
+    # y-axis will likely to be longer than x-axis
+    if len_y > len_x:
+        prop_factor = len_y / len_x
+    else :
+        prop_factor = len_x / len_y
+    # the value of 7.5 is based on the many UI experiment
+    # the result may vary according to personal reference
+    percent_x = 4 * prop_factor * 7.5
+    percent_y = 4
+    delta_x = (x_max - x_min) / 100 * percent_x
     delta_x = math.fabs(delta_x)
-    delta_y = (y_max - y_min) / 100 * percent
+    delta_y = (y_max - y_min) / 100 * percent_y
     delta_y = math.fabs(delta_y)
     # We apply the margins to the extent.
     margin = [
