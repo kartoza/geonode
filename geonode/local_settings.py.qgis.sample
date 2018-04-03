@@ -29,10 +29,17 @@ try:
 except ImportError:
     pass
 
-# GEONODE_APPS += ("geonode.qgis_server", )
-GEONODE_APPS = list(GEONODE_APPS)
-# INSTALLED_APPS += ("geonode.qgis_server", )
-INSTALLED_APPS = list(INSTALLED_APPS)
+qgis_server_apps_package = "geonode.qgis_server"
+
+settings.GEONODE_APPS = list(settings.GEONODE_APPS)
+if qgis_server_apps_package not in settings.GEONODE_APPS:
+
+	settings.GEONODE_APPS += ("geonode.qgis_server", )
+
+settings.INSTALLED_APPS = list(settings.INSTALLED_APPS)
+if qgis_server_apps_package not in settings.INSTALLED_APPS:
+	settings.INSTALLED_APPS += (
+		"geonode.qgis_server", )
 
 # QGIS Server Backend settings
 
@@ -44,9 +51,15 @@ if 'geonode.geoserver' in INSTALLED_APPS:
 if 'geonode.geoserver' in GEONODE_APPS:
     GEONODE_APPS.remove("geonode.geoserver")
 
-if 'LOCAL_GEOSERVER' in locals():
-    MAP_BASELAYERS.remove(LOCAL_GEOSERVER)
-    del LOCAL_GEOSERVER
+if hasattr(settings, 'PUBLIC_GEOSERVER') and \
+		settings.PUBLIC_GEOSERVER in settings.MAP_BASELAYERS:
+	settings.MAP_BASELAYERS.remove(settings.PUBLIC_GEOSERVER)
+	del settings.PUBLIC_GEOSERVER
+
+if hasattr(settings, 'LOCAL_GEOSERVER') and \
+		settings.LOCAL_GEOSERVER in settings.MAP_BASELAYERS:
+	settings.MAP_BASELAYERS.remove(settings.LOCAL_GEOSERVER)
+	del settings.LOCAL_GEOSERVER
 
 if 'PUBLIC_GEOSERVER' in locals():
     MAP_BASELAYERS.remove(PUBLIC_GEOSERVER)
@@ -114,9 +127,3 @@ QGIS_SERVER_CONFIG = {
     'qgis_server_url': QGIS_SERVER_URL,
     'layer_directory': os.path.join(PROJECT_ROOT, "qgis_layer")
 }
-
-
-on_travis = os.environ.get('ON_TRAVIS', False)
-SKIP_GEOSERVER_TEST = on_travis
-
-CELERY_ALWAYS_EAGER = os.environ.get('CELERY_ALWAYS_EAGER', True)
