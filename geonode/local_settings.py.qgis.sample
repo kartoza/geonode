@@ -31,15 +31,13 @@ except ImportError:
 
 qgis_server_apps_package = "geonode.qgis_server"
 
-settings.GEONODE_APPS = list(settings.GEONODE_APPS)
-if qgis_server_apps_package not in settings.GEONODE_APPS:
+GEONODE_APPS = list(GEONODE_APPS)
+if qgis_server_apps_package not in GEONODE_APPS:
+    GEONODE_APPS += ("geonode.qgis_server", )
 
-	settings.GEONODE_APPS += ("geonode.qgis_server", )
-
-settings.INSTALLED_APPS = list(settings.INSTALLED_APPS)
-if qgis_server_apps_package not in settings.INSTALLED_APPS:
-	settings.INSTALLED_APPS += (
-		"geonode.qgis_server", )
+INSTALLED_APPS = list(INSTALLED_APPS)
+if qgis_server_apps_package not in INSTALLED_APPS:
+    INSTALLED_APPS += ("geonode.qgis_server", )
 
 # QGIS Server Backend settings
 
@@ -51,19 +49,15 @@ if 'geonode.geoserver' in INSTALLED_APPS:
 if 'geonode.geoserver' in GEONODE_APPS:
     GEONODE_APPS.remove("geonode.geoserver")
 
-if hasattr(settings, 'PUBLIC_GEOSERVER') and \
-		settings.PUBLIC_GEOSERVER in settings.MAP_BASELAYERS:
-	settings.MAP_BASELAYERS.remove(settings.PUBLIC_GEOSERVER)
-	del settings.PUBLIC_GEOSERVER
-
-if hasattr(settings, 'LOCAL_GEOSERVER') and \
-		settings.LOCAL_GEOSERVER in settings.MAP_BASELAYERS:
-	settings.MAP_BASELAYERS.remove(settings.LOCAL_GEOSERVER)
-	del settings.LOCAL_GEOSERVER
-
-if 'PUBLIC_GEOSERVER' in locals():
+if 'PUBLIC_GEOSERVER' in locals() and \
+        PUBLIC_GEOSERVER in MAP_BASELAYERS:
     MAP_BASELAYERS.remove(PUBLIC_GEOSERVER)
     del PUBLIC_GEOSERVER
+
+if 'LOCAL_GEOSERVER' in locals() and \
+        LOCAL_GEOSERVER in MAP_BASELAYERS:
+    MAP_BASELAYERS.remove(LOCAL_GEOSERVER)
+    del LOCAL_GEOSERVER
 
 # Change context processors
 geoserver_context_processor = 'geonode.geoserver.context_processors.geoserver_urls'
