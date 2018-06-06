@@ -330,6 +330,7 @@ GEONODE_APPS = GEONODE_CONTRIB_APPS + GEONODE_APPS
 
 INSTALLED_APPS = (
 
+    'raven.contrib.django.raven_compat',  # enable Raven plugin
     'modeltranslation',
 
     # Boostrap admin theme
@@ -1339,3 +1340,99 @@ GEOTIFF_IO_ENABLED = strtobool(
 GEOTIFF_IO_BASE_URL = os.getenv(
     'GEOTIFF_IO_BASE_URL', 'https://app.geotiff.io'
 )
+
+# Sentry Logging
+
+LOGGING_MAIL_ADMINS = ast.literal_eval(
+    os.environ.get('LOGGING_MAIL_ADMINS', 'False'))
+LOGGING_SENTRY = ast.literal_eval(
+    os.environ.get('LOGGING_SENTRY', 'False'))
+
+LOGGING_DEFAULT_HANDLER = os.environ.get('LOGGING_DEFAULT_HANDLER', 'console')
+LOGGING_DEFAULT_LOG_LEVEL = os.environ.get(
+    'LOGGING_DEFAULT_LOG_LEVEL', 'ERROR')
+
+default_handlers = [LOGGING_DEFAULT_HANDLER]
+
+if LOGGING_MAIL_ADMINS:
+    mail_admins_handler = 'mail_admins'
+else:
+    mail_admins_handler = LOGGING_DEFAULT_HANDLER
+
+if LOGGING_SENTRY:
+    sentry_handler = 'sentry'
+    default_handlers.append('sentry')
+else:
+    sentry_handler = LOGGING_DEFAULT_HANDLER
+
+if 'raven.contrib.django.raven_compat' in INSTALLED_APPS:
+    print '*********** Setting up sentry logging ************'
+    RAVEN_CONFIG = {
+        'dsn': 'http://4425a43d1ae2490bba0b7b397025fd49:'
+               'f60de041c1814ff79f3e510c0731cb3e@sentry.kartoza.com/17',
+    }
+
+    # MIDDLEWARE_CLASSES = (
+    #     'raven.contrib.django.middleware.SentryResponseErrorIdMiddleware',
+    #     'raven.contrib.django.middleware.SentryLogMiddleware',
+    # ) + MIDDLEWARE_CLASSES
+
+    #
+    # Sentry settings - logs exceptions to a database
+    LOGGING = {
+        # internal dictConfig version - DON'T CHANGE
+        'version': 1,
+        'disable_existing_loggers': False,
+        # default root logger
+        'root': {
+            'level': LOGGING_DEFAULT_LOG_LEVEL,
+            'handlers': default_handlers,
+        },
+        'handlers': {
+            # send email to mail_admins, if DEBUG=False
+            'mail_admins': {
+                'level': 'ERROR',
+                'class': 'django.utils.log.AdminEmailHandler'
+            },
+            # sentry logger
+            'sentry': {
+                'level': 'WARNING',
+                'class': (
+                    'raven.contrib.django.raven_compat.'
+                    'handlers.SentryHandler'),
+            },
+            # file logger
+            'logfile': {
+                'class': 'logging.FileHandler',
+                'filename': '/var/log/django.log',
+                'level': 'DEBUG'
+            },
+            # console output
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+            },
+        },
+        'loggers': {
+            'django.db.backends': {
+                'level': 'ERROR',
+                'handlers': [sentry_handler],
+                'propagate': True
+            },
+            'raven': {
+                'level': 'ERROR',
+                'handlers': [mail_admins_handler],
+                'propagate': False
+            },
+            'sentry.errors': {
+                'level': 'ERROR',
+                'handlers': [mail_admins_handler],
+                'propagate': False
+            },
+            'django.request': {
+                'handlers': [mail_admins_handler],
+                'level': 'ERROR',
+                'propagate': True
+            }
+        }
+    }

@@ -142,6 +142,7 @@ python-mimeparse==1.6.0
 python-openid==2.2.5
 pytz==2018.3
 PyYAML==3.12
+raven==5.29.0
 redis==2.10.5
 regex==2016.7.21
 requests==2.18.4
