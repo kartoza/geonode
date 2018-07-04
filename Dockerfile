@@ -1,4 +1,5 @@
-FROM geonode/geonode:latest
+ARG GEONODE_BASE_IMAGE=geonode/geonode:latest
+FROM ${GEONODE_BASE_IMAGE}
 MAINTAINER GeoNode development team
 
 COPY requirements.txt /usr/src/app/
