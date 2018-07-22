@@ -389,7 +389,7 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
 
     x_min, y_min, x_max, y_max = bbox
     # We calculate the margins according to 10 percent.
-    percent = 10
+    percent = 5
     delta_x = (x_max - x_min) / 100 * percent
     delta_x = math.fabs(delta_x)
     delta_y = (y_max - y_min) / 100 * percent
@@ -409,8 +409,8 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
         'REQUEST': 'GetMap',
         'BBOX': bbox,
         'SRS': 'EPSG:4326',
-        'WIDTH': '250',
-        'HEIGHT': '250',
+        'WIDTH': '240',
+        'HEIGHT': '180',
         'MAP': qgis_project,
         'LAYERS': layers,
         'STYLE': style,
