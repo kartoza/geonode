@@ -471,6 +471,13 @@ class GeoNodeMapTest(TestCase):
                 uploaded.metadata_xml = thelayer_metadata
                 regions_resolved, regions_unresolved = resolve_regions(regions)
                 self.assertIsNotNone(regions_resolved)
+        except GeoNodeException, e:
+            # layer have projection file, but has no valid srid
+            self.assertEqual(
+                str(e),
+                "Invalid Layers. "
+                "Needs an authoritative SRID in its CRS to be accepted")
+
         # except:
         #     # Sometimes failes with the message:
         #     # UploadError: Could not save the layer air_runways,
