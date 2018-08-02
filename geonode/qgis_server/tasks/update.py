@@ -24,8 +24,9 @@ import socket
 
 import requests
 from celery.task import task
+from django.contrib.gis.gdal import SpatialReference, CoordTransform, \
+    OGRGeometry
 from requests.exceptions import HTTPError
-from pyproj import Proj, transform
 
 from geonode.layers.models import Layer
 from geonode.layers.utils import create_thumbnail
@@ -65,17 +66,20 @@ def create_qgis_server_thumbnail(instance, overwrite=False, bbox=None):
         if isinstance(instance, Layer):
             # check if bbox is empty
             if bbox is None:
-                bbox = instance.bbox_string.split(',')
-                bbox = [float(s) for s in bbox]
+                bbox = [
+                    instance.bbox_x0,
+                    instance.bbox_y0,
+                    instance.bbox_x1,
+                    instance.bbox_y1
+                ]
             # set thumbnails use 4326, so we need to convert bbox accordingly
-            if '4326' not in instance.srid:
-                src_srid = instance.srid
-                if len(src_srid.split(':')) < 2:
-                    src_srid = 'epsg:' + src_srid
-                p1 = Proj(init=src_srid)
-                p2 = Proj(init='epsg:4326')
-                bbox[0], bbox[1] = transform(p1, p2, bbox[0], bbox[1])
-                bbox[2], bbox[3] = transform(p1, p2, bbox[2], bbox[3])
+            if not instance.srid == 'EPSG:4326':
+                source_srs = SpatialReference(instance.srid)
+                target_srs = SpatialReference('EPSG:4326')
+                coord_transform = CoordTransform(source_srs, target_srs)
+                bound_geom = OGRGeometry.from_bbox(bbox)
+                bound_geom.transform(coord_transform)
+                bbox = bound_geom.extent
             thumbnail_remote_url = layer_thumbnail_url(
                 instance, bbox=bbox, internal=False)
         elif isinstance(instance, Map):

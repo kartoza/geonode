@@ -386,7 +386,8 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     :return: The WMS URL to fetch the thumbnail.
     :rtype: basestring
     """
-
+    # convert to float, in case it is a decimal value or string
+    bbox = [float(c) for c in bbox]
     x_min, y_min, x_max, y_max = bbox
     # We calculate the margins according to 10 percent.
     percent = 10
@@ -403,14 +404,31 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     ]
     # Call the WMS.
     bbox = ','.join([str(val) for val in margin])
+    # Calculate width and height
+    # Thumbnail bbox should always be in 4326 for consistency
+    bottom_left = Point(x=margin[1], y=margin[0], srid='EPSG:4326')
+    top_left = Point(x=margin[1], y=margin[2], srid='EPSG:4326')
+    top_right = Point(x=margin[3], y=margin[2], srid='EPSG:4326')
+
+    # calculate linear distance
+    # GEOSGeometry.distance will return linear distance instead of arc
+    height = bottom_left.distance(top_left)
+    width = top_left.distance(top_right)
+
+    # try to maintain aspect ratios of the image
+    max_pixel_count = 250
+    max_length = max(height, width)
+    height = height * max_pixel_count / max_length
+    width = width * max_pixel_count / max_length
+
     query_string = {
         'SERVICE': 'WMS',
         'VERSION': '1.3.0',
         'REQUEST': 'GetMap',
         'BBOX': bbox,
         'SRS': 'EPSG:4326',
-        'WIDTH': '250',
-        'HEIGHT': '250',
+        'WIDTH': int(width),
+        'HEIGHT': int(height),
         'MAP': qgis_project,
         'LAYERS': layers,
         'STYLE': style,

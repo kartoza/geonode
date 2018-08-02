@@ -23,7 +23,8 @@ import logging
 import os
 import shutil
 
-from osgeo import ogr, osr, gdal
+from django.contrib.gis.gdal import SRSException, DataSource, CoordTransform, \
+    SpatialReference, OGRGeometry
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db.models import signals
@@ -33,6 +34,7 @@ from requests.compat import urljoin
 from geonode import qgis_server
 from geonode.base.models import Link
 from geonode.layers.models import Layer, LayerFile
+from geonode.layers.utils import is_vector, is_raster
 from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import set_attributes
 from geonode.qgis_server.helpers import tile_url_format, create_qgis_project, \
@@ -115,11 +117,12 @@ def qgis_server_post_save(instance, sender, **kwargs):
     base_filename, original_ext = os.path.splitext(geonode_layer_path)
     extensions = QGISServerLayer.accepted_format
 
-    is_shapefile = False
+    is_vector_layer = is_vector(geonode_layer_path)
+    is_raster_layer = is_raster(geonode_layer_path)
 
+    # iterate all extension supported by QGIS
     for ext in extensions:
         if os.path.exists(base_filename + '.' + ext):
-            is_shapefile = is_shapefile or ext == 'shp'
             try:
                 if created:
                     # Assuming different layer has different filename because
@@ -156,26 +159,45 @@ def qgis_server_post_save(instance, sender, **kwargs):
     # refresh to get QGIS Layer
     instance.refresh_from_db()
 
-    # Set layer crs
-    try:
-        if is_shapefile:
-            dataset = ogr.Open(geonode_layer_path)
-            layer = dataset.GetLayer()
-            spatial_ref = layer.GetSpatialRef()
-            srid = spatial_ref.GetAuthorityCode(None) if spatial_ref else None
-            if srid:
-                instance.srid = srid
-        else:
-            dataset = gdal.Open(geonode_layer_path)
-            prj = dataset.GetProjection()
-            srs = osr.SpatialReference(wkt=prj)
-            srid = srs.GetAuthorityCode(None) if srs else None
-            if srid:
-                instance.srid = srid
-    except Exception as e:
-        logger.debug("Can't retrieve projection: {layer}".format(
-            layer=geonode_layer_path))
-        logger.exception(e)
+    # Transform bounds to EPSG:4326 to be used by leaflet.
+    skip_bound_transform = False
+    if is_vector_layer:
+        try:
+            # Try to get bbox again but handle exceptions
+            datasource = DataSource(geonode_layer_path)
+            layer = datasource[0]
+            srs = layer.srs
+            srs.identify_epsg()
+        except SRSException as e:
+            # GDAL can't find matching EPSG code
+            # We will let QGIS handle on the fly projection
+            # However, we need bounds in EPSG:4326 to display in leaflet
+            logger.exception(e)
+
+        except Exception as e:
+            logger.debug("Can't retrieve projection: {layer}".format(
+                layer=geonode_layer_path))
+            logger.exception(e)
+            # Can not transform bounds if we don't have projection
+            skip_bound_transform = True
+    elif is_raster_layer:
+        srs = SpatialReference(instance.srid)
+
+    if not skip_bound_transform:
+        bound_geom = OGRGeometry.from_bbox((
+            instance.bbox_x0, instance.bbox_y0,
+            instance.bbox_x1, instance.bbox_y1
+        ))
+        coord_transform = CoordTransform(srs, SpatialReference('EPSG:4326'))
+        bound_geom.transform(coord_transform)
+        # update bounds info
+        Layer.objects.update(
+            srid='EPSG:4326',
+            bbox_x0=bound_geom.envelope.min_x,
+            bbox_x1=bound_geom.envelope.max_x,
+            bbox_y0=bound_geom.envelope.min_y,
+            bbox_y1=bound_geom.envelope.max_y)
+        instance.refresh_from_db()
 
     # base url for geonode
     base_url = settings.SITEURL
@@ -185,8 +207,8 @@ def qgis_server_post_save(instance, sender, **kwargs):
         'qgis_server:download-zip', kwargs={'layername': instance.name})
     zip_download_url = urljoin(base_url, zip_download_url)
     logger.debug('zip_download_url: %s' % zip_download_url)
-    if is_shapefile:
-        link_name = 'Zipped Shapefile'
+    if is_vector_layer:
+        link_name = 'Zipped Vector Files'
         link_mime = 'SHAPE-ZIP'
     else:
         link_name = 'Zipped All Files'
