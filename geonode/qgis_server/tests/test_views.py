@@ -21,19 +21,21 @@
 import StringIO
 import json
 import os
+import shutil
+import tempfile
 import urlparse
 import zipfile
 from imghdr import what
 
-import requests
-from lxml import etree
-
 import gisdata
+import requests
+from PIL import Image
 from django.conf import settings
 from django.contrib.staticfiles.templatetags import staticfiles
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test import LiveServerTestCase, TestCase
+from lxml import etree
 
 from geonode import qgis_server
 from geonode.decorators import on_ogc_backend
@@ -669,6 +671,143 @@ class ThumbnailGenerationTest(LiveServerTestCase):
         map.delete()
         layer1.delete()
         layer2.delete()
+
+    @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
+    def test_thumbnail_aspect_ratios(self):
+        """Test that requested thumbnail have proper aspect ratios."""
+        filename = os.path.join(gisdata.GOOD_DATA, 'raster/test_grid.tif')
+        layer = file_upload(filename)
+        """:type: geonode.layers.models.Layer"""
+
+        # check that we have remote thumbnail
+        remote_thumbnail_link = layer.link_set.get(
+            name__icontains='remote thumbnail')
+        self.assertTrue(remote_thumbnail_link.url)
+
+        # thumbnail won't generate because remote thumbnail uses public
+        # address
+        remote_thumbnail_url = remote_thumbnail_link.url
+
+        # Replace url's basename, we want to access it using django client
+        parse_result = urlparse.urlsplit(remote_thumbnail_url)
+
+        query_string = urlparse.parse_qs(parse_result.query)
+
+        width = int(query_string['WIDTH'][0])
+        height = int(query_string['HEIGHT'][0])
+
+        # width and height are based from bbox, so it has a higher chance
+        # of not equal, but that's ok
+        self.assertNotEqual(width, height)
+
+        remote_thumbnail_url = urlparse.urlunsplit(
+            ('', '', parse_result.path, parse_result.query, ''))
+
+        response = self.client.get(remote_thumbnail_url)
+
+        # Get thumbnail dimensions
+        img = Image.open(StringIO.StringIO(response.content))
+        img_w, img_h = img.size
+
+        self.assertEqual(width, img_w)
+        self.assertEqual(height, img_h)
+
+        layer.delete()
+
+    @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
+    def test_specific_projection(self):
+        """Test that thumbnail were properly generated despite custom prj."""
+        layer_dir = os.path.join(
+            gisdata.PROJECT_ROOT,
+            'both/good/sangis.org/Airport')
+
+        # We will modify prj files, so we will copy it
+        tmpdir = tempfile.mkdtemp()
+        target_dir = os.path.join(tmpdir, 'data')
+        shutil.copytree(layer_dir, target_dir)
+        filename = os.path.join(target_dir, 'Air_Runways.shp')
+        prj_file = os.path.join(target_dir, 'Air_Runways.prj')
+
+        # Modify prj file
+        prj_content = """
+        PROJCS["NAD_1983_StatePlane_California_VI_FIPS_0406_Feet",
+            GEOGCS["GCS_North_American_1983",
+            DATUM["D_North_American_1983",
+                SPHEROID["GRS_1980",6378137.0,298.257222101]],
+            PRIMEM["Greenwich",0.0],
+            UNIT["Degree",0.0174532925199433]],
+        PROJECTION["Lambert_Conformal_Conic"],
+        PARAMETER["False_Easting",6561666.666666666],
+        PARAMETER["False_Northing",1640416.666666667],
+        PARAMETER["Central_Meridian",-116.25],
+        PARAMETER["Standard_Parallel_1",32.78333333333333],
+        PARAMETER["Standard_Parallel_2",33.88333333333333],
+        PARAMETER["Latitude_Of_Origin",32.16666666666666],
+        UNIT["Foot_US",0.3048006096012192],
+        AUTHORITY["EPSG","2230"]]
+        """
+
+        with open(prj_file, mode='w') as f:
+            f.write(prj_content.replace(' ', '').replace('\n', ''))
+
+        layer = file_upload(filename)
+
+        # Check SRID is properly parsed
+        self.assertEqual(layer.srid, 'EPSG:2230')
+        expected_bbox = [
+            6221125.23791369,
+            6599463.49999559,
+            1775961.20320421,
+            2075201.60434909
+        ]
+        # there might be some discrepancies in the accuracy, so just check
+        # until 5 decimal places
+        for index in range(len(expected_bbox)):
+            self.assertAlmostEqual(
+                expected_bbox[index],
+                float(layer.bbox[index]),
+                places=5)
+
+        # Check that we have a proper thumbnail
+
+        # Check that we have remote thumbnail
+        remote_thumbnail_link = layer.link_set.get(
+            name__icontains='remote thumbnail')
+        self.assertTrue(remote_thumbnail_link.url)
+
+        # thumbnail won't generate because remote thumbnail uses public
+        # address
+
+        remote_thumbnail_url = remote_thumbnail_link.url
+
+        # Replace url's basename, we want to access it using django client
+        parse_result = urlparse.urlsplit(remote_thumbnail_url)
+
+        # check that thumbnail will request in EPSG:4326
+        query_string = urlparse.parse_qs(parse_result.query)
+        self.assertEqual(query_string['SRS'], ['EPSG:4326'])
+
+        requested_bbox = query_string['BBOX'][0].split(',')
+        requested_bbox = [float(c) for c in requested_bbox]
+
+        # At least check that the bbox is converted
+        expected_bbox = [
+            32.4514953875,
+            -117.489172313,
+            33.4442838815,
+            -116.002305884
+        ]
+        # there might be some discrepancies in the accuracy, so just check
+        # until 5 decimal places
+        for index in range(len(expected_bbox)):
+            self.assertAlmostEqual(
+                expected_bbox[index],
+                requested_bbox[index],
+                places=5)
+
+        layer.delete()
+
+        shutil.rmtree(tmpdir)
 
 
 class InitialSetup():

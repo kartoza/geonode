@@ -168,6 +168,10 @@ def qgis_server_post_save(instance, sender, **kwargs):
             layer = datasource[0]
             srs = layer.srs
             srs.identify_epsg()
+            srid_string = 'EPSG:{0}'.format(srs.srid)
+            if srid_string == instance.srid:
+                # We have a proper srid here
+                skip_bound_transform = True
         except SRSException as e:
             # GDAL can't find matching EPSG code
             # We will let QGIS handle on the fly projection
@@ -183,6 +187,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
     elif is_raster_layer:
         srs = SpatialReference(instance.srid)
 
+    # Transform bounds to EPSG:4326 when we have undefined projection
     if not skip_bound_transform:
         bound_geom = OGRGeometry.from_bbox((
             instance.bbox_x0, instance.bbox_y0,
