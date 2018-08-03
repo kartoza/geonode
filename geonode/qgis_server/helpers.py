@@ -36,6 +36,7 @@ from lxml import etree
 from requests import Request
 
 from geonode import qgis_server, geoserver
+from geonode.maps.models import Map
 from geonode.utils import check_ogc_backend
 from geonode.geoserver.helpers import OGC_Servers_Handler
 from geonode.layers.models import Layer
@@ -347,7 +348,7 @@ def layer_thumbnail_url(instance, style=None, bbox=None, internal=True):
         raise
 
     qgis_project = qgis_layer.qgis_project_path
-    layers = instance.name
+    layers = 'basemap,{0}'.format(instance.name)
 
     if not style:
         style = 'default'
@@ -416,7 +417,7 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     width = top_left.distance(top_right)
 
     # try to maintain aspect ratios of the image
-    max_pixel_count = 250
+    max_pixel_count = 512
     max_length = max(height, width)
     height = height * max_pixel_count / max_length
     width = width * max_pixel_count / max_length
@@ -889,7 +890,8 @@ def style_list(layer, internal=True, generating_qgis_capabilities=False):
 
 
 def create_qgis_project(
-        layer, qgis_project_path, overwrite=False, internal=True):
+        layer, qgis_project_path, overwrite=False, internal=True,
+        basemap=None, basemap_name=None):
     """Create a new QGS Project for a given layer.
 
     :param layer: Layer or list of layers
@@ -934,17 +936,46 @@ def create_qgis_project(
 
     overwrite = str(overwrite).lower()
 
+    if basemap:
+        basemap_quoted = urllib.quote(basemap.encode('utf-8'))
+        basemap_source_uri = 'type=xyz&url={0}'.format(basemap_quoted)
+        basemap_source_uri = urllib.quote(basemap_source_uri.encode('utf-8'))
+        files = '{0};{1}'.format(basemap_source_uri, files)
+        if not basemap_name:
+            basemap_name = 'basemap'
+        names = '{0};{1}'.format(basemap_name, names)
+
     query_string = {
         'SERVICE': 'MAPCOMPOSITION',
         'PROJECT': qgis_project_path,
-        'FILES': files,
+        'SOURCES': files,
         'NAMES': names,
         'OVERWRITE': overwrite,
-        'REMOVEQML': False
+        'REMOVEQML': True
     }
     qgis_server_url = qgis_server_endpoint(internal)
     response = requests.get(qgis_server_url, params=query_string)
     return response
+
+
+def change_basemap_url(instance, basemap):
+    """Change basemap datasource in qgs project file.
+
+    :param instance: Instance of Layer or Map
+    :param basemap: Basemap url
+    """
+    if isinstance(instance, Layer):
+        layers = instance
+        qgis_project_path = instance.qgis_layer.qgis_project_path
+    if isinstance(instance, Map):
+        layers = Layer.objects.filter(
+            alternate__in=[l.name for l in instance.local_layers])
+        qgis_project_path = instance.qgisservermap.qgis_project_path
+
+    return create_qgis_project(
+        layers, qgis_project_path,
+        overwrite=False, internal=True,
+        basemap=basemap)
 
 
 def delete_orphaned_qgis_server_layers():

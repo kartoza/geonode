@@ -31,6 +31,8 @@ import datetime
 import requests
 import shutil
 from django.conf import settings
+from django.contrib.gis.gdal import SpatialReference, CoordTransform, \
+    OGRGeometry
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, Http404
@@ -51,7 +53,7 @@ from geonode.qgis_server.helpers import (
     qgs_url,
     qlr_url,
     qgis_server_endpoint, style_get_url, style_list, style_add_url,
-    style_remove_url, style_set_default_url)
+    style_remove_url, style_set_default_url, change_basemap_url)
 from geonode.qgis_server.models import QGISServerLayer
 from geonode.qgis_server.tasks.update import (
     create_qgis_server_thumbnail,
@@ -858,16 +860,27 @@ def set_thumbnail(request, layername):
             status=403)
 
     # extract bbox
-    # bbox from POST might have been converted into 4326.
-    # try use native bbox from the layer
-    bbox_string = layer.bbox_string if layer.bbox_string else request.POST['bbox']
+    bbox_string = request.POST['bbox']
+
+    # check current basemap
+    basemap = request.POST.get('basemap')
+    if basemap:
+        change_basemap_url(layer, basemap)
+
     # BBox should be in the format: [xmin,ymin,xmax,ymax], EPSG:4326
     # coming from leafletjs
-    bbox = bbox_string.split(',')
-    bbox = [float(s) for s in bbox]
+    if bbox_string:
+        bbox = bbox_string.split(',')
+        bbox = [float(s) for s in bbox]
+        bbox_srid = 'EPSG:4326'
+    else:
+        # Let it use default extent
+        bbox = None
+        bbox_srid = None
 
     # Give thumbnail creation to celery tasks, and exit.
-    create_qgis_server_thumbnail.delay(layer, overwrite=True, bbox=bbox)
+    create_qgis_server_thumbnail.delay(
+        layer, overwrite=True, bbox=bbox, bbox_srid=bbox_srid)
     retval = {
         'success': True
     }

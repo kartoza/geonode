@@ -138,6 +138,17 @@
             'OpenStreetMap': osm
         };
 
+        {# Extra basemap tiles from LEAFLET_CONFIG #}
+        {% if LEAFLET_CONFIG and LEAFLET_CONFIG.TILES %}
+            {% for tile in LEAFLET_CONFIG.TILES %}
+
+                base_maps["{{ tile.0 }}"] = L.tileLayer('{{ tile.1|safe }}', {
+                    attribution: '{{ tile.2|safe }}'
+                });
+
+            {% endfor %}
+        {% endif %}
+
         var overlay_layer = {};
 
         var map = L.map('preview_map',{measureControl: true});
@@ -171,7 +182,8 @@
         L.control.watermark({ position: 'bottomright' }).addTo(map);
 
         // L.control.measureControl.addTo(map);
-        map.addLayer(OpenMapSurfer_Roads);
+        map.current_base_layer = base_maps[Object.keys(base_maps)[0]];
+        map.addLayer(map.current_base_layer);
 
         {% if layer_bbox %}
             zoom_to_box(map, [{{ layer_bbox }}]);
@@ -212,6 +224,10 @@
         var layerControl = L.control.layers(
                 base_maps, overlay_layer
         ).addTo(map);
+
+        map.on('baselayerchange', function (e) {
+            map.current_base_layer = e.layer;
+        });
 
         if (L.control.hasOwnProperty('fullscreen')) {
             L.control.fullscreen().addTo(map);
@@ -281,8 +297,15 @@
         {# Use map extent #}
         var map = window.preview_map;
         var bbox = map.getBounds().toBBoxString();
+        var current_basemap = L.Util.template(map.current_base_layer._url, {
+            x: '{x}',
+            y: '{y}',
+            z: '{z}',
+            s: 'a'
+        });
         var data = {
-            'bbox': bbox
+            'bbox': bbox,
+            'basemap': current_basemap
         };
         $.post('{% url "qgis_server:set-thumbnail" layername=resource.name %}', data);
     }

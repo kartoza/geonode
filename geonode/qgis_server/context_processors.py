@@ -55,6 +55,10 @@ def qgis_server_urls(request):
                     dict()).get(
                         'MOSAIC_ENABLED',
                         False),
+        LEAFLET_CONFIG=getattr(
+            settings,
+            "LEAFLET_CONFIG",
+            False)
     )
     defaults['style_upload_form'] = QGISLayerStyleUploadForm()
     return defaults

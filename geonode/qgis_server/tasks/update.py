@@ -42,7 +42,8 @@ logger = logging.getLogger(__name__)
     queue='update',
     autoretry_for=(QGISServerLayer.DoesNotExist, ),
     retry_kwargs={'max_retries': 5, 'countdown': 5})
-def create_qgis_server_thumbnail(instance, overwrite=False, bbox=None):
+def create_qgis_server_thumbnail(
+        instance, overwrite=False, bbox=None, bbox_srid=None):
     """Task to update thumbnails.
 
     This task will formulate OGC url to generate thumbnail and then pass it
@@ -58,9 +59,15 @@ def create_qgis_server_thumbnail(instance, overwrite=False, bbox=None):
         [xmin,ymin,xmax,ymax]
     :type bbox: list(float)
 
+    :param bbox_srid: SRID of the bbox
+    :type bbox_srid: basestring
+
     :return:
     """
     thumbnail_remote_url = None
+    if not bbox_srid:
+        # default bbox_srid
+        bbox_srid = 'EPSG:4326'
     try:
         # to make sure it is executed after the instance saved
         if isinstance(instance, Layer):
@@ -72,9 +79,10 @@ def create_qgis_server_thumbnail(instance, overwrite=False, bbox=None):
                     instance.bbox_x1,
                     instance.bbox_y1
                 ]
+                bbox_srid = instance.srid
             # set thumbnails use 4326, so we need to convert bbox accordingly
-            if not instance.srid == 'EPSG:4326':
-                source_srs = SpatialReference(instance.srid)
+            if not bbox_srid == 'EPSG:4326':
+                source_srs = SpatialReference(bbox_srid)
                 target_srs = SpatialReference('EPSG:4326')
                 coord_transform = CoordTransform(source_srs, target_srs)
                 bound_geom = OGRGeometry.from_bbox(bbox)
