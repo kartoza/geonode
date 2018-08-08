@@ -46,7 +46,8 @@ logger = logging.getLogger("geonode.layers.models")
 shp_exts = ['.shp', ]
 csv_exts = ['.csv']
 kml_exts = ['.kml']
-vec_exts = shp_exts + csv_exts + kml_exts
+geojson_exts = ['.geojson']
+vec_exts = shp_exts + csv_exts + kml_exts + geojson_exts
 
 cov_exts = ['.tif', '.tiff', '.geotiff', '.geotif', '.asc']
 

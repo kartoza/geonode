@@ -128,6 +128,9 @@ class LayerUploadForm(forms.Form):
                             "Only one shapefile per zip is allowed")
                     base_name = name
                     base_ext = ext
+                elif ext.lower() == '.geojson':
+                    base_name = name
+                    base_ext = ext
                 elif ext.lower() == '.dbf':
                     dbf_file = filename
                 elif ext.lower() == '.shx':
@@ -157,9 +160,9 @@ class LayerUploadForm(forms.Form):
                     sld_file = cleaned["sld_file"].name
 
         if not cleaned["metadata_upload_form"] and not cleaned["style_upload_form"] and base_ext.lower() not in (
-                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld"):
+                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld", ".geojson"):
             raise forms.ValidationError(
-                "Only Shapefiles, GeoTiffs, and ASCIIs are supported. You "
+                "Only Shapefiles, GeoTiffs, ASCIIs, and GeoJSON are supported. You "
                 "uploaded a %s file" % base_ext)
         elif cleaned["metadata_upload_form"] and base_ext.lower() not in (".xml"):
             raise forms.ValidationError(

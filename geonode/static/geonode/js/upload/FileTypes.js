@@ -50,6 +50,11 @@ define(['./FileType'], function (FileType) {
             format: 'vector',
             main: 'geojson'
         });
+    file_types['JSON'] = new FileType({
+            name: gettext('JSON'),
+            format: 'vector',
+            main: 'json'
+        });
     file_types['ZIP'] = new FileType({
             name: gettext('Zip Archive'),
             format: 'archive',
