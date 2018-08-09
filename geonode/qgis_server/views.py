@@ -31,8 +31,6 @@ import datetime
 import requests
 import shutil
 from django.conf import settings
-from django.contrib.gis.gdal import SpatialReference, CoordTransform, \
-    OGRGeometry
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, Http404

@@ -2,7 +2,7 @@ version: '2'
 services:
 
   qgis-server:
-    image: kartoza/geonode_qgis-server
+    image: kartoza/qgis-server:2.18
     volumes:
       # Mount this volume from current directory to
       # The absolute path, so these files were mounted

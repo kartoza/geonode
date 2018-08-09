@@ -419,8 +419,12 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     # try to maintain aspect ratios of the image
     max_pixel_count = 512
     max_length = max(height, width)
-    height = height * max_pixel_count / max_length
-    width = width * max_pixel_count / max_length
+    if max_length == 0:
+        height = max_pixel_count
+        width = max_pixel_count
+    else:
+        height = height * max_pixel_count / max_length
+        width = width * max_pixel_count / max_length
 
     query_string = {
         'SERVICE': 'WMS',
@@ -811,8 +815,10 @@ def style_list(layer, internal=True, generating_qgis_capabilities=False):
         response = requests.get(url)
 
         root_xml = etree.fromstring(response.content)
+        xpath_query = 'wms:Capability/wms:Layer/wms:Layer' \
+                      '[wms:Name="{0}"]/wms:Style'.format(layer.name)
         styles_xml = root_xml.xpath(
-            'wms:Capability/wms:Layer/wms:Layer/wms:Style',
+            xpath_query,
             namespaces={
                 'xlink': 'http://www.w3.org/1999/xlink',
                 'wms': 'http://www.opengis.net/wms'
