@@ -319,6 +319,14 @@ class LayersTest(TestCase):
         files = dict(base_file=SimpleUploadedFile('foo.GEOTIF', ' '))
         self.assertTrue(LayerUploadForm(dict(), files).is_valid())
 
+    def testGeoJsonValidation(self):
+        files = dict(base_file=SimpleUploadedFile('foo.geojson', ' '))
+        self.assertTrue(LayerUploadForm(dict(), files).is_valid())
+        files = dict(base_file=SimpleUploadedFile('foo.GEOJSON', ' '))
+        self.assertTrue(LayerUploadForm(dict(), files).is_valid())
+        files = dict(base_file=SimpleUploadedFile('foo.GeoJson', ' '))
+        self.assertTrue(LayerUploadForm(dict(), files).is_valid())
+
     def testASCIIValidation(self):
         files = dict(base_file=SimpleUploadedFile('foo.asc', ' '))
         self.assertTrue(LayerUploadForm(dict(), files).is_valid())
@@ -372,6 +380,9 @@ class LayersTest(TestCase):
         self.assertEquals(layer_type('foo.shp'), 'vector')
         self.assertEquals(layer_type('foo.SHP'), 'vector')
         self.assertEquals(layer_type('foo.sHp'), 'vector')
+        self.assertEquals(layer_type('foo.geojson'), 'vector')
+        self.assertEquals(layer_type('foo.GEOJSON'), 'vector')
+        self.assertEquals(layer_type('foo.GeoJson'), 'vector')
         self.assertEquals(layer_type('foo.tif'), 'raster')
         self.assertEquals(layer_type('foo.TIF'), 'raster')
         self.assertEquals(layer_type('foo.TiF'), 'raster')
