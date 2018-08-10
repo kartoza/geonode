@@ -276,8 +276,10 @@ class QGISServerViewsTest(LiveServerTestCase):
         layer_xml = root.xpath(
             'wms:Capability/wms:Layer/wms:Layer/wms:Name',
             namespaces={'wms': 'http://www.opengis.net/wms'})
-        self.assertEqual(len(layer_xml), 1)
-        self.assertEqual(layer_xml[0].text, uploaded.name)
+        # We have the basemap layer and the layer itself
+        self.assertEqual(len(layer_xml), 2)
+        self.assertEqual(layer_xml[0].text, 'basemap')
+        self.assertEqual(layer_xml[1].text, uploaded.name)
         # GetLegendGraphic request returned must be valid
         layer_xml = root.xpath(
             'wms:Capability/wms:Layer/'
@@ -286,7 +288,7 @@ class QGISServerViewsTest(LiveServerTestCase):
                 'xlink': 'http://www.w3.org/1999/xlink',
                 'wms': 'http://www.opengis.net/wms'
             })
-        legend_url = layer_xml[0].attrib[
+        legend_url = layer_xml[1].attrib[
             '{http://www.w3.org/1999/xlink}href']
 
         response = self.client.get(legend_url)
@@ -491,11 +493,10 @@ class QGISServerStyleManagerTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 201)
 
         actual_list_style = style_list(layer, internal=False)
-        if actual_list_style:
-            expected_list_style = ['default', 'new_style']
-            self.assertEqual(
-                set(expected_list_style),
-                set([style.name for style in actual_list_style]))
+        expected_list_style = ['default', 'new_style']
+        self.assertEqual(
+            set(expected_list_style),
+            set([style.name for style in actual_list_style]))
 
         # Test delete request
         delete_style_url = reverse(
@@ -508,11 +509,10 @@ class QGISServerStyleManagerTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 200)
 
         actual_list_style = style_list(layer, internal=False)
-        if actual_list_style:
-            expected_list_style = ['new_style']
-            self.assertEqual(
-                set(expected_list_style),
-                set([style.name for style in actual_list_style]))
+        expected_list_style = ['new_style']
+        self.assertEqual(
+            set(expected_list_style),
+            set([style.name for style in actual_list_style]))
 
         # Check new default
         default_style_url = reverse(

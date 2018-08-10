@@ -315,10 +315,19 @@ def qgis_server_post_save(instance, sender, **kwargs):
     # importlayers management command and needs to be overwritten
     overwrite = getattr(instance, 'overwrite', False)
 
+    # default basemap
+    try:
+        default_tile = settings.LEAFLET_CONFIG['TILES'][0]
+        basemap_name = 'basemap'
+        basemap_url = default_tile[1]
+    except BaseException:
+        basemap_name = None
+        basemap_url = None
+
     # Create the QGIS Project
     response = create_qgis_project(
         instance, qgis_layer.qgis_project_path, overwrite=overwrite,
-        internal=True)
+        internal=True, basemap=basemap_url, basemap_name=basemap_name)
 
     logger.debug('Creating the QGIS Project : %s' % response.url)
     if response.content != 'OK':
