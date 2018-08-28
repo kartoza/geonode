@@ -196,7 +196,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
         coord_transform = CoordTransform(srs, SpatialReference('EPSG:4326'))
         bound_geom.transform(coord_transform)
         # update bounds info
-        Layer.objects.update(
+        Layer.objects.filter(id=instance.id).update(
             srid='EPSG:4326',
             bbox_x0=bound_geom.envelope.min_x,
             bbox_x1=bound_geom.envelope.max_x,
