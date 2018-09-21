@@ -263,7 +263,8 @@ def static(options):
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
 
-    updategeoip(options)
+    if not os.environ.get('ON_TRAVIS', None):
+        updategeoip(options)
     info(('GeoNode development environment successfully set up.'
           'If you have not set up an administrative account,'
           ' please do so now. Use "paver start" to start up the server.'))
