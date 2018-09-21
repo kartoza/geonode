@@ -230,7 +230,8 @@ class Layer(ResourceBase):
 
         # we need to check, for shapefile, if column names are valid
         list_col = None
-        if self.storeType == 'dataStore':
+        base_file_ext = base_files.first().name
+        if self.storeType == 'dataStore' and base_file_ext == '.shp':
             valid_shp, wrong_column_name, list_col = check_shp_columnnames(
                 self)
             if wrong_column_name:
