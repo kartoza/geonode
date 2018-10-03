@@ -28,6 +28,8 @@ import glob
 import sys
 import logging
 
+from django.core.files.base import ContentFile
+
 from geonode.maps.models import Map
 from osgeo import gdal, osr
 
@@ -576,7 +578,7 @@ def file_upload(filename,
                     name=valid_name,
                     defaults=defaults
                 )
-            elif identifier:
+            elif identifier and not identifier == 'None':
                 layer, created = Layer.objects.get_or_create(
                     uuid=identifier,
                     defaults=defaults
@@ -593,10 +595,19 @@ def file_upload(filename,
     # process the layer again after that by
     # doing a layer.save()
     if not created and overwrite:
-        if layer.upload_session:
-            layer.upload_session.layerfile_set.all().delete()
-        if upload_session:
-            layer.upload_session = upload_session
+        # Replace metadata file if only updated metadata
+        if metadata_upload_form:
+            # Replace metadata content with the new one
+            metadata_file = layer.upload_session.layerfile_set.get(name='xml')
+            metadata_file.file.save(
+                metadata_file.file.name, ContentFile(xml_file))
+            upload_session.delete()
+            upload_session = layer.upload_session
+        else:
+            if layer.upload_session:
+                layer.upload_session.layerfile_set.all().delete()
+            if upload_session:
+                layer.upload_session = upload_session
 
         # update with new information
         db_layer = Layer.objects.filter(id=layer.id)
