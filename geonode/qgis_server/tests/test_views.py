@@ -302,6 +302,13 @@ class QGISServerViewsTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(get_capabilities_content, response.content)
 
+        # Check that saving twice doesn't ruin get capabilities
+        uploaded.save()
+        response = requests.get(wms_get_capabilities_url(
+            uploaded, internal=False))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get_capabilities_content, response.content)
+
         # WMS GetMap
         query_string = {
             'SERVICE': 'WMS',
