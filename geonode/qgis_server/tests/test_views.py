@@ -278,17 +278,19 @@ class QGISServerViewsTest(LiveServerTestCase):
             namespaces={'wms': 'http://www.opengis.net/wms'})
         # We have the basemap layer and the layer itself
         self.assertEqual(len(layer_xml), 2)
-        self.assertEqual(layer_xml[0].text, 'basemap')
-        self.assertEqual(layer_xml[1].text, uploaded.name)
+        layer_names = [l.text for l in layer_xml]
+        self.assertIn('basemap', layer_names)
+        self.assertIn(uploaded.name, layer_names)
         # GetLegendGraphic request returned must be valid
         layer_xml = root.xpath(
             'wms:Capability/wms:Layer/'
-            'wms:Layer/wms:Style/wms:LegendURL/wms:OnlineResource',
+            'wms:Layer[wms:Name="{0}"]/wms:Style/'
+            'wms:LegendURL/wms:OnlineResource'.format(uploaded.name),
             namespaces={
                 'xlink': 'http://www.w3.org/1999/xlink',
                 'wms': 'http://www.opengis.net/wms'
             })
-        legend_url = layer_xml[1].attrib[
+        legend_url = layer_xml[0].attrib[
             '{http://www.w3.org/1999/xlink}href']
 
         response = self.client.get(legend_url)
@@ -307,7 +309,27 @@ class QGISServerViewsTest(LiveServerTestCase):
         response = requests.get(wms_get_capabilities_url(
             uploaded, internal=False))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(get_capabilities_content, response.content)
+        response_content = response.content
+
+        response_root = etree.fromstring(response_content)
+        response_layer_xml = response_root.xpath(
+            'wms:Capability/wms:Layer/'
+            'wms:Layer[wms:Name="{0}"]'.format(uploaded.name),
+            namespaces={
+                'xlink': 'http://www.w3.org/1999/xlink',
+                'wms': 'http://www.opengis.net/wms'
+            })
+        layer_xml = root.xpath(
+            'wms:Capability/wms:Layer/'
+            'wms:Layer[wms:Name="{0}"]'.format(uploaded.name),
+            namespaces={
+                'xlink': 'http://www.w3.org/1999/xlink',
+                'wms': 'http://www.opengis.net/wms'
+            })
+
+        self.assertEqual(
+            etree.tostring(layer_xml[0]),
+            etree.tostring(response_layer_xml[0]))
 
         # WMS GetMap
         query_string = {
