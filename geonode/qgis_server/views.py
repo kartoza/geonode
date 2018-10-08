@@ -28,6 +28,8 @@ from imghdr import what as image_format
 import re
 
 import datetime
+
+import errno
 import requests
 import shutil
 from django.conf import settings
@@ -233,8 +235,14 @@ def legend(request, layername, layertitle=False, style=None):
 
     if not os.path.exists(legend_filename):
 
-        if not os.path.exists(os.path.dirname(legend_filename)):
-            os.makedirs(os.path.dirname(legend_filename))
+        try:
+            if not os.path.exists(os.path.dirname(legend_filename)):
+                os.makedirs(os.path.dirname(legend_filename))
+        except OSError as e:
+            # In case race condition happens because client attempts to access
+            # multiple tiles
+            if e.errno != errno.EEXIST:
+                raise
 
         url = legend_url(layer, layertitle, style=style, internal=True)
 
@@ -311,6 +319,7 @@ def tile(request, layername, z, x, y, style=None):
         # generate style cache
         if not qgis_layer.default_style:
             try:
+
                 style_list(layer, internal=False)
             except:
                 print 'Failed to fetch styles'
@@ -325,8 +334,14 @@ def tile(request, layername, z, x, y, style=None):
 
     if not os.path.exists(tile_filename):
 
-        if not os.path.exists(os.path.dirname(tile_filename)):
-            os.makedirs(os.path.dirname(tile_filename))
+        try:
+            if not os.path.exists(os.path.dirname(tile_filename)):
+                os.makedirs(os.path.dirname(tile_filename))
+        except OSError as e:
+            # In case race condition happens because client attempts to access
+            # multiple tiles
+            if e.errno != errno.EEXIST:
+                raise
 
         # Use internal url
         url = tile_url(layer, z, x, y, style=style, internal=True)

@@ -21,6 +21,7 @@
 import os
 import json
 import datetime
+import tempfile
 import urllib2
 # import base64
 import time
@@ -203,6 +204,78 @@ class NormalUserTest(TestCase):
         finally:
             # Clean up and completely delete the layer
             saved_layer.delete()
+
+    def test_layer_upload_metadata(self):
+        """Try uploading a layer, then revise metadata and upload just the
+        metadata."""
+
+        self.client.login(username='norman', password='norman')
+
+        norman = get_user_model().objects.get(username="norman")
+        saved_layer = file_upload(
+            os.path.join(
+                gisdata.VECTOR_DATA,
+                "san_andres_y_providencia_poi.shp"),
+            name="san_andres_y_providencia_poi_by_norman",
+            user=norman)
+
+        saved_layer.refresh_from_db()
+
+        # download generated metadata from GeoNode
+        # Use ISO metadata for example
+        iso_metadata_link = saved_layer.link_set.metadata().get(
+            link_type='metadata',
+            name='ISO')
+        metadata_url = iso_metadata_link.url
+        response = self.client.get(metadata_url)
+        self.assertEqual(response.status_code, 200)
+        metadata_xml = response.content
+
+        namespaces = {
+            'gmd': 'http://www.isotc211.org/2005/gmd',
+            'gco': 'http://www.isotc211.org/2005/gco'
+        }
+        root_xml = etree.XML(metadata_xml)
+        identification_title = root_xml.xpath(
+            '//gmd:identificationInfo//gmd:title/gco:CharacterString',
+            namespaces=namespaces)[0]
+        # Change title
+        identification_title.text = 'New Title for {0}'.format(
+            identification_title.text)
+
+        _, new_xml_file = tempfile.mkstemp(suffix='.xml')
+
+        with open(new_xml_file, mode='w') as f:
+            et = etree.ElementTree(root_xml)
+            et.write(f, pretty_print=True)
+
+        # Replace metadata
+        new_layer = file_upload(
+            new_xml_file,
+            name="san_andres_y_providencia_poi_by_norman",
+            user=norman,
+            overwrite=True,
+            metadata_upload_form=True)
+
+        # Should be the same layer, just updated
+        self.assertEqual(saved_layer.id, new_layer.id)
+        # Should show the new title
+        self.assertEqual(new_layer.title, identification_title.text)
+        # Should have the same upload session
+        self.assertEqual(saved_layer.upload_session, new_layer.upload_session)
+
+        # Should return the new metadata with the same url
+        response = self.client.get(metadata_url)
+        self.assertEqual(response.status_code, 200)
+        new_metadata_xml = response.content
+        new_root_xml = etree.XML(new_metadata_xml)
+        new_identification_title = new_root_xml.xpath(
+            '//gmd:identificationInfo//gmd:title/gco:CharacterString',
+            namespaces=namespaces)[0]
+        self.assertTrue(
+            new_identification_title.text.startswith('New Title for'))
+        self.assertEqual(
+            new_identification_title.text, identification_title.text)
 
 
 class GeoNodeMapTest(TestCase):

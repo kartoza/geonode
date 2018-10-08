@@ -598,9 +598,22 @@ def file_upload(filename,
         # Replace metadata file if only updated metadata
         if metadata_upload_form:
             # Replace metadata content with the new one
-            metadata_file = layer.upload_session.layerfile_set.get(name='xml')
+            metadata_file, created = LayerFile.objects.get_or_create(
+                upload_session=layer.upload_session,
+                name='xml')
+
+            if not created:
+                xml_filename = metadata_file.file.name
+            else:
+                # use the same name
+                base_file, _ = layer.get_base_file()
+                filename = base_file.file.name
+                basename, _ = os.path.splitext(filename)
+                xml_filename = '{basename}.xml'.format(basename=basename)
+
             metadata_file.file.save(
-                metadata_file.file.name, ContentFile(xml_file))
+                xml_filename,
+                ContentFile(xml_file))
             upload_session.delete()
             upload_session = layer.upload_session
         else:
