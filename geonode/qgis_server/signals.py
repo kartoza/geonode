@@ -23,9 +23,10 @@ import logging
 import os
 import shutil
 
-from django.contrib.gis.gdal import SRSException, DataSource, CoordTransform, \
-    SpatialReference, OGRGeometry
 from django.conf import settings
+from django.contrib.gis.gdal import (
+    SRSException, DataSource, CoordTransform,
+    SpatialReference, OGRGeometry, GDALRaster)
 from django.core.urlresolvers import reverse
 from django.db.models import signals
 from django.dispatch import Signal
@@ -37,8 +38,10 @@ from geonode.layers.models import Layer, LayerFile
 from geonode.layers.utils import is_vector, is_raster
 from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import set_attributes
-from geonode.qgis_server.helpers import tile_url_format, create_qgis_project, \
-    style_list
+from geonode.qgis_server.helpers import (
+    tile_url_format,
+    create_qgis_project,
+    style_list)
 from geonode.qgis_server.models import QGISServerLayer, QGISServerMap
 from geonode.qgis_server.tasks.update import create_qgis_server_thumbnail
 from geonode.qgis_server.xml_utilities import update_xml
@@ -161,31 +164,35 @@ def qgis_server_post_save(instance, sender, **kwargs):
 
     # Transform bounds to EPSG:4326 to be used by leaflet.
     skip_bound_transform = False
-    if is_vector_layer:
-        try:
+    try:
+        srid_string = None
+        if is_vector_layer:
             # Try to get bbox again but handle exceptions
             datasource = DataSource(geonode_layer_path)
             layer = datasource[0]
             srs = layer.srs
             srs.identify_epsg()
             srid_string = 'EPSG:{0}'.format(srs.srid)
-            if srid_string == instance.srid:
-                # We have a proper srid here
-                skip_bound_transform = True
-        except SRSException as e:
-            # GDAL can't find matching EPSG code
-            # We will let QGIS handle on the fly projection
-            # However, we need bounds in EPSG:4326 to display in leaflet
-            logger.exception(e)
+        elif is_raster_layer:
+            rst = GDALRaster(geonode_layer_path)
+            srs = rst.srs
+            srs.identify_epsg()
+            srid_string = 'EPSG:{0}'.format(srs.srid)
 
-        except Exception as e:
-            logger.debug("Can't retrieve projection: {layer}".format(
-                layer=geonode_layer_path))
-            logger.exception(e)
-            # Can not transform bounds if we don't have projection
+        if srid_string == instance.srid:
+            # We have a proper srid here
             skip_bound_transform = True
-    elif is_raster_layer:
-        srs = SpatialReference(instance.srid)
+    except SRSException as e:
+        # GDAL can't find matching EPSG code
+        # We will let QGIS handle on the fly projection
+        # However, we need bounds in EPSG:4326 to display in leaflet
+        logger.exception(e)
+    except Exception as e:
+        logger.debug("Can't retrieve projection: {layer}".format(
+            layer=geonode_layer_path))
+        logger.exception(e)
+        # Can not transform bounds if we don't have projection
+        skip_bound_transform = True
 
     # Transform bounds to EPSG:4326 when we have undefined projection
     if not skip_bound_transform:

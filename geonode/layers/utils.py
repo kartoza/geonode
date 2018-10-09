@@ -594,7 +594,7 @@ def file_upload(filename,
     # and the layer was not just created
     # process the layer again after that by
     # doing a layer.save()
-    if not created and overwrite:
+    if metadata_upload_form or (not created and overwrite):
         # Replace metadata file if only updated metadata
         if metadata_upload_form:
             # Replace metadata content with the new one
@@ -604,6 +604,7 @@ def file_upload(filename,
 
             if not created:
                 xml_filename = metadata_file.file.name
+                metadata_file.file.delete()
             else:
                 # use the same name
                 base_file, _ = layer.get_base_file()

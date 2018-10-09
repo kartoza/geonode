@@ -157,6 +157,19 @@ class QGISServerLayer(models.Model, PermissionLevelMixin):
         """
         return '{prefix}.qml'.format(prefix=self.qgis_layer_path_prefix)
 
+    @property
+    def xml_path(self):
+        """Returned the location of XML path for this layer (if any).
+
+        Example base path: /usr/src/app/geonode/qgis_layer/jakarta_flood.shp
+
+        QGIS QML path: /usr/src/app/geonode/qgis_tiles/jakarta_flood.xml
+
+        :return: Base path of xml style
+        :rtype: str
+        """
+        return '{prefix}.xml'.format(prefix=self.qgis_layer_path_prefix)
+
     def delete_qgis_layer(self):
         """Delete all files related to this object from disk."""
         for file_path in self.files:

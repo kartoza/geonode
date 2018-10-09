@@ -327,7 +327,7 @@ class QGISServerViewsTest(LiveServerTestCase):
                 'wms': 'http://www.opengis.net/wms'
             })
 
-        self.assertEqual(
+        self.assertXMLEqual(
             etree.tostring(layer_xml[0]),
             etree.tostring(response_layer_xml[0]))
 

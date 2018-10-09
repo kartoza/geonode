@@ -254,7 +254,6 @@ class NormalUserTest(TestCase):
             new_xml_file,
             name="san_andres_y_providencia_poi_by_norman",
             user=norman,
-            overwrite=True,
             metadata_upload_form=True)
 
         # Should be the same layer, just updated
