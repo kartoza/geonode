@@ -18,6 +18,7 @@
 #
 #########################################################################
 
+import requests
 import fileinput
 import glob
 import os
@@ -67,15 +68,13 @@ def grab(src, dest, name):
     else:
         download = False
     if download:
-        if str(src).startswith("file://"):
-            src2 = src[7:]
-            if not os.path.exists(src2):
-                print "Source location (%s) does not exist" % str(src2)
-            else:
-                print "Copying local file from %s" % str(src2)
-                shutil.copyfile(str(src2), str(dest))
-        else:
-            urllib.urlretrieve(str(src), str(dest))
+        r = requests.get(str(src), verify=False, stream=True)
+        print "Stream download."
+        with open(str(dest), mode='wb') as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+        print "Download finished."
 
 
 @task
