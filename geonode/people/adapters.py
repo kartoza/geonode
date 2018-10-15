@@ -141,9 +141,9 @@ class LocalAccountAdapter(DefaultAccountAdapter, BaseInvitationsAdapter):
             "inviter_first_name": user.first_name or str(user),
             "inviter_id": user.id,
             "groups": user_groups,
-            "MEDIA_URL": settings.MEDIA_URL,
-            "SITEURL": settings.SITEURL,
-            "STATIC_URL": settings.STATIC_URL
+            "MEDIA_URL": settings.MEDIA_URL.strip('/'),
+            "SITEURL": settings.SITEURL.strip('/'),
+            "STATIC_URL": settings.STATIC_URL.strip('/')
         })
         return super(LocalAccountAdapter, self).render_mail(
             template_prefix, email, enhanced_context)
