@@ -1069,6 +1069,13 @@ def printsignals():
 def designals():
     global signals_store
 
+    if not signals_store:
+        # Signal store is empty
+        # Initializing
+        signals_store = {
+            k: [] for k in signalnames
+        }
+
     for signalname in signalnames:
         if signalname in signals_store:
             signaltype = getattr(models.signals, signalname)
