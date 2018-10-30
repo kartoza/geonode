@@ -94,6 +94,7 @@ class LayerUploadForm(forms.Form):
         sld_file = forms.FileField(required=False)
     if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
         qml_file = forms.FileField(required=False)
+        qlr_file = forms.FileField(required=False)
 
     charset = forms.CharField(required=False)
     metadata_uploaded_preserve = forms.BooleanField(required=False)
@@ -141,6 +142,12 @@ class LayerUploadForm(forms.Form):
                     xml_file = filename
                 elif ext.lower() == '.sld':
                     sld_file = filename
+
+                if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+                    if ext.lower() == '.qlr':
+                        base_name = name
+                        base_ext = ext
+
             if base_name is None:
                 raise forms.ValidationError(
                     "Zip files can only contain shapefile.")
@@ -160,9 +167,9 @@ class LayerUploadForm(forms.Form):
                     sld_file = cleaned["sld_file"].name
 
         if not cleaned["metadata_upload_form"] and not cleaned["style_upload_form"] and base_ext.lower() not in (
-                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld", ".geojson"):
+                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld", ".geojson", ".qlr"):
             raise forms.ValidationError(
-                "Only Shapefiles, GeoTiffs, ASCIIs, and GeoJSON are supported. You "
+                "Only Shapefiles, GeoTiffs, ASCIIs, QLR, and GeoJSON are supported. You "
                 "uploaded a %s file" % base_ext)
         elif cleaned["metadata_upload_form"] and base_ext.lower() not in (".xml"):
             raise forms.ValidationError(

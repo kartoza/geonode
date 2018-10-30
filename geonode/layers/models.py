@@ -31,10 +31,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.core.files.storage import FileSystemStorage
 
+from geonode import geoserver, qgis_server
 from geonode.base.models import ResourceBase, ResourceBaseManager, resourcebase_post_save
 from geonode.people.utils import get_valid_user
 from agon_ratings.models import OverallRating
-from geonode.utils import check_shp_columnnames
+from geonode.utils import check_shp_columnnames, check_ogc_backend
 from geonode.security.models import PermissionLevelMixin
 from geonode.security.utils import remove_object_permissions
 
@@ -47,9 +48,16 @@ shp_exts = ['.shp', ]
 csv_exts = ['.csv']
 kml_exts = ['.kml']
 geojson_exts = ['.geojson']
-vec_exts = shp_exts + csv_exts + kml_exts + geojson_exts
+qlr_exts = ['.qlr']
 
+vec_exts = []
 cov_exts = ['.tif', '.tiff', '.geotiff', '.geotif', '.asc']
+
+if check_ogc_backend(geoserver.BACKEND_PACKAGE):
+    vec_exts = shp_exts + csv_exts + kml_exts + geojson_exts
+
+elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+    vec_exts = shp_exts + csv_exts + kml_exts + geojson_exts + qlr_exts
 
 TIME_REGEX = (
     ('[0-9]{8}', _('YYYYMMDD')),

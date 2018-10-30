@@ -46,6 +46,7 @@ from geonode.qgis_server.helpers import (
     style_add_url,
     style_set_default_url)
 from geonode.qgis_server.models import QGISServerLayer, QGISServerMap
+from geonode.qgis_server.qlr import is_qlr, QLRFile, populate_info_from_qlr
 from geonode.qgis_server.tasks.update import create_qgis_server_thumbnail
 from geonode.qgis_server.xml_utilities import update_xml
 from geonode.utils import check_ogc_backend
@@ -123,6 +124,7 @@ def qgis_server_post_save(instance, sender, **kwargs):
     base_filename, original_ext = os.path.splitext(geonode_layer_path)
     extensions = QGISServerLayer.accepted_format
 
+    is_qlr_layer = is_qlr(geonode_layer_path)
     is_vector_layer = is_vector(geonode_layer_path)
     is_raster_layer = is_raster(geonode_layer_path)
 
@@ -169,14 +171,14 @@ def qgis_server_post_save(instance, sender, **kwargs):
     skip_bound_transform = False
     try:
         srid_string = None
-        if is_vector_layer:
+        if is_vector_layer and not is_qlr_layer:
             # Try to get bbox again but handle exceptions
             datasource = DataSource(geonode_layer_path)
             layer = datasource[0]
             srs = layer.srs
             srs.identify_epsg()
             srid_string = 'EPSG:{0}'.format(srs.srid)
-        elif is_raster_layer:
+        elif is_raster_layer and not is_qlr_layer:
             rst = GDALRaster(geonode_layer_path)
             srs = rst.srs
             srs.identify_epsg()
@@ -195,6 +197,18 @@ def qgis_server_post_save(instance, sender, **kwargs):
             layer=geonode_layer_path))
         logger.exception(e)
         # Can not transform bounds if we don't have projection
+        skip_bound_transform = True
+
+    # Check QLR
+    if is_qlr_layer:
+        qlr_obj = QLRFile(geonode_layer_path)
+        instance, update_kwargs = populate_info_from_qlr(instance, qlr_obj)
+        Layer.objects.filter(id=instance.id).update(**update_kwargs)
+        instance.refresh_from_db()
+
+        is_vector_layer = qlr_obj.type == 'vector'
+        is_raster_layer = qlr_obj.type == 'raster'
+
         skip_bound_transform = True
 
     # Transform bounds to EPSG:4326 when we have undefined projection

@@ -371,9 +371,92 @@ class QGISServerViewsTest(LiveServerTestCase):
                          125.599999999999994,
                          10.100000000000000]
         uploaded_bbox = [float(f) for f in uploaded.bbox_string.split(',')]
-        # self.assertAlmostEqual(uploaded.bbox_string, expected_bbox, 5)
+
         for key in range(len(uploaded_bbox)):
             self.assertAlmostEqual(uploaded_bbox[key], expected_bbox[key], 5)
+
+        self.assertEqual('EPSG:4326', uploaded.srid)
+
+        # Check WFS request resolved correctly
+        url = reverse('qgis_server:layer-request', kwargs={
+            'layername': uploaded.name
+        })
+        params = {
+            'SERVICE': 'WFS',
+            'REQUEST': 'GetFeature',
+            'VERSION': '1.0.0',
+            'TYPENAME': uploaded.name,
+            'OUTPUTFORMAT': 'GeoJSON'
+        }
+        response = self.client.get(url, data=params)
+
+        self.assertEqual(response.status_code, 200)
+
+        json_output = json.loads(response.content)
+
+        types = json_output['type']
+
+        self.assertEqual(types, 'FeatureCollection')
+
+        feature_count = len(json_output['features'])
+
+        self.assertEqual(1, feature_count)
+
+        uploaded.delete()
+
+    @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
+    def test_upload_qlr(self):
+        """Test we can upload QLR layer and check bbox"""
+        file_path = os.path.realpath(__file__)
+        test_dir = os.path.dirname(file_path)
+        # this QLR uses remote data source to
+        # http://testing.geonode.kartoza.com
+        qlr_file_path = os.path.join(test_dir, 'data', 'buildings.qlr')
+        uploaded = file_upload(qlr_file_path)
+        # check if file is uploaded
+        self.assertTrue(uploaded)
+        # check bbox exists
+
+        expected_bbox = [
+            106.64,
+            -6.30,
+            106.91,
+            -6.11
+        ]
+
+        uploaded_bbox = [float(f) for f in uploaded.bbox_string.split(',')]
+
+        for key in range(len(uploaded_bbox)):
+            self.assertAlmostEqual(uploaded_bbox[key], expected_bbox[key], 2)
+
+        self.assertEqual('EPSG:4326', uploaded.srid)
+
+        # Check WFS request resolved correctly
+        url = reverse('qgis_server:layer-request', kwargs={
+            'layername': uploaded.name
+        })
+        params = {
+            'SERVICE': 'WFS',
+            'REQUEST': 'GetFeature',
+            'VERSION': '1.0.0',
+            'TYPENAME': uploaded.name,
+            'OUTPUTFORMAT': 'GeoJSON'
+        }
+        response = self.client.get(url, data=params)
+
+        self.assertEqual(response.status_code, 200)
+
+        json_output = json.loads(response.content)
+
+        types = json_output['type']
+
+        self.assertEqual(types, 'FeatureCollection')
+
+        feature_count = len(json_output['features'])
+
+        self.assertEqual(12, feature_count)
+
+        uploaded.delete()
 
     @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
     def test_download_map_qlr(self):

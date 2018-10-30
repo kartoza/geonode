@@ -50,7 +50,8 @@ class QGISServerLayer(models.Model, PermissionLevelMixin):
     """
 
     accepted_format = [
-        'tif', 'tiff', 'asc', 'shp', 'shx', 'dbf', 'prj', 'qml', 'xml', 'qgs', 'geojson', 'json']
+        'tif', 'tiff', 'asc', 'shp', 'shx', 'dbf', 'prj', 'qml', 'xml',
+        'qgs', 'geojson', 'json', 'qlr']
 
     geotiff_format = ['tif', 'tiff']
 

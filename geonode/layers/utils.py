@@ -52,6 +52,7 @@ from geonode.base.models import Link, SpatialRepresentationType,  \
     TopicCategory, Region, License, ResourceBase
 from geonode.layers.models import shp_exts, csv_exts, vec_exts, cov_exts
 from geonode.layers.metadata import set_metadata
+from geonode.qgis_server.qlr import is_qlr, QLRFile
 from geonode.utils import (http_client, check_ogc_backend,
                            unzip_file, extract_tarfile)
 from ..geoserver.helpers import ogc_server_settings  # set_layer_style
@@ -199,6 +200,18 @@ def get_files(filename):
 
     # Only for QGIS Server
     if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
+        matches = glob.glob(glob_name + ".[qQ][lL][rR]")
+        logger.debug('Checking QLR file')
+        logger.debug('Number of matches QLR file : %s' % len(matches))
+        logger.debug('glob name: %s' % glob_name)
+        if len(matches) == 1:
+            files['qlr'] = matches[0]
+        elif len(matches) > 1:
+            msg = ('Multiple QGIS Layer File (qlr) for %s exist; '
+                   'they need to be distinct by spelling and not '
+                   'just case.') % filename
+            raise GeoNodeException(msg)
+
         matches = glob.glob(glob_name + ".[qQ][mM][lL]")
         logger.debug('Checking QML file')
         logger.debug('Number of matches QML file : %s' % len(matches))
@@ -346,7 +359,12 @@ def get_bbox(filename):
     srid = None
     bbox_x0, bbox_y0, bbox_x1, bbox_y1 = None, None, None, None
 
-    if is_vector(filename):
+    if is_qlr(filename):
+        qlr_obj = QLRFile(filename)
+        srid = qlr_obj.srid
+        bbox_x0, bbox_y0, bbox_x1, bbox_y1 = qlr_obj.extent
+
+    elif is_vector(filename):
         datasource = DataSource(filename)
         if datasource.layer_count == 0:
             raise GeoNodeException(
