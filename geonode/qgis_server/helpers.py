@@ -17,13 +17,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
+import json
 import logging
 import math
 import os
 import re
 import shutil
 import urllib
-import json
 from urlparse import urljoin
 
 import requests
@@ -36,15 +36,15 @@ from lxml import etree
 from requests import Request
 
 from geonode import qgis_server, geoserver
-from geonode.maps.models import Map
-from geonode.utils import check_ogc_backend
 from geonode.geoserver.helpers import OGC_Servers_Handler
 from geonode.layers.models import Layer
-from geonode.qgis_server.gis_tools import num2deg
+from geonode.maps.models import Map
+from geonode.qgis_server.gis_tools import num2deg, deg2num
 from geonode.qgis_server.models import (
     QGISServerLayer,
     QGISServerMap,
     QGISServerStyle)
+from geonode.utils import check_ogc_backend
 
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
     # FIXME: The post service providing the map_status object
@@ -911,6 +911,20 @@ def style_list(layer, internal=True, generating_qgis_capabilities=False):
         return None
 
 
+def tile_cache_path(layername, z, x, y, style='default'):
+    """Generate tile cache path for a given tile request."""
+    tile_path_format = settings.QGIS_SERVER_CONFIG['tile_path']
+    tile_path = tile_path_format % (layername, style, z, x, y)
+    return tile_path
+
+
+def legend_cache_path(layername, style='default'):
+    """Generate legend cache path for a given legend request."""
+    legend_path_format = settings.QGIS_SERVER_CONFIG['legend_path']
+    legend_path = legend_path_format % (layername, style)
+    return legend_path
+
+
 def create_qgis_project(
         layer, qgis_project_path, overwrite=False, internal=True,
         basemap=None, basemap_name=None):
@@ -998,6 +1012,40 @@ def change_basemap_url(instance, basemap):
         layers, qgis_project_path,
         overwrite=False, internal=True,
         basemap=basemap)
+
+
+def tile_coordinate_generator(layer, zoom_min, zoom_max):
+    """Generate tuples of z x y given zoom range.
+
+    :param layer: GeoNode layers
+    :type layer: geonode.layers.models.Layer
+
+    :param zoom_min: minimum zoom level (inclusive)
+    :type zoom_min: int
+
+    :param zoom_max: maximum zoom level (inclusive)
+    :type zoom_max: int
+
+    :return: list of z x y tuples and tile count.
+    :rtype: list(tuple(z, x, y)), int
+    """
+    x0, y0, x1, y1 = transform_layer_bbox(layer, 4326)
+
+    tiles_list = []
+    tile_count = 0
+
+    for zoom in range(zoom_min, zoom_max + 1):
+        tile_x0, tile_y0 = deg2num(y0, x0, zoom)
+        tile_x1, tile_y1 = deg2num(y1, x1, zoom)
+        if tile_x0 > tile_x1:
+            tile_x0, tile_x1 = tile_x1, tile_x0
+        if tile_y0 > tile_y1:
+            tile_y0, tile_y1 = tile_y1, tile_y0
+        for tile_y in range(tile_y0, tile_y1 + 1):
+            for tile_x in range(tile_x0, tile_x1 + 1):
+                tiles_list.append((zoom, tile_x, tile_y))
+                tile_count += 1
+    return tiles_list, tile_count
 
 
 def delete_orphaned_qgis_server_layers():

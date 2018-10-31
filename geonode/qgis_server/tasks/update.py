@@ -18,7 +18,9 @@
 #
 #########################################################################
 
+import errno
 import logging
+import os
 import shutil
 import socket
 
@@ -31,7 +33,11 @@ from requests.exceptions import HTTPError
 from geonode.layers.models import Layer
 from geonode.layers.utils import create_thumbnail
 from geonode.maps.models import Map
-from geonode.qgis_server.helpers import map_thumbnail_url, layer_thumbnail_url
+from geonode.qgis_server.helpers import (
+    map_thumbnail_url,
+    layer_thumbnail_url,
+    tile_url,
+    tile_cache_path)
 from geonode.qgis_server.models import QGISServerLayer
 
 logger = logging.getLogger(__name__)
@@ -170,9 +176,53 @@ def cache_request(url, cache_file):
             content=response.content)
         raise HTTPError(msg)
 
+    dirname = os.path.dirname(cache_file)
+
+    try:
+        os.makedirs(dirname)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
     with open(cache_file, 'wb') as out_file:
         shutil.copyfileobj(response.raw, out_file)
 
     del response
 
     return True
+
+
+def tile_cache_seeder(layer, tiles_list, style='default'):
+    """Generate QGIS Server tile cache.
+
+    First, generate tiles_list using tile_coordinate_generator.
+
+    :param layer: GeoNode layers
+    :type layer: geonode.layers.models.Layer
+
+    :param tiles_list: tiles tuples list from tile_coordinate_generator
+    :type tiles_list: list(tuple)
+
+    :return: processed tiles count
+    :rtype: int
+    """
+    tile_count = 0
+    for zoom, tile_y, tile_x in tiles_list:
+
+        url = tile_url(
+            layer, zoom, tile_x, tile_y,
+            style='default', internal=True)
+
+        tile_path = tile_cache_path(
+            layer.qgis_layer.qgis_layer_name,
+            zoom, tile_x, tile_y, style=style)
+
+        result = cache_request.delay(url, tile_path)
+
+        try:
+            result.get()
+            tile_count += 1
+        except HTTPError:
+            pass
+
+    return tile_count

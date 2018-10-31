@@ -40,7 +40,8 @@ from geonode.layers.utils import file_upload
 from geonode.qgis_server.helpers import validate_django_settings, \
     transform_layer_bbox, qgis_server_endpoint, tile_url_format, tile_url, \
     style_get_url, style_add_url, style_list, style_set_default_url, \
-    style_remove_url
+    style_remove_url, tile_coordinate_generator
+from geonode.qgis_server.tasks.update import tile_cache_seeder
 
 
 class HelperTest(LiveServerTestCase):
@@ -291,4 +292,39 @@ class HelperTest(LiveServerTestCase):
             actual_geonode_layer_list - geonode_layer_list)
 
         # cleanup
+        uploaded.delete()
+
+    @on_ogc_backend(qgis_server.BACKEND_PACKAGE)
+    def test_tile_seeds(self):
+        """Test doing tile seeds."""
+        filename = os.path.join(gisdata.GOOD_DATA, 'raster/test_grid.tif')
+        uploaded = file_upload(filename)
+
+        # cache path should be empty
+        self.assertFalse(os.path.exists(uploaded.qgis_layer.cache_path))
+
+        # generate using tile seeder
+        tiles_list, tile_count = tile_coordinate_generator(uploaded, 10, 12)
+
+        self.assertEqual(12, tile_count)
+
+        tile_count = tile_cache_seeder(uploaded, tiles_list, style='default')
+
+        self.assertEqual(12, tile_count)
+
+        self.assertTrue(os.path.exists(uploaded.qgis_layer.cache_path))
+
+        # clean up
+        shutil.rmtree(uploaded.qgis_layer.cache_path)
+
+        # generate tiles using management command
+        self.assertFalse(os.path.exists(uploaded.qgis_layer.cache_path))
+
+        call_command(
+            'tile_seeder',
+            uploaded.name,
+            noinput=True, zoom_level=[10, 12])
+
+        self.assertTrue(os.path.exists(uploaded.qgis_layer.cache_path))
+
         uploaded.delete()

@@ -21,7 +21,7 @@
 import logging
 from urllib import urlencode, urlretrieve
 from os.path import splitext
-from math import atan, degrees, sinh, pi
+from math import atan, degrees, sinh, pi, radians, log, tan, cos
 from lxml import etree
 
 from django.conf import settings as geonode_config
@@ -129,6 +129,29 @@ def set_attributes(layer, overwrite=False):
                         layer.name.encode('utf-8'))
     else:
         logger.debug('No attributes found')
+
+
+def deg2num(lat_deg, lon_deg, zoom):
+    """Conversion from lat/lon EPSG:4326 coordinate to XYZ url.
+    See http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+
+    :param lat_deg: latitude
+    :type lat_deg: float
+
+    :param lon_deg: longitude
+    :type lon_deg: float
+
+    :param zoom: The zoom level, usually between 0 and 20.
+    :type zoom: integer
+
+    :return: Tuple (xtile,ytile).
+    :rtype: tuple
+    """
+    lat_rad = radians(lat_deg)
+    n = 2.0 ** zoom
+    xtile = int((lon_deg + 180.0) / 360.0 * n)
+    ytile = int((1.0 - log(tan(lat_rad) + (1 / cos(lat_rad))) / pi) / 2.0 * n)
+    return xtile, ytile
 
 
 def num2deg(x_tile, y_tile, zoom):
