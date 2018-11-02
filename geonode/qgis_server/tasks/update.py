@@ -181,7 +181,7 @@ def cache_request(url, cache_file):
     try:
         os.makedirs(dirname)
     except OSError as e:
-        if e.errno != errno.EEXIST:
+        if not e.errno == errno.EEXIST:
             raise
 
     with open(cache_file, 'wb') as out_file:
@@ -201,13 +201,14 @@ def tile_cache_seeder(layer, tiles_list, style='default'):
     :type layer: geonode.layers.models.Layer
 
     :param tiles_list: tiles tuples list from tile_coordinate_generator
+        (z, x, y)
     :type tiles_list: list(tuple)
 
     :return: processed tiles count
     :rtype: int
     """
     tile_count = 0
-    for zoom, tile_y, tile_x in tiles_list:
+    for zoom, tile_x, tile_y in tiles_list:
 
         url = tile_url(
             layer, zoom, tile_x, tile_y,

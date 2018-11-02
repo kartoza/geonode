@@ -314,6 +314,12 @@ class HelperTest(LiveServerTestCase):
 
         self.assertTrue(os.path.exists(uploaded.qgis_layer.cache_path))
 
+        # Check particular location is correctly generated
+        self.assertTrue(os.path.exists(
+            os.path.join(
+                uploaded.qgis_layer.cache_path, 'default/10/787/527.png')
+        ))
+
         # clean up
         shutil.rmtree(uploaded.qgis_layer.cache_path)
 
