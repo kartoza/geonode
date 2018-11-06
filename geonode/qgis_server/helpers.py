@@ -28,7 +28,8 @@ from urlparse import urljoin
 
 import requests
 from django.conf import settings
-from django.contrib.gis.gdal import CoordTransform, SpatialReference
+from django.contrib.gis.gdal import CoordTransform, SpatialReference, \
+    OGRGeometry
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
@@ -127,13 +128,39 @@ def transform_layer_bbox(layer, target_crs):
 
     :return: list converted BBox in target CRS, in the format:
         [xmin,ymin,xmax,ymax]
-    :rtype: list(int)
+    :rtype: list(float)
     """
     srid, wkt = layer.geographic_bounding_box.split(';')
     srid = re.findall(r'\d+', srid)
     geom = GEOSGeometry(wkt, srid=int(srid[0]))
     geom.transform(target_crs)
     return list(geom.extent)
+
+
+def transform_bbox(bbox, source_crs, target_crs):
+    """Transform BBOX into different CRS.
+
+    :param bbox: list BBox in source CRS, in the format:
+        [xmin,ymin,xmax,ymax]
+    :type bbox: list(float)
+
+    :param source_crs: source SRID (e.g. 4326)
+    :type source_crs: int
+
+    :param target_crs: target SRID (e.g. 3857)
+    :type target_crs: int
+
+    :return: list converted BBox in target CRS, in the format:
+        [xmin,ymin,xmax,ymax]
+    :rtype: list(float)
+    """
+
+    source_srs = SpatialReference('EPSG:{}'.format(source_crs))
+    target_srs = SpatialReference('EPSG:{}'.format(target_crs))
+    coord_transform = CoordTransform(source_srs, target_srs)
+    bound_geom = OGRGeometry.from_bbox(bbox)
+    bound_geom.transform(coord_transform)
+    return bound_geom.extent
 
 
 def qgis_server_endpoint(internal=True):
@@ -288,7 +315,7 @@ def map_thumbnail_url(instance, bbox=None, internal=True):
     :type instance: geonode.maps.models.Map
 
     :param bbox: Bounding box of thumbnail in 4 tuple format
-        [xmin,ymin,xmax,ymax]
+        [xmin,ymin,xmax,ymax] in EPSG:4326
     :type bbox: list(float)
 
     :param internal: Flag to switch between public url and internal url.
@@ -329,7 +356,7 @@ def layer_thumbnail_url(instance, style=None, bbox=None, internal=True):
     :type style: str
 
     :param bbox: Bounding box of thumbnail in 4 tuple format
-        [xmin,ymin,xmax,ymax]
+        [xmin,ymin,xmax,ymax] in EPSG:4326
     :type bbox: list(float)
 
     :param internal: Flag to switch between public url and internal url.
@@ -369,6 +396,7 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     """Internal function to generate the URL for the thumbnail.
 
     :param bbox: The bounding box to use in the format [left,bottom,right,top].
+        in EPSG:4326
     :type bbox: list
 
     :param layers: Name of the layer to use.
@@ -389,7 +417,11 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     """
     # convert to float, in case it is a decimal value or string
     bbox = [float(c) for c in bbox]
-    x_min, y_min, x_max, y_max = bbox
+
+    # Convert bbox to EPSG:3857 so we get meters unit
+    requested_bbox = transform_bbox(bbox, 4326, 3857)
+
+    x_min, y_min, x_max, y_max = requested_bbox
     # We calculate the margins according to 10 percent.
     percent = 10
     delta_x = (x_max - x_min) / 100 * percent
@@ -397,41 +429,55 @@ def thumbnail_url(bbox, layers, qgis_project, style=None, internal=True):
     delta_y = (y_max - y_min) / 100 * percent
     delta_y = math.fabs(delta_y)
     # We apply the margins to the extent.
-    margin = [
-        y_min - delta_y,
+    # For EPSG:3857, the format should be x0,y0,x1,y1
+    # For EPSG:4326, the format somehow be y0,x0,y1,x1
+    requested_bbox = [
         x_min - delta_x,
-        y_max + delta_y,
-        x_max + delta_x
+        y_min - delta_y,
+        x_max + delta_x,
+        y_max + delta_y
     ]
-    # Call the WMS.
-    bbox = ','.join([str(val) for val in margin])
-    # Calculate width and height
-    # Thumbnail bbox should always be in 4326 for consistency
-    bottom_left = Point(x=margin[1], y=margin[0], srid='EPSG:4326')
-    top_left = Point(x=margin[1], y=margin[2], srid='EPSG:4326')
-    top_right = Point(x=margin[3], y=margin[2], srid='EPSG:4326')
+    bbox_x0, bbox_y0, bbox_x1, bbox_y1 = requested_bbox
 
-    # calculate linear distance
-    # GEOSGeometry.distance will return linear distance instead of arc
-    height = bottom_left.distance(top_left)
-    width = top_left.distance(top_right)
+    # We apply aspect ratios calculations for resulting image
+    width = 400
+    height = 300
 
-    # try to maintain aspect ratios of the image
-    max_pixel_count = 512
-    max_length = max(height, width)
-    if max_length == 0:
-        height = max_pixel_count
-        width = max_pixel_count
-    else:
-        height = height * max_pixel_count / max_length
-        width = width * max_pixel_count / max_length
+    extent_horizontal = math.fabs(bbox_x1 - bbox_x0)
+    extent_vertical = math.fabs(bbox_y1 - bbox_y0)
+
+    aspect_ratios = float(width) / float(height)
+    extent_ratios = extent_horizontal / extent_vertical
+    if extent_ratios > aspect_ratios:
+        # vertical is lacking
+        vertical = extent_horizontal / aspect_ratios
+
+        correction = (vertical - extent_vertical) / 2
+        bbox_y0 -= correction
+        bbox_y1 += correction
+    elif extent_ratios < aspect_ratios:
+        # horizontal is lacking
+        horizontal = extent_vertical * aspect_ratios
+
+        correction = (horizontal - extent_horizontal) / 2
+        bbox_x0 -= correction
+        bbox_x1 += correction
+
+    # For EPSG:3857, the format should be x0,y0,x1,y1
+    requested_bbox = [
+        bbox_x0,
+        bbox_y0,
+        bbox_x1,
+        bbox_y1
+    ]
+    bbox_string = ','.join([str(val) for val in requested_bbox])
 
     query_string = {
         'SERVICE': 'WMS',
         'VERSION': '1.3.0',
         'REQUEST': 'GetMap',
-        'BBOX': bbox,
-        'SRS': 'EPSG:4326',
+        'BBOX': bbox_string,
+        'SRS': 'EPSG:3857',
         'WIDTH': int(width),
         'HEIGHT': int(height),
         'MAP': qgis_project,
