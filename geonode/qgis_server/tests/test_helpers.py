@@ -213,6 +213,35 @@ class HelperTest(LiveServerTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, 'OK')
 
+        # Test style extraction
+        # There should be no qml file, by default. It should be ignored.
+        qgis_layer.refresh_from_db()
+        self.assertFalse(os.path.exists(qgis_layer.qml_path))
+
+        # If the need rises, we can extract default style to qml path
+        qgis_layer.extract_default_style_to_qml()
+        self.assertTrue(os.path.exists(qgis_layer.qml_path))
+
+        # It can be deleted, once we finished dealing with it
+        qgis_layer.remove_qml_file_style()
+        self.assertFalse(os.path.exists(qgis_layer.qml_path))
+        # Deleting again should raise no error
+        qgis_layer.remove_qml_file_style()
+
+        # Alternatively if we are using default style in one thread,
+        # use context manager
+        with qgis_layer.use_default_style_as_qml(open_as_file=True) as f:
+            # Should contain the qml definition
+            qml_content = f.read()
+            self.assertTrue(qml_content, qgis_layer.default_style.body)
+
+        self.assertFalse(os.path.exists(qgis_layer.qml_path))
+
+        with qgis_layer.use_default_style_as_qml():
+            self.assertTrue(os.path.exists(qgis_layer.qml_path))
+
+        self.assertFalse(os.path.exists(qgis_layer.qml_path))
+
         # Cleanup
         uploaded.delete()
 

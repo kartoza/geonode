@@ -17,12 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-
+import codecs
+import contextlib
 import logging
 import os
 from shutil import rmtree
 from xml.etree import ElementTree
 
+import errno
 import requests
 from django.conf import settings
 from django.db import models
@@ -171,6 +173,54 @@ class QGISServerLayer(models.Model, PermissionLevelMixin):
         """
         return '{prefix}.xml'.format(prefix=self.qgis_layer_path_prefix)
 
+    def extract_default_style_to_qml(self):
+        """Get default style and write it as QML."""
+        if self.default_style.body:
+            with codecs.open(self.qml_path, mode='w', encoding='utf-8') as f:
+                f.write(self.default_style.body)
+
+    def remove_qml_file_style(self):
+        """Delete default QML file from disk."""
+        try:
+            os.remove(self.qml_path)
+        except OSError as e:
+            # ignore if it doesn't exists
+            if e.errno == errno.ENOENT:
+                pass
+
+    @contextlib.contextmanager
+    def use_default_style_as_qml(self, open_as_file=False, mode='r'):
+        """Context manager when using default style as QML.
+
+        :param open_as_file: Set to true if you want to open QML file as file
+        :type open_as_file: bool
+
+        :param mode: File mode when opening the file. Only used when
+            open_as_file flag is True
+        :type mode: pythonic open mode
+
+        :return: Yield a file handle if open_as_file=True, otherwise return
+            QML file path
+        :rtype: file | basestring
+        """
+        qml_handle = None
+        try:
+            # Extract default style to QML file
+            self.extract_default_style_to_qml()
+
+            # Now the style is accessible through self.qml_path
+            if open_as_file:
+                qml_handle = codecs.open(
+                    self.qml_path, mode=mode, encoding='utf-8')
+                yield qml_handle
+            else:
+                yield self.qml_path
+        finally:
+            # Cleanup resource when it's done
+            if qml_handle:
+                qml_handle.close()
+            self.remove_qml_file_style()
+
     def delete_qgis_layer(self):
         """Delete all files related to this object from disk."""
         for file_path in self.files:
@@ -200,6 +250,14 @@ class QGISServerLayer(models.Model, PermissionLevelMixin):
             return None
 
 
+class QGISServerStyleManager(models.Manager):
+
+    def get_queryset(self):
+        """Defer text fields"""
+        return super(QGISServerStyleManager, self).get_queryset().defer(
+            'body')
+
+
 class QGISServerStyle(models.Model, PermissionLevelMixin):
     """Model wrapper for QGIS Server styles."""
     name = models.CharField(_('style name'), max_length=255)
@@ -208,6 +266,8 @@ class QGISServerStyle(models.Model, PermissionLevelMixin):
     style_url = models.CharField(_('style url'), null=True, max_length=1000)
     style_legend_url = models.CharField(
         _('style legend url'), null=True, max_length=1000)
+
+    objects = QGISServerStyleManager()
 
     @classmethod
     def from_get_capabilities_style_xml(
