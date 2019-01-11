@@ -198,7 +198,7 @@ class QGISServerViewsTest(LiveServerTestCase):
                 'style_name': 'default'
             }))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get('Content-Type'), 'text/xml')
+        self.assertEqual(response.get('Content-Type'), 'text/vnd.qt.qml')
 
         # Set thumbnail from viewed bbox
         response = self.client.get(

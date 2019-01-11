@@ -659,7 +659,7 @@ def qml_style(request, layername, style_name=None):
         response = requests.get(style_url)
         if response.status_code == 200:
             response = HttpResponse(
-                response.content, content_type='text/xml')
+                response.content, content_type='text/vnd.qt.qml')
             response[
                 'Content-Disposition'] = 'attachment; filename=%s.qml' % (
                 style_name, )
