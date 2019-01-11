@@ -33,7 +33,7 @@ from geonode.qgis_server.views import (
     qgis_server_map_print,
     geotiff,
     download_qlr,
-    qml_style, set_thumbnail, default_qml_style)
+    qml_style, set_thumbnail, default_qml_style, get_layer)
 
 
 urlpatterns = [
@@ -163,5 +163,10 @@ urlpatterns = [
        r'^download-qlr/(?P<layername>[\w]*)$',
        download_qlr,
        name='download-qlr'
+    ),
+    url(
+        r'^layer/(?P<layername>[^/]*)/get$',
+        get_layer,
+        name='get_layer'
     ),
 ]

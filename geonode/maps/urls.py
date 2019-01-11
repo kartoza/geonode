@@ -31,13 +31,13 @@ js_info_dict = {
 
 new_map_view = views.new_map
 existing_map_view = views.map_view
+map_json = views.map_json
 
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
     new_map_view = views.new_map
     existing_map_view = views.map_view
     map_embed = views.map_embed
     map_edit = views.map_edit
-    map_json = views.map_json
     map_thumbnail = views.map_thumbnail
     map_detail = views.map_detail
 
@@ -55,7 +55,6 @@ elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
     map_download_qlr = map_download_qlr
     map_download_leaflet = map_download_leaflet
     map_edit = MapEditView.as_view()
-    map_json = MapUpdateView.as_view()
     map_thumbnail = set_thumbnail_map
     map_detail = MapDetailView.as_view()
 

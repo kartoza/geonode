@@ -492,15 +492,21 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
     # Geonode map supports local layers and remote layers
     # Remote layers were provided from other OGC services, so we don't
     # deal with it at the moment.
-    local_layers = [l for l in map_layers if l.local]
+    local_layers_name = [l.alternate for l in instance.local_layers]
+
+    for ml in map_layers:
+        if ml.name in local_layers_name:
+            local = True
+        else:
+            local = False
+        MapLayer.objects.filter(pk=ml.pk).update(local=local)
 
     layers = []
-    for layer in local_layers:
+    for layer in instance.local_layers:
         try:
-            l = Layer.objects.get(alternate=layer.name)
-            if not l.qgis_layer:
+            if not layer.qgis_layer:
                 raise QGISServerLayer.DoesNotExist
-            layers.append(l)
+            layers.append(layer)
         except Layer.DoesNotExist:
             msg = 'No Layer found for typename: {0}'.format(layer.name)
             logger.debug(msg)
@@ -574,7 +580,7 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
 
     # Set default bounding box based on all layers extents.
     # bbox format [xmin, xmax, ymin, ymax]
-    bbox = instance.get_bbox_from_layers(instance.local_layers)
+    bbox = instance.get_bbox_from_layers(layers)
     instance.set_bounds_from_bbox(bbox, instance.srid)
     Map.objects.filter(id=map_id).update(
         bbox_x0=instance.bbox_x0,
@@ -585,6 +591,17 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
         zoom=instance.zoom,
         center_x=instance.center_x,
         center_y=instance.center_y)
+
+    # Add chosen basemap to QGIS Project
+    basemap_maplayer = MapLayer.objects.filter(
+        map=instance,
+        group='background',
+        visibility=True).first()
+    """:type: MapLayer"""
+    tile_url = basemap_maplayer.ows_url
+
+    # In case there is a subdomain URL, replace it
+    tile_url = tile_url.replace('{s}.', '')
 
     # Check overwrite flag
     overwrite = getattr(instance, 'overwrite', False)
@@ -599,6 +616,7 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
         layer=layers,
         qgis_project_path=qgis_map.qgis_project_path,
         overwrite=overwrite,
+        basemap=tile_url,
         internal=True)
 
     logger.debug('Create project url: {url}'.format(url=response.url))
@@ -606,27 +624,28 @@ def qgis_server_post_save_map(instance, sender, **kwargs):
         'Creating the QGIS Project : %s -> %s' % (
             qgis_map.qgis_project_path, response.content))
 
-    # add style to qgis project
+    # add layer's individual style to qgis project
     for layer in layers:
         qgis_layer = layer.qgis_layer
-        default_style = qgis_layer.default_style
-        with open(qgis_layer.qml_path, 'w') as qml_file:
-            qml_file.write(default_style.body)
-        url_add_style = style_add_url(
-            layer,
-            layer.name,
-            qgis_project_path=qgis_map.qgis_project_path)
-        response = requests.get(url_add_style)
-        if response.status_code != 200:
-            logger.debug('Unable to add new style to qgs file')
 
-        url_set_default = style_set_default_url(
-            layer,
-            layer.name,
-            qgis_project_path=qgis_map.qgis_project_path)
-        response = requests.get(url_set_default)
-        if response.status_code != 200:
-            logger.debug('Unable to set default to the new style in qgs')
+        with qgis_layer.use_default_style_as_qml():
+            # Insert styles to Map QGIS Project
+            url_add_style = style_add_url(
+                layer,
+                style_name=layer.name,
+                qgis_project_path=qgis_map.qgis_project_path)
+            response = requests.get(url_add_style)
+            if response.status_code != 200:
+                logger.debug('Unable to add new style to qgs file')
+
+            # Set default styles to Map QGIS Project
+            url_set_default = style_set_default_url(
+                layer,
+                style_name=layer.name,
+                qgis_project_path=qgis_map.qgis_project_path)
+            response = requests.get(url_set_default)
+            if response.status_code != 200:
+                logger.debug('Unable to set default to the new style in qgs')
 
     # Generate map thumbnail
     create_qgis_server_thumbnail.delay(

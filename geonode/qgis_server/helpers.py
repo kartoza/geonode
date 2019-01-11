@@ -39,7 +39,7 @@ from requests import Request
 from geonode import qgis_server, geoserver
 from geonode.geoserver.helpers import OGC_Servers_Handler
 from geonode.layers.models import Layer
-from geonode.maps.models import Map
+from geonode.maps.models import Map, MapLayer
 from geonode.qgis_server.gis_tools import num2deg, deg2num
 from geonode.qgis_server.models import (
     QGISServerLayer,
@@ -332,6 +332,17 @@ def map_thumbnail_url(instance, bbox=None, internal=True):
         logger.debug(msg)
         raise
 
+    # Get all visible map layers, ordered from zIndex
+    # 0 means bottom.
+    # In FIFO (bottom to top) order, we will feed the layer name to QGIS
+    visible_layers = MapLayer.objects.filter(
+        map=instance, visibility=True).exclude(
+        group='background').order_by('stack_order')
+    geonode_layers = Layer.objects.filter(
+        alternate__in=[ml.name for ml in visible_layers])
+    layers = 'basemap,{0}'.format(
+        ','.join([l.name for l in geonode_layers]))
+
     qgis_project = qgis_map.qgis_project_path
     if not os.path.exists(qgis_project):
         msg = 'Map project not found for {0}'.format(qgis_project)
@@ -343,7 +354,7 @@ def map_thumbnail_url(instance, bbox=None, internal=True):
         # Reproject, in case of different CRS
         bbox = transform_layer_bbox(instance, 4326)
     return thumbnail_url(
-        bbox, qgis_map.qgis_map_name, qgis_project, internal=internal)
+        bbox, layers, qgis_project, internal=internal)
 
 
 def layer_thumbnail_url(instance, style=None, bbox=None, internal=True):

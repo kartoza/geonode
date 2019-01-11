@@ -1013,14 +1013,14 @@ LEAFLET_CONFIG = {
 
         # Base map
         ('OpenMapSurfer_Roads',
-         'http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}',
+         'https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}',
          'Imagery from <a href="http://giscience.uni-hd.de/">'
          'GIScience Research Group @ University of Heidelberg</a> '
          '&mdash; Map data &copy;'
          ' <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
          ),
         ('OpenStreetMap',
-         'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+         'https://{s}.tile.osm.org/{z}/{x}/{y}.png',
          '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> '
          'contributors'
          ),

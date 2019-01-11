@@ -19,6 +19,7 @@
 #########################################################################
 
 import StringIO
+import decimal
 import json
 import logging
 import os
@@ -42,6 +43,7 @@ from django.http.response import (
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
+from geonode.layers.views import _resolve_layer
 
 from geonode.maps.models import MapLayer
 from geonode.layers.models import Layer, LayerFile
@@ -54,7 +56,7 @@ from geonode.qgis_server.helpers import (
     qlr_url,
     qgis_server_endpoint, style_get_url, style_list, style_add_url,
     style_remove_url, style_set_default_url, change_basemap_url,
-    tile_cache_path, legend_cache_path)
+    tile_cache_path, legend_cache_path, transform_layer_bbox)
 from geonode.qgis_server.models import QGISServerLayer
 from geonode.qgis_server.tasks.update import (
     create_qgis_server_thumbnail,
@@ -986,3 +988,35 @@ def download_qlr(request, layername):
         'attachment; filename=%s.qlr' % layer_title
 
     return response
+
+
+def get_layer(request, layername):
+    """Get Layer object as JSON for map client."""
+
+    # Function to treat Decimal in json.dumps.
+    # http://stackoverflow.com/a/16957370/1198772
+    def decimal_default(obj):
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        raise TypeError
+    logger.debug('Call get layer')
+    if request.method == 'GET':
+        layer_obj = _resolve_layer(request, layername)
+        logger.debug(layername)
+        bbox_x0, bbox_y0, bbox_x1, bbox_y1 = transform_layer_bbox(layer_obj, 4326)
+        response = {
+            'alternate': layer_obj.alternate,
+            'name': layer_obj.name,
+            'title': layer_obj.title,
+            'url': layer_obj.get_tiles_url(),
+            'bbox_x0': bbox_x0,
+            'bbox_x1': bbox_x1,
+            'bbox_y0': bbox_y0,
+            'bbox_y1': bbox_y1,
+        }
+        return HttpResponse(
+            json.dumps(
+                response,
+                ensure_ascii=False,
+                default=decimal_default),
+            content_type='application/javascript')

@@ -5,7 +5,7 @@
 {% load leaflet_tags %}
 
 {% block title %}
-    {% trans "GeoExplorer" %} - {{ block.super }}
+    {% trans "Leaflet" %} - {{ block.super }}
 {% endblock title %}
 
 {% block head %}
@@ -13,115 +13,150 @@
 {% endblock head %}
 
 {% block extra_head %}
+    {{ block.super }}
     {% leaflet_css %}
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css"
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css"
           media="all"/>
     <link rel="stylesheet"
           href="https://cdn.rawgit.com/elesdoar/leaflet-control-orderlayers/master/dist/css/leaflet.control.orderlayers.min.css"
           type="text/css"/>
     <link rel="stylesheet" href="{% static 'lib/css/L.Control.Pan.css' %}"/>
-    <link href="{{ STATIC_URL }}geonode/css/map_leaflet.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'geonode/css/map_leaflet.css' %}"/>
     <style type="text/css">
-        html, body, #wrap {
-            height: 100%;
-            width: 100%;
-        }
 
-        #layer-list li {
+        #layer-list .input-group{
             cursor: move;
         }
 
-        label {
-            padding-bottom: 1%;
+        .layer-item, .form-control.layer-item[disabled], label.form-control.layer-item {
+            display: inline-block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            cursor: move;
+            vertical-align: middle;
         }
 
-        .leaflet-bar.easy-button-container.leaflet-control {
-            margin-left: 35px;
+        label.form-control.layer-item.basemap-item{
+            max-width: 200px;
+            min-width: 200px;
+            cursor: default;
+        }
+
+        .leaflet-left .easy-button-container{
+            left: 23px;
         }
 
     </style>
 {% endblock extra_head %}
 
-{% block body %}
-    </div>
-    </div>
-    </div>
+{% block middle %}
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-3 pad0">
-                <div class="options-panel newmap">
-                    <div class="form-group">
-                        <label for="add_layer_select">Available layers</label>
-                        <select class="form-control" id="add_layer_select">
-                            {% for layer in layers %}
-                                <option value="{{ layer.alternate }}"
-                                        id="option_{{ layer.alternate }}">{{ layer.title }}</option>
-                            {% endfor %}
-                        </select>
-                        <input id="add_layer_button" type="submit" class="btn btn-info" value="Add Layer">
+            <div class="col-md-3">
+                <div class="options-panel">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <label for="add_layer_select">{% trans "Available layers" %}</label>
+                        </div>
+                        <div class="panel-body">
+                            <div class="input-group">
+                                <select class="form-control" id="add_layer_select">
+                                    <option>{% trans "Loading Layer Lists..." %}</option>
+                                </select>
+                                <span class="input-group-btn">
+                                    <input id="add_layer_button" type="submit" class="btn btn-primary" value="{% trans "Add Layer" %}">
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <h4>Map layers</h4>
-                    <div>
-                        <ul id="layer-list">
-                        </ul>
-                        <span id="hidden-layer-list"></span>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <label>{% trans "Map layers" %}</label>
+                        </div>
+                        <div class="panel-body">
+                            <div id="layer-list">
+                            </div>
+                        </div>
                     </div>
-                    <h4>Background layers</h4>
-                    <div>
-                        <ul id="background-layer-list">
-                        </ul>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <label>{% trans "Background layers" %}</label>
+                        </div>
+                        <div class="panel-body">
+                            <div class="input-group">
+                                <div id="background-layer-list">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="buttons">
-                        <button class="btn btn-info" data-toggle="modal" data-target="#save-map-modal">Save</button>
-                        {#                        <button class="btn btn-info">Load</button>#}
-                        {#                        <button class="btn btn-info">Publish</button>#}
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#save-map-modal">{% trans "Save" %}</button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-9 pad0">
+            <div class="col-md-9">
                 <div id="map" style="position:relative; ">
                 </div>
             </div>
         </div>
     </div>
     <!-- Modal -->
+    {% block save_map_modal %}
     <div class="modal fade" id="save-map-modal" role="dialog">
         <div class="modal-dialog">
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Save Map</h4>
+                    <h4 class="modal-title">{% trans "Save Map" %}</h4>
                 </div>
                 <div class="modal-body">
                     <form role="form" id="save-map-form" action="{% url 'new_map_json' %}" method="post">
                         <div class="form-group">
-                            <label for="map-title-input">Title:</label>
+                            <label for="map-title-input">{% trans "Title:" %}</label>
                             <input name="map-title" type="text" class="form-control" id="map-title-input"
                                    placeholder="Enter map title">
                         </div>
                         <div class="form-group">
-                            <label for="map-abstract-input">Abstract:</label>
+                            <label for="map-abstract-input">{% trans "Abstract:" %}</label>
                             <textarea name="map-abstract" class="form-control" rows="5" id="map-abstract-input"
                                       placeholder="Enter map abstract"></textarea>
+                        </div>
+                        <div class="alert alert-info" id="info-message-modal" hidden>
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <span id="info-message-content">
+                                <i class="fa fa-spinner fa-spin"></i>{% trans "Saving in progress. Please wait." %}
+                            </span>
+                        </div>
+                        <div class="alert alert-success" id="success-message-modal" hidden>
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <span id="success-message-content">
+                                {% trans "Map Successfully Saved." %}
+                            </span>
+                            <div>
+                                <a id="go-to-map" class="btn btn-primary" href="#">{% trans "Go To Map Detail" %}</a>
+                                <a class="btn btn-default" href="{% url "maps_browse" %}">{% trans "Go To Map List" %}</a>
+                            </div>
                         </div>
                         <div class="alert alert-danger" id="error-message-modal" hidden>
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                             <span id="error-message-content"></span>
                         </div>
-                        <button type="submit" class="btn btn-default">Save</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-default">{% trans "Save" %}</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-{% endblock body %}
+    {% endblock save_map_modal %}
+{% endblock middle %}
 
 {% block footer %}
-
+    {{ block.super }}
 {% endblock footer %}
 
 {% block extra_script %}
@@ -129,7 +164,7 @@
     {% leaflet_js %}
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"
             type="text/javascript"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/Sortable/1.4.2/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.4.2/Sortable.min.js"></script>
     <script src="https://cdn.rawgit.com/elesdoar/leaflet-control-orderlayers/master/dist/leaflet.control.orderlayers.min.js"></script>
     <script src="https://cdn.rawgit.com/elesdoar/leaflet-control-orderlayers/master/dist/leaflet.control.orderlayers.min.js"></script>
 
@@ -146,44 +181,184 @@
         var all_layers_list = [];
 
         // Define some default base layers
-        var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        var osm = L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
         });
 
-        var OpenMapSurfer_Roads = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
+        var OpenMapSurfer_Roads = L.tileLayer('https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
             maxZoom: 20,
             attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         });
 
         {% if create %}
+            {# if new map, define default basemaps#}
             all_layers = {
                 'OpenMapSurfer_Roads': {
                     'title': 'OpenMapSurfer Roads',
                     'name': 'OpenMapSurfer_Roads',
+                    'alternate': 'OpenMapSurfer_Roads',
                     'url': OpenMapSurfer_Roads._url,
                     'layer': OpenMapSurfer_Roads,
-                    'visibility': true,
-                    'group': 'background',
-                    'zIndex': 0
-                },
-                'osm': {
-                    'title': 'OpenStreetMap',
-                    'name': 'osm',
-                    'url': osm._url,
-                    'layer': osm,
                     'visibility': false,
                     'group': 'background',
-                    'zIndex': 1
+                    'attribution': '',
+                    'zIndex': 0
+                },
+                'OpenStreetMap': {
+                    'title': 'OpenStreetMap',
+                    'name': 'OpenStreetMap',
+                    'alternate': 'OpenMapSurfer_Roads',
+                    'url': osm._url,
+                    'layer': osm,
+                    'visibility': true,
+                    'group': 'background',
+                    'attribution': '',
+                    'zIndex': 0
                 }
             };
-            all_layers_list.push('OpenMapSurfer_Roads');
-            all_layers_list.push('osm');
-
-            active_background_layer = OpenMapSurfer_Roads;
         {% else %}
+            {# If not create mode, initialize empty and register from map layers. #}
             all_layers = {};
-            all_layers_list = [];
         {% endif %}
+
+        function _register_to_layer_list(layer_desc) {
+            var layer_name = layer_desc['alternate'];
+            var leaflet_layer_obj = L.tileLayer(layer_desc['url'], {
+                attribution: layer_desc['attribution']
+            });
+            layer_desc['layer'] = leaflet_layer_obj;
+            all_layers[layer_name] = layer_desc;
+        }
+
+        function _register_to_layer_select_list(layer_desc, option_index){
+            var $add_layer_select = $("#add_layer_select");
+            var $option = $(`<option value="${layer_desc.name}"
+                id="option_${layer_desc.name}"
+                data-value="${layer_desc.name}"
+                data-layer-alternate="${layer_desc.alternate}">${layer_desc.title}</option>`);
+            if(option_index){
+                $add_layer_select.find(`option:eq(${option_index})`).before($option);
+            } else {
+                $add_layer_select.append($option);
+            }
+        }
+
+        {# Extra basemap tiles from LEAFLET_CONFIG #}
+        var extra_basemaps = [
+        {% if LEAFLET_CONFIG and LEAFLET_CONFIG.TILES %}
+            {% for tile in LEAFLET_CONFIG.TILES %}
+                {
+                    'title': "{{ tile.0 }}",
+                    'name': "{{ tile.0 }}",
+                    'alternate': "{{ tile.0 }}",
+                    'url': '{{ tile.1|safe }}',
+                    'visibility': false,
+                    'group': 'background',
+                    'attribution': '{{ tile.2|safe }}',
+                    'zIndex': 0
+                }{% if not forloop.last %},{% endif %}
+
+            {% endfor %}
+        {% endif %}
+        ];
+
+        for(var i=0;i<extra_basemaps.length;i++){
+            _register_to_layer_list(extra_basemaps[i]);
+        }
+
+        {# fetch layers list from api #}
+        {% block layer_fetch_script %}
+        $.getJSON('{% url "api_api_top_level" api_name="api" %}layers',  function(data){
+            if(data === undefined || data.objects === undefined){
+                return
+            }
+            var $add_layer_select = $("#add_layer_select");
+            var objects = data['objects'];
+            var layer;
+            $add_layer_select.empty();
+            for(var i=0;i<objects.length;i++){
+                layer = objects[i];
+                _register_to_layer_list(layer);
+                layer.option_index = i;
+                layer.group = '';
+                _register_to_layer_select_list(layer);
+            }
+
+            // Populate radio button for background layer
+            populate_background_layer(all_layers_list, all_layers);
+            init_data_script();
+        });
+        {% endblock layer_fetch_script %}
+
+        {% block init_script %}
+            {# This function gets called when layer's list are finally fetched. #}
+            function init_data_script(){
+            {% if copy or not create %}
+                {# Create new map from copying existing map. Or update existing map. #}
+                $.getJSON('{% url "api_api_top_level" api_name="api" %}maps/{{ map.id }}',  function(data){
+                    if(data === undefined || data.layers === undefined){
+                        return
+                    }
+                    var map_obj = data;
+                    var layers = data.layers;
+                    var last_promise;
+                    for(var i=0;i<layers.length;i++){
+                        {# ignore background layers #}
+                        var layer = layers[i];
+                        var layer_name = layer.name;
+                        if(layer.group === 'background'){
+                            if(layer.visibility === true){
+                                {# remove current basemap #}
+                                map.removeLayer(active_background_layer.layer);
+                                remove_from_list(all_layers_list, active_background_layer.name);
+
+                                {# set new basemap #}
+                                active_background_layer = all_layers[layer_name];
+                                active_background_layer.visibility = true;
+                                active_background_layer.layer.addTo(map);
+                                active_background_layer.layer.setZIndex(0);
+                                all_layers_list.push(active_background_layer.name);
+                                populate_background_layer(all_layers_list, all_layers);
+                            }
+
+                            continue
+                        }
+                        var layer_desc = all_layers[layer_name];
+                        layer_desc['url'] = layer_desc.ows_url;
+                        layer_desc['zIndex'] = layer_desc.stack_order;
+
+                        {# synchronously add layer in series #}
+                        if(last_promise === undefined) {
+                            last_promise = $.when(
+                                add_layer(layer_desc.alternate, layer_desc.visibility, layer_desc.stack_order));
+                        }
+                        else {
+                            last_promise.done(function(){
+                                last_promise = $.when(
+                                    add_layer(layer_desc.alternate, layer_desc.visibility, layer_desc.stack_order));
+                            });
+                        }
+                    }
+
+                    if(last_promise !== undefined){
+                        last_promise.done(function(){
+                            zoom_to_box(map, [map_obj.bbox_x0, map_obj.bbox_y0, map_obj.bbox_x1, map_obj.bbox_y1]);
+                        });
+                    }
+                });
+            {% elif create and not copy %}
+                {# Create new map from including existing layer #}
+                {# Check layer parameter in url#}
+                var url = new URL(window.location);
+                var params = new URLSearchParams(url.search);
+                var layers = params.getAll('layer');
+                for(var i=0;i<layers.length;i++){
+                    var layer=layers[i];
+                    add_layer(layer);
+                }
+            {% endif %}
+            }
+        {% endblock init_script %}
 
         var w_height = $(window).height();
         var map_height = w_height - $('nav').height();
@@ -194,6 +369,8 @@
         }
 
         function zoom_to_box(map, bbox) {
+            {# each point is on lat long format #}
+            {# bbox is in the form x0,y0,x1,y1 #}
             var bounds = [
                 [bbox[1], bbox[0]],
                 [bbox[3], bbox[2]]
@@ -215,26 +392,17 @@
 
         function delete_layer_clicked(button) {
             // Remove layer from the map
-            if (map.hasLayer(all_layers[button.value].layer)) {
-                map.removeLayer(all_layers[button.value].layer);
+            var layer_desc = all_layers[button.value];
+            if (map.hasLayer(layer_desc.layer)) {
+                map.removeLayer(layer_desc.layer);
             }
-            // Remove layer from the array
-            delete all_layers[button.value];
             // Remove layer from map layer list
-            remove("li_" + button.value);
+            remove(`ig_${button.value}`);
             // Remove from list overlay layers
-            // This statement seems to be bug, so being commented out
-            //remove_from_list(all_layers, button.value);
-            // Remove hidden layer
-            var hidden_layers = $("#hidden-layer-list > input");
-            hidden_layers.each(function() {
-                if (this.id == "hidden_" + button.value) {
-                    this.remove();
-                }
-            });
+            remove_from_list(all_layers_list, button.value);
 
             // Show from available layer
-            document.getElementById("option_" + button.value).style.display = 'block';
+            _register_to_layer_select_list(layer_desc, layer_desc.option_index);
         }
 
         function remove_from_list(list, item) {
@@ -245,104 +413,93 @@
         }
 
         function compare_bounds(bound1, bound2) {
+            {# Bound in the format x0,y0,x1,y1 #}
             return [
-                Math.max(bound1[0], bound2[0]),
-                Math.min(bound1[1], bound2[1]),
-                Math.max(bound1[2], bound2[2]),
-                Math.min(bound1[3], bound2[3]) ]
+                Math.min(bound1[0], bound2[0], bound1[2], bound2[2]),
+                Math.min(bound1[1], bound2[1], bound1[3], bound2[3]),
+                Math.max(bound1[0], bound2[0], bound1[2], bound2[2]),
+                Math.max(bound1[1], bound2[1], bound1[3], bound2[3])]
         }
 
         function add_layer(layer_typename, visibility, layer_order) {
             visibility = typeof visibility !== 'undefined' ? visibility : true;
-            if (layer_typename in all_layers) {
-                return
-            }
             if (!layer_typename) {
                 return
             }
-            $.ajax({
+            return $.ajax({
                 type: 'GET',
-                url: '/layers/' + layer_typename + '/get',
+                url: '{% url 'qgis_server:get_layer' layername="layer_typename" %}'.replace('layer_typename', layer_typename),
                 data: {},
                 dataType: 'json',
                 success: function (json) {
-                    var layer_url = json['url'];
-                    var layer_title = json['title'];
+                    var layer_url = json.url;
+                    var layer_title = json.title;
+                    var layer_name = layer_typename;
 
                     // Add layer to leaflet
                     var tile_layer = L.tileLayer(layer_url);
                     if (tile_layer != null) {
                         // Set view to new added layer
-                        var bounds = [json['bbox_x0'], json['bbox_y0'],
-                            json['bbox_x1'], json['bbox_y1']];
+                        var bounds = [json.bbox_x0, json.bbox_y0,
+                            json.bbox_x1, json.bbox_y1];
 
                         // Determine which extent should be used, only uses the widest one
-                        var hidden_layers = $("#hidden-layer-list > input");
-                        if(hidden_layers.length != 0) {
-                            temp_bounds = undefined;
-                            hidden_layers.each(function () {
-                                //temp_bounds has been determined from the previous loop
-                                if(temp_bounds != undefined) {
-                                    bounds = temp_bounds;
-                                }
-                                previous_bounds = $(this).val();
-                                //convert string to float
-                                previous_bounds = previous_bounds.split(",").map(function (elem) {
-                                        return parseFloat(elem);
-                                    });
-                                temp_bounds = compare_bounds(bounds, previous_bounds);
-                            });
-                            // The zoom value will determine how wide the layers will be shown
-                            map.setZoom(5);
-                            bounds = temp_bounds;
+                        var temp_bounds = bounds;
+                        for(var i=0;i<all_layers_list.length;i++){
+                            var layer = all_layers[all_layers_list[i]];
+                            if(layer.bounds !== undefined){
+                                temp_bounds = compare_bounds(temp_bounds, layer.bounds);
+                            }
                         }
+                        bounds = temp_bounds;
                         zoom_to_box(map, bounds);
 
                         // Add to list layer
+                        var $layer_ig = $(`<span class='input-group' id='ig_${layer_name}'>
+                            <span class='input-group-addon'>
+                                <span class='glyphicon glyphicon-move'></span>
+                            </span>
+                            <span class='input-group-addon'>
+                                <input class='layer-item-checkbox' type='checkbox' onclick='check_box_layer_clicked(this);' name='show_layer' value='${layer_name}'>
+                            </span>
+                            <input type="text" class='form-control layer-item' readonly disabled value='${layer_title}'  data-value='${layer_name}'/>
+                            <span class='input-group-btn'>
+                                <button type='button' class='btn btn-danger' onclick='delete_layer_clicked(this);' value='${layer_name}'>X</button>
+                            </span>
+                            </li>`);
+
                         if (visibility) {
                             // Add the layer
                             map.addLayer(tile_layer);
-                            $("#layer-list").prepend(
-                                    "<li id='li_" + layer_typename + "'>" +
-                                    "<input type='checkbox' onclick='check_box_layer_clicked(this);' name='show_layer' value='" + layer_typename + "' checked>" +
-                                    layer_title +
-                                    "<button type='button' onclick='delete_layer_clicked(this);' value='" + layer_typename + "'>X</button>" +
-                                    "</li>");
-                        } else {
-                            $("#layer-list").prepend(
-                                    "<li id='li_" + layer_typename + "'>" +
-                                    "<input type='checkbox' onclick='check_box_layer_clicked(this);' name='show_layer' value='" + layer_typename + "'>" +
-                                    layer_title +
-                                    "<button type='button' onclick='delete_layer_clicked(this);' value='" + layer_typename + "'>X</button>" +
-                                    "</li>");
+                            $layer_ig.find('input.layer-item-checkbox').prop('checked', true);
                         }
 
-                        $("#hidden-layer-list").html("<input type='hidden' id='hidden_"+ layer_typename +"' value='"+bounds+"' />");
+                        $("#layer-list").prepend($layer_ig);
 
                         // Add to memory
-                        var added_layer = {};
+                        var added_layer = all_layers[layer_name];
                         added_layer.title = layer_title;
+                        added_layer.alternate = json.alternate;
                         added_layer.url = layer_url;
                         added_layer.layer = tile_layer;
+                        added_layer.bounds = bounds;
                         added_layer.visibility = visibility;
                         if (layer_order) {
                             added_layer.zIndex = layer_order;
                         } else {
-                            console.log('No layer order, set to : ' + (all_layers_list.length));
                             added_layer.zIndex = all_layers_list.length;
                         }
-                        all_layers[layer_typename] = added_layer;
+                        all_layers[layer_name] = added_layer;
 
                         // Add to list of overlay layers
-                        all_layers_list.push(layer_typename);
+                        all_layers_list.push(layer_name);
 
                         // Set zIndex of the layer
                         tile_layer.setZIndex(added_layer.zIndex);
-                        console.log(added_layer.zIndex);
 
 
                         // Hide from available layer
-                        document.getElementById("option_" + layer_typename).style.display = 'none';
+                        $(`#add_layer_select > option[data-layer-alternate="${layer_name}"]`).remove();
                         $('#add_layer_select').prop('selectedIndex', -1);
                     }
                 },
@@ -353,8 +510,12 @@
         }
 
         function save_map(event) {
-            console.log('Save Map');
             event.preventDefault();
+            var $info_modal = $("#info-message-modal");
+            var $error_modal = $("#error-message-modal");
+            var $success_modal = $("#success-message-modal");
+
+            $info_modal.show();
             var form_data = $('#save-map-form').serializeObject();
 
             // Collect layers
@@ -363,34 +524,37 @@
 
             map_data['sources'] = {};
             for (i = 0; i < all_layers_list.length; i++) {
-                key = all_layers_list[i];
-                source_token = 'source_' + all_layers[key]['title'];
-                console.log('Adding to layers');
-                console.log(key);
+                var key = all_layers_list[i];
+                var layer_desc = all_layers[key];
+                var source_token = 'source_' + layer_desc.name;
                 layers.push(
                         {
-                            'name': key,
-                            'title': all_layers[key]['title'],
-                            'visibility': all_layers[key]['visibility'],
-                            'url': all_layers[key]['url'],
-                            'group': all_layers[key]['group'],
+                            'name': layer_desc.alternate,
+                            'title': layer_desc.title,
+                            'visibility': layer_desc.visibility,
+                            'url': layer_desc.url,
+                            'group': layer_desc.group,
                             'source': source_token
                         }
                 );
                 map_data['sources'][source_token] = {
-                    'url': all_layers[key]['url']
+                    'url': layer_desc.url
                 };
             }
-            console.log(layers);
 
             map_data['about'] = {
                 'title': form_data['map-title'],
                 'abstract': form_data['map-abstract']
             };
+            {# GeoNode Map backend json post handler uses EPSG:3857 for the 'center' key #}
+            {# It however uses projection EPSG:4326 for the bbox, so we update accordingly #}
+            var center_point = L.Projection.Mercator.project(map.getCenter());
             map_data['map'] = {
-                'center': [map.getCenter()['lat'], map.getCenter()['lng']],
+                {# In EPSG:3857 #}
+                'center': [center_point.x, center_point.y],
                 'zoom': map.getZoom(),
-                'projection': '',
+                {# In EPSG:4326 #}
+                'projection': 'EPSG:4326',
                 'layers': layers
             };
 
@@ -403,89 +567,87 @@
                 contentType: false,
                 dataType: 'json',
                 success: function (data) {
-                    console.log('Save map success');
-                    $('#save-map-modal').modal('hide');
+                    if(data === undefined || data.errors){
+                        $("#error-message-content").html(
+                            `{% trans "<strong>Failed!</strong> There is an error when saving the map. <br/><div class='panel panel-default'>${data.errors}</div>" %}`);
+                        $error_modal.show();
+                    }
+                    if(data){
+                        var detail_url = '{% url "map_detail" mapid=1 %}'.replace('1', data.id);
+                        $("#go-to-map").attr('href', detail_url);
+                        $success_modal.show();
+                    }
+                    $info_modal.hide();
                 },
                 error: function (xhr, status, error) {
-                    console.log('Save map failed' + error);
-                    $("#error-message-content").html(
-                            "<strong>Failed!</strong> There is an error when saving the map. " + error);
-                    $('#error-message-modal').show();
+                    $error_modal.html(
+                            `{% trans "<strong>Failed!</strong> There is an error when saving the map. <br/><div class='panel panel-default'>${error}</div>" %}`);
+                    $error_modal.show();
                 }
             });
         }
 
         function populate_background_layer(the_list, the_dict) {
-            console.log(the_list);
-            for (i = 0; i < the_list.length; i++) {
-                var background_layer_name = the_list[i];
-                var background_layer = the_dict[background_layer_name];
-                if (background_layer['group'] != 'background') {
+            var $background_layer_list = $("#background-layer-list");
+            $background_layer_list.empty();
+            for(var key in the_dict){
+                var background_layer = the_dict[key];
+                if (background_layer.group !== 'background') {
                     continue;
                 }
-                if (background_layer['visibility'] == "True") {
-                    active_background_layer = background_layer;
-                    $("#background-layer-list").prepend(
-                            '<li>' +
-                            '<input type="radio" name="background-layer" value="' +
-                            background_layer_name +
-                            '" checked="checked">' +
-                            background_layer['title'] +
-                            '</li>'
-                    );
-                } else if (background_layer['visibility']) {
-                    active_background_layer = background_layer;
-                    $("#background-layer-list").prepend(
-                            '<li>' +
-                            '<input type="radio" name="background-layer" value="' +
-                            background_layer_name +
-                            '" checked="checked">' +
-                            background_layer['title'] +
-                            '</li>'
-                    );
-
-                } else {
-                    $("#background-layer-list").prepend(
-                            '<li>' +
-                            '<input type="radio" name="background-layer" value="' +
-                            background_layer_name +
-                            '">' +
-                            background_layer['title'] +
-                            '</li>'
-                    );
+                if(active_background_layer._url === background_layer.url){
+                    background_layer.visibility = true
                 }
+                var $background_input_dom = $(
+                    `<span class='input-group'>
+                        <span class='input-group-addon'>
+                            <input id='basemap_radio_${key}' type="radio" name="background-layer" value="${key}">
+                        </span>
+                        <label for='basemap_radio_${key}' class='form-control layer-item basemap-item'>${background_layer.title}</label>
+                    </span>`);
+                if (background_layer.visibility === "True" || background_layer.visibility === true) {
+                    active_background_layer = background_layer;
+                    $background_input_dom.find('input').prop('checked', true);
+
+                }
+                $background_layer_list.append($background_input_dom);
 
             }
             // Add radio button listener for background layer
             $('input:radio[name=background-layer]').change(function () {
-                var new_background_layer = all_layers[this.value]['layer'];
-                map.removeLayer(active_background_layer);
-                new_background_layer.addTo(map);
-                new_background_layer.setZIndex(0);
+                var new_background_layer = the_dict[this.value];
+                {# remove from layer list  #}
+                remove_from_list(the_list, active_background_layer.name);
+                map.removeLayer(active_background_layer.layer);
+
+                new_background_layer.layer.addTo(map);
+                new_background_layer.layer.setZIndex(0);
+                new_background_layer.visibility = true;
                 active_background_layer = new_background_layer;
+                {# Always insert basemap at lowest order #}
+                the_list.splice(0, 0, new_background_layer.name);
             });
         }
 
         $(document).ready(function () {
+
             // Initiate map
-            {% if create %}
-                map = L.map('map', {
-                    center: [-6.2, 106.8],
-                    zoom: 11,
-                    layers: [active_background_layer]
-                });
-            {% else %}
-                map = L.map('map', {
-                    center: [-6.2, 106.8],
-                    zoom: 11
-                });
-            {% endif %}
+
+            active_background_layer = all_layers['OpenStreetMap'];
+            active_background_layer.visibility = true;
+            all_layers_list.push(active_background_layer.name);
+
+            map = L.map('map', {
+                center: [-6.2, 106.8],
+                zoom: 11,
+                layers: [active_background_layer.layer]
+            });
 
             L.easyButton({
                 states: [{
                     stateName: 'zoom-all',
                     icon: 'fa-globe',
-                    title: 'Zoom to global view',
+                    title: '{% trans "Zoom to global view" %}',
                     zIndex: 1,
                     onClick: function (control) {
                         zoom_to_box(map, [0, 90, 0, -90]);
@@ -494,19 +656,12 @@
                     }]
             }).addTo(map);
 
-            // Populate radio button for background layer
-            populate_background_layer(all_layers_list, all_layers);
-
             // Make sortable
             var list = document.getElementById("layer-list");
             Sortable.create(list, {
                 onEnd: function (/**Event*/evt) {
-                    console.log(evt.oldIndex);
-                    console.log(evt.newIndex);
-                    console.log(evt.item.id);
                     if (evt.newIndex == undefined) {
                         // Move but to the same location.
-                        console.log('new index is undefined, return');
                         return;
                     }
                     var num_background = 0;
@@ -517,102 +672,31 @@
                         }
                     }
                     var num_overlay = all_layers_list.length - num_background;
-                    var flag_move_up = evt.oldIndex > evt.newIndex;
-                    console.log("is move up " + flag_move_up);
-                    var small_index = evt.oldIndex;
-                    var big_index = evt.newIndex;
 
-                    if (flag_move_up) {
-                        big_index = evt.oldIndex;
-                        small_index = evt.newIndex;
+                    var layer_list = $("#layer-list .layer-item");
+                    function zIndex(item_index){
+                        {# zIndex 0 is preserved for basemap #}
+                        var offset = 1;
+                        {# higher zIndex means top of the layer #}
+                        {# lower item index means top of the stack #}
+                        return offset + num_overlay - item_index + 1;
                     }
 
-                    var layer_list = $("ul[id='layer-list'] li");
-                    for (i = 0; i < layer_list.length; i++) {
-                        var layer_typename = layer_list[i].id.slice(3);
-                        layer = all_layers[layer_typename].layer;
-                        if (i < small_index) {
-                            // pass
-                        } else if (i > big_index) {
-                            // pass
-                        } else if (i == evt.newIndex) {
-                            if (flag_move_up) {
-                                layer.setZIndex(layer.options.zIndex + (big_index - small_index));
-                                console.log("move layer " + layer_typename + " to " + (layer.options.zIndex))
-                            } else {
-                                layer.setZIndex(layer.options.zIndex - (big_index - small_index));
-                                console.log("move layer " + layer_typename + " to " + (layer.options.zIndex))
-                            }
-
-                        } else {
-                            if (flag_move_up) {
-                                layer.setZIndex(layer.options.zIndex - 1);
-                                console.log("move layer " + layer_typename + " to " + (layer.options.zIndex))
-                            } else {
-                                layer.setZIndex(layer.options.zIndex + 1);
-                                console.log("move layer " + layer_typename + " to " + (layer.options.zIndex))
-                            }
-                        }
-
-                    }
+                    layer_list.each(function(index, val){
+                        var layer_typename = $(val).attr('data-value');
+                        var layer = all_layers[layer_typename].layer;
+                        layer.setZIndex(zIndex(index));
+                    });
 
                 }
             }); // That's all
-
-            {% if not create %}
-                {% for layer in map_layers %}
-                    if ("{{ layer.group }}" == 'background') {
-                        all_layers_list.push("{{ layer.name }}");
-                        background_tile = L.tileLayer("{{ layer.ows_url }}");
-                        all_layers["{{ layer.name }}"] = {
-                            'title': '{{ layer.name }}',
-                            'url': '{{ layer.ows_url }}',
-                            'group': '{{ layer.group }}',
-                            'visibility': '{{ layer.visibility }}',
-                            'layer': background_tile,
-                            'zIndex': parseInt("{{ layer.stack_order }}")
-                        };
-                        if ("{{ layer.visibility }}" == 'True') {
-                            background_tile.addTo(map);
-                        }
-                    } else {
-                        console.log("{{ layer.name }} " + "{{ layer.stack_order }}");
-                        {% if layer.visibility %}
-                            add_layer("{{ layer.name }}", true, parseInt("{{ layer.stack_order }}"));
-                        {% else %}
-                            add_layer("{{ layer.name }}", false, parseInt("{{ layer.stack_order }}"));
-                        {% endif %}
-                    }
-                {% endfor %}
-                populate_background_layer(all_layers_list, all_layers);
-                {% if map and map.center_x %}
-                    // console.log("{{ map.center_x }}, {{ map.center_y }}), {{ map.zoom }}");
-                    map.setView(new L.LatLng({{ map.center_x }}, {{ map.center_y }}), {{ map.zoom }});
-                {% endif %}
-            {% else %}
-                // Check layer parameter in url
-                var qd = {};
-                location.search.substr(1).split("&").forEach(function (item) {
-                    var s = item.split("="),
-                            k = s[0],
-                            v = s[1] && decodeURIComponent(s[1]);
-                    (k in qd) ? qd[k].push(v) : qd[k] = [v]
-                });
-                if (qd['layer']) {
-                    for (i = 0; i < qd['layer'].length; i++) {
-                        var layer_typename = qd['layer'][i];
-                        add_layer(layer_typename);
-                    }
-                }
-            {% endif %}
 
         });
 
         $("#add_layer_button").click(function () {
             // Get value from select option
-            {#            var add_layer_select = $('select[id=add_layer_select]');#}
             var add_layer_select = $("#add_layer_select option:selected");
-            var layer_typename = add_layer_select.val();
+            var layer_typename = add_layer_select.attr('data-layer-alternate');
 
             add_layer(layer_typename);
 

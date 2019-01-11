@@ -876,6 +876,11 @@ class LayerResource(CommonModelApi):
 class MapResource(CommonModelApi):
 
     """Maps API"""
+    layers = fields.ListField(
+        attribute='layers',
+        null=True,
+        use_in='detail',
+        default=[])
 
     def format_objects(self, objects):
         """
@@ -886,6 +891,8 @@ class MapResource(CommonModelApi):
         """
         formatted_objects = []
         for obj in objects:
+            bundle = self.build_bundle(obj=obj)
+
             # convert the object to a dict using the standard values.
             formatted_obj = model_to_dict(obj, fields=self.VALUES)
             username = obj.owner.get_username()
@@ -909,34 +916,63 @@ class MapResource(CommonModelApi):
             formatted_obj['online'] = True
 
             # get map layers
-            map_layers = obj.layers
-            formatted_layers = []
-            map_layer_fields = [
-                'id'
-                'stack_order',
-                'format',
-                'name',
-                'opacity',
-                'group',
-                'visibility',
-                'transparent',
-                'ows_url',
-                'layer_params',
-                'source_params',
-                'local'
-            ]
-            for layer in map_layers:
-                formatted_map_layer = model_to_dict(
-                     layer, fields=map_layer_fields)
-                formatted_layers.append(formatted_map_layer)
-            formatted_obj['layers'] = formatted_layers
+            if self.layers.use_in in ['all', 'list']:
+                formatted_obj['layers'] = self.dehydrate_layers(bundle)
+
             formatted_objects.append(formatted_obj)
         return formatted_objects
+
+    def dehydrate_layers(self, bundle):
+        """Dehydrate layer_set field."""
+        dehydrated = []
+        obj = bundle.obj
+        layer_set_fields = [
+            'id',
+            'stack_order',
+            'format',
+            'name',
+            'opacity',
+            'group',
+            'visibility',
+            'transparent',
+            'ows_url',
+            'layer_params',
+            'layer_title',
+            'source_params',
+            'local'
+        ]
+        for l in obj.layer_set.all().order_by('stack_order'):
+            formatted_layer_set = model_to_dict(l, fields=layer_set_fields)
+            formatted_layer_set['title'] = l.layer_title
+
+            try:
+                formatted_layer_set['layer_params'] = json.loads(
+                    l.layer_params)
+            except ValueError:
+                formatted_layer_set['layer_params'] = l.layer_params
+
+            try:
+                formatted_layer_set['source_params'] = json.loads(
+                    l.source_params)
+            except ValueError:
+                formatted_layer_set['source_params'] = l.source_params
+
+            dehydrated.append(formatted_layer_set)
+        return dehydrated
 
     class Meta(CommonMetaApi):
         queryset = Map.objects.distinct().order_by('-date')
         resource_name = 'maps'
         authentication = MultiAuthentication(SessionAuthentication(), GeonodeApiKeyAuthentication())
+        detail_uri_name = 'id'
+        include_resource_uri = True
+        allowed_methods = ['get']
+        excludes = ['csw_anytext', 'metadata_xml']
+        filtering = CommonMetaApi.filtering
+        # Allow filtering using ID
+        filtering.update({
+            'id': ALL,
+        })
 
 
 class DocumentResource(CommonModelApi):

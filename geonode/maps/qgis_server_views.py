@@ -18,33 +18,32 @@
 #
 #########################################################################
 import json
-import requests
-import math
 import logging
+import math
 import re
+import urlparse
 
+import requests
 from django.conf import settings
-from django.views.generic import CreateView, DetailView, UpdateView
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
-from django.views.decorators.clickjacking import xframe_options_exempt
-from django.utils.decorators import method_decorator
 from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.generic import CreateView, DetailView, UpdateView
 from guardian.shortcuts import get_perms
 
+from geonode import geoserver, qgis_server
+from geonode.layers.models import Layer
+from geonode.maps.models import Map, MapLayer, MapSnapshot
+from geonode.maps.views import _PERMISSION_MSG_LOGIN, _PERMISSION_MSG_SAVE, \
+    clean_config
 from geonode.maps.views import _resolve_map, _PERMISSION_MSG_VIEW, \
     snapshot_config, _resolve_layer
-
-from geonode.maps.models import Map, MapLayer
-from geonode.layers.models import Layer
-
 from geonode.utils import default_map_config, forward_mercator, \
     llbbox_to_mercator, check_ogc_backend
-from geonode import geoserver, qgis_server
-
-import urlparse
 
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
     # FIXME: The post service providing the map_status object
@@ -95,7 +94,8 @@ class MapCreateView(CreateView):
                 map_id=mapid).order_by('stack_order')
             context = {
                 'config': json.dumps(config),
-                'create': False,
+                'copy': True,
+                'create': True,
                 'layers': layers,
                 'map': map_obj,
                 'map_layers': map_layers,
@@ -246,6 +246,7 @@ class MapCreateView(CreateView):
                 config['fromLayer'] = True
                 context = {
                     'config': json.dumps(config),
+                    'copy': False,
                     'create': True,
                     'layers': layers,
                     'map': map_obj,
@@ -260,6 +261,7 @@ class MapCreateView(CreateView):
                 # list all required layers
                 layers = Layer.objects.all()
                 context = {
+                    'copy': False,
                     'create': True,
                     'layers': layers
                 }
@@ -453,61 +455,74 @@ class MapUpdateView(UpdateView):
     template_name = 'leaflet/maps/map_edit.html'
     context_object_name = 'map'
 
-    def get_context_data(self, **kwargs):
-        mapid = self.kwargs.get('mapid')
+    def get_context_data(self, object):
+        map_obj = object
         request = self.request
-        map_obj = _resolve_map(request,
-                               mapid,
-                               'base.view_resourcebase',
-                               _PERMISSION_MSG_VIEW)
-
-        if request.method == 'POST':
-            if not request.user.is_authenticated():
-                return self.render_to_response(
-                    'You must be logged in to save new maps',
-                    content_type="text/plain",
-                    status=401
-                )
-            map_obj.overwrite = True
-            map_obj.save()
-            map_obj.set_default_permissions()
-            map_obj.handle_moderated_uploads()
-            # If the body has been read already, use an empty string.
-            # See https://github.com/django/django/commit/58d555caf527d6f1bdfeab14527484e4cca68648
-            # for a better exception to catch when we move to Django 1.7.
-            try:
-                body = request.body
-            except Exception:
-                body = ''
-
-            try:
-                map_obj.update_from_viewer(body)
-            except ValueError as e:
-                return self.render_to_response(str(e), status=400)
-            else:
-                context = {
-                    'create': False,
-                    'status': 200,
-                    'map': map_obj,
-                    'content_type': 'application/json'
-                }
-                return context
+        if 'access_token' in request.session:
+            access_token = request.session['access_token']
         else:
-            return self.render_to_response(status=405)
+            access_token = None
 
-    def get(self, request, **kwargs):
-        self.object = Map.objects.get(
-            id=self.kwargs.get('mapid'))
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        context = self.get_context_data(object=self.object,
-                                        form=form)
-        return self.render_to_response(context)
+        return map_obj.viewer_json(
+            request.user,
+            access_token)
 
-    def get_object(self, queryset=None):
-        obj = Map.objects.get(
-            id=self.kwargs.get('mapid'))
-        return obj
+    def render_to_json_response(self, context):
+        return HttpResponse(
+            json.dumps(context),
+            content_type='application/json')
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object(permission_type='view')
+        except PermissionDenied as e:
+            return HttpResponse(str(e), status=401)
+
+        map_obj = self.object
+        context = self.get_context_data(object=map_obj)
+        return self.render_to_json_response(context)
+
+    def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponse(
+                _PERMISSION_MSG_LOGIN,
+                status=401,
+                content_type="text/plain"
+            )
+        try:
+            self.object = self.get_object(permission_type='change')
+        except PermissionDenied as e:
+            return HttpResponse(
+                _PERMISSION_MSG_SAVE,
+                status=401,
+                content_type='text/plain')
+
+        map_obj = self.object
+
+        try:
+            map_obj.overwrite = True
+            map_obj.update_from_viewer(request.body)
+            MapSnapshot.objects.create(
+                config=clean_config(request.body),
+                map=map_obj,
+                user=request.user)
+        except ValueError as e:
+            # Invalid body
+            return HttpResponseBadRequest(str(e))
+
+        context = self.get_context_data(object=map_obj)
+        return self.render_to_json_response(context)
+
+    def get_object(self, queryset=None, permission_type='view'):
+        request = self.request
+        mapid = self.kwargs.get('mapid')
+
+        map_obj = _resolve_map(
+            request,
+            mapid,
+            'base.{permission_type}_resourcebase'.format(permission_type),
+            _PERMISSION_MSG_VIEW)
+        return map_obj
 
 
 def map_download_qlr(request, mapid):
