@@ -107,29 +107,30 @@
         L.tileLayer.betterWms = function (url, options) {
           return new L.TileLayer.BetterWMS(url, options);
         };
-        var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        });
 
-        var unesco = L.tileLayer(
-            'http://en.unesco.org/tiles/{z}/{x}/{y}.png', {
-            attribution: '&copy; unesco'
-        });
-
-        var unesco_geodata = L.tileLayer(
-            'http://en.unesco.org/tiles/geodata/{z}/{x}/{y}.png', {
-            attribution: '&copy; unesco'
-        });
-
-        var OpenMapSurfer_Roads = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-
-        var base_maps = {
-            "OpenMapSurfer_Roads": OpenMapSurfer_Roads,
-            'OpenStreetMap': osm
-        };
+        var base_maps = {};
+        {# it is likely the basemap will be shown twice if the map creation has fetched the base map from settings #}
+        {# otherwise, this to anticipate the old map when this new changes haven't applied yet #}
+        {% if LEAFLET_CONFIG and LEAFLET_CONFIG.TILES %}
+            var basemap_layers = new Array({{ LEAFLET_CONFIG.TILES|length }});
+                {# construct the background layer object #}
+                {% for tile in LEAFLET_CONFIG.TILES %}
+                    basemap_layers[{{ forloop.counter0 }}] = L.tileLayer('{{ tile.1 }}',{
+                        attribution: '{{ tile.2|safe }}'});
+                {% endfor %}
+                base_maps = {
+                {% for tile in LEAFLET_CONFIG.TILES %}
+                    '{{ tile.0 }}': basemap_layers[{{ forloop.counter0 }}]{% if not forloop.last %},{% endif %}
+                {% endfor %}
+                };
+        {% else %}
+            var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            });
+            base_maps = {
+                'OpenStreetMap': osm
+            };
+        {% endif %}
 
         var overlay_layer = {};
 
@@ -164,7 +165,6 @@
         L.control.watermark({ position: 'bottomright' }).addTo(map);
 
         // L.control.measureControl.addTo(map);
-        map.addLayer(OpenMapSurfer_Roads);
 
         {% if layer_bbox %}
             zoom_to_box(map, [{{ layer_bbox }}]);

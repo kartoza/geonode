@@ -122,21 +122,13 @@
             attribution: '&copy; unesco'
         });
 		
-        var OpenMapSurfer_Roads = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-
         // not yet available
         // var unesco_white = L.tileLayer(
         //     'http://en.unesco.org/tiles/white/{z}/{x}/{y}.png', {
         //     attribution: '&copy; unesco'
         // });
 
-        var base_maps = {
-            "OpenMapSurfer_Roads": OpenMapSurfer_Roads,
-            'OpenStreetMap': osm
-        };
+        var base_maps = {};
 
         {# Extra basemap tiles from LEAFLET_CONFIG #}
         {% if LEAFLET_CONFIG and LEAFLET_CONFIG.TILES %}

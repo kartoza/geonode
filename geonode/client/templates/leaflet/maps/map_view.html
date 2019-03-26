@@ -150,36 +150,46 @@
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
         });
 
-        var OpenMapSurfer_Roads = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-
         {% if create %}
-            all_layers = {
-                'OpenMapSurfer_Roads': {
-                    'title': 'OpenMapSurfer Roads',
-                    'name': 'OpenMapSurfer_Roads',
-                    'url': OpenMapSurfer_Roads._url,
-                    'layer': OpenMapSurfer_Roads,
-                    'visibility': true,
-                    'group': 'background',
-                    'zIndex': 0
-                },
-                'osm': {
-                    'title': 'OpenStreetMap',
-                    'name': 'osm',
-                    'url': osm._url,
-                    'layer': osm,
-                    'visibility': false,
-                    'group': 'background',
-                    'zIndex': 1
-                }
-            };
-            all_layers_list.push('OpenMapSurfer_Roads');
-            all_layers_list.push('osm');
-
-            active_background_layer = OpenMapSurfer_Roads;
+            {% if LEAFLET_CONFIG and LEAFLET_CONFIG.TILES %}
+                var basemap_layers = new Array({{ LEAFLET_CONFIG.TILES|length }});
+                {# construct the background layer object #}
+                {% for tile in LEAFLET_CONFIG.TILES %}
+                    basemap_layers[{{ forloop.counter0 }}] = L.tileLayer('{{ tile.1 }}',{
+                        attribution: '{{ tile.2|safe }}'});
+                    all_layers_list.push('{{ tile.0 }}');
+                {% endfor %}
+                {# use the object in the all_layers#}
+                all_layers = {
+                    {% for tile in LEAFLET_CONFIG.TILES %}
+                        '{{ tile.0 }}': {
+                            'title': '{{ tile.0 }}',
+                            'name': '{{ tile.0 }}',
+                            'url': basemap_layers[{{ forloop.counter0 }}]._url,
+                            'layer': basemap_layers[{{ forloop.counter0 }}],
+                            'visibility': {% if forloop.counter0 == 0 %} true {% else %} false {% endif %},
+                            'group': 'background',
+                            'zIndex': 0
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                };
+                active_background_layer = basemap_layers[0];
+            {% else %}
+                {# set settings.LEAFLET_CONFIG if reaches this part #}
+                all_layers = {
+                    'osm': {
+                        'title': 'OpenStreetMap',
+                        'name': 'osm',
+                        'url': osm._url,
+                        'layer': osm,
+                        'visibility': false,
+                        'group': 'background',
+                        'zIndex': 1
+                    }
+                };
+                all_layers_list.push('osm');
+                active_background_layer = osm;
+            {% endif %}
         {% else %}
             all_layers = {};
             all_layers_list = [];
@@ -584,6 +594,26 @@
                         {% endif %}
                     }
                 {% endfor %}
+
+                {# use case: add default basemap for embed iframe map #}
+                if (all_layers_list && all_layers_list.length == 0) {
+                    all_layers = {
+                        'osm': {
+                            'title': 'OpenStreetMap',
+                            'name': 'osm',
+                            'url': osm._url,
+                            'layer': osm,
+                            'visibility': true,
+                            'group': 'background',
+                            'zIndex': 1
+                        }
+                    };
+                    all_layers_list.push('osm');
+                    active_background_layer = osm;
+                    active_background_layer.addTo(map);
+                    active_background_layer.setZIndex(0);
+                }
+
                 populate_background_layer(all_layers_list, all_layers);
                 {% if map and map.center_x %}
                     // console.log("{{ map.center_x }}, {{ map.center_y }}), {{ map.zoom }}");
