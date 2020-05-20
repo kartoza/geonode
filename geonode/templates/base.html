@@ -288,7 +288,9 @@
               <ul class="dropdown-menu">
                 <li><a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Layers" %}</a></li>
                 <li><a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Documents" %}</a></li>
-                <li><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Remote Services" %}</a></li>
+                {% if user.is_authenticated %}
+                  <li><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Remote Services" %}</a></li>
+                {% endif %}
                 {% if user.is_authenticated and not READ_ONLY_MODE %}
                     <li role="separator" class="divider"></li>
                     <li><a href="{% url "layer_upload" %}">{% trans "Upload Layer" %}</a></li>
@@ -317,6 +319,7 @@
               <a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Maps" %}</a>
               {% endif %}
           </li>
+          {% if user.is_authenticated %}
           <li>
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "About" %}<i class="fa fa-angle-down fa-lg"></i></a>
               <ul class="dropdown-menu">
@@ -336,7 +339,7 @@
                 {% endif %}
               </ul>
           </li>
-
+          {% endif %}
           {% block extra_tab %}
 
           {% endblock %}
@@ -469,7 +472,9 @@
             <li>{% trans "Data" %}</li>
             <li><a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Layers" %}</a></li>
             <li><a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Documents" %}</a></li>
-            <li><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Remote Services" %}</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Remote Services" %}</a></li>
+            {% endif %}
             {% if user.is_authenticated and not READ_ONLY_MODE %}
                 <li role="separator" class="divider"></li>
                 <li><a href="{% url "layer_upload" %}">{% trans "Upload Layer" %}</a></li>

@@ -19,18 +19,23 @@
 #
 
 from django.conf.urls import url
+from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
 from .views import GroupDetailView, GroupActivityView
 from . import views
 
 urlpatterns = [  # 'geonode.groups.views',
-    url(r'^$', TemplateView.as_view(
-        template_name='groups/group_list.html'), name="group_list"),
+    url(r'^$',
+        login_required(
+            TemplateView.as_view(
+                template_name='groups/group_list.html')),
+        name="group_list"),
 
     url(r'^categories/$',
-        TemplateView.as_view(
-            template_name="groups/category_list.html"),
+        login_required(
+            TemplateView.as_view(
+                template_name="groups/category_list.html")),
         name="group_category_list"),
     url(r'^categories/_create/$', views.group_category_create,
         name="group_category_create"),

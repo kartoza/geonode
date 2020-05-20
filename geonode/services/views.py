@@ -63,7 +63,7 @@ def service_proxy(request, service_id):
                                                                   service_url=quote(service_url, safe=''))
     return proxy(request, url=service_url, sec_chk_hosts=False)
 
-
+@login_required
 def services(request):
     """This view shows the list of all registered services"""
     return render(

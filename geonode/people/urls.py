@@ -19,12 +19,13 @@
 #
 
 from django.conf.urls import url
+from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from .views import ProfileAutocomplete
 from . import views
 
 urlpatterns = [  # 'geonode.people.views',
-    url(r'^$', TemplateView.as_view(template_name='people/profile_list.html'),
+    url(r'^$', login_required(TemplateView.as_view(template_name='people/profile_list.html')),
         name='profile_browse'),
     url(r"^edit/$", views.profile_edit, name="profile_edit"),
     url(r"^edit/(?P<username>[^/]*)$",
