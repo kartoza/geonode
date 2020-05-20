@@ -59,6 +59,7 @@ sitemaps = {
 homepage = register_url_event()(TemplateView.as_view(template_name='index.html'))
 
 urlpatterns = [
+    url(r'^', include('igrac.urls')),
     url(r'^$',
         homepage,
         name='home'),

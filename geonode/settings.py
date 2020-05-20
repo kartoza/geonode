@@ -463,6 +463,9 @@ INSTALLED_APPS = (
 
     # GeoNode
     'geonode',
+
+    # IGRAC
+    'igrac',
 )
 
 if 'postgresql' in DATABASE_URL or 'postgis' in DATABASE_URL:
