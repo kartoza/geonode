@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{#{% block body_class %}{% trans "igrac-home" %}{% endblock %}#}
+
+{% block extra_head %}
+    <link href="{% static "css/base-igrac.css" %}" rel="stylesheet" />
+{% endblock %}
+
+{% load wagtailcore_tags %}
+
+{% block body_class %}template-blogpage{% endblock %}
+
+{% block content %}
+    <h1>{{ page.title }}</h1>
+    <p class="meta">{{ page.date }}</p>
+
+    <div class="intro">{{ page.intro }}</div>
+
+    {{ page.body|richtext }}
+
+    <p><a href="{{ page.get_parent.url }}">Return to blog</a></p>
+
+{% endblock %}

@@ -44,6 +44,10 @@ from geonode.monitoring import register_url_event
 from geonode.messaging.urls import urlpatterns as msg_urls
 from .people.views import CustomSignupView
 
+from wagtail.admin import urls as wagtailadmin_urls
+from wagtail.documents import urls as wagtaildocs_urls
+from wagtail.core import urls as wagtail_urls
+
 admin.autodiscover()
 
 js_info_dict = {
@@ -60,6 +64,11 @@ homepage = register_url_event()(TemplateView.as_view(template_name='index.html')
 
 urlpatterns = [
     url(r'^', include('igrac.urls')),
+
+    url(r'^cms/', include(wagtailadmin_urls)),
+    url(r'^documents/', include(wagtaildocs_urls)),
+    url(r'^pages/', include(wagtail_urls)),
+
     url(r'^$',
         homepage,
         name='home'),
