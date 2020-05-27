@@ -1,6 +1,8 @@
 .igrac-home #wrap {
     margin-top: 10px;
     height: 100%;
+    min-height: 100vh;
+    height: auto;
 }
 
 .map-wrapper {
@@ -9,6 +11,7 @@
 
 .map-item {
     display: inline-block;
+    margin-top: 25px;
 }
 
 .map-item-wrappper {
