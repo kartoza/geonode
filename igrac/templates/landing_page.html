@@ -23,12 +23,12 @@
         <div class="row">
             {% for map in maps %}
                 <div class="col-lg-4 map-item">
-                    <a class="map-item-wrappper col-lg-12" href="{% url 'map_view' mapid=map.id %}">
+                    <a class="map-item-wrappper col-lg-12" href="{% url 'map_view_slug' slug=map.slug %}">
                         <div class="col-lg-8">
-                            <img src="{{ map.thumbnail_url }}" />
+                            <img src="{{ map.map.thumbnail_url }}" />
                         </div>
                         <div class="col-lg-4">
-                            <span>{{ map.title }}</span>
+                            <span>{{ map.map.title }}</span>
                         </div>
                     </a>
                 </div>

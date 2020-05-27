@@ -632,7 +632,7 @@ TEMPLATES = [
                 # 'django.core.context_processors.request',
                 'geonode.context_processors.resource_urls',
                 'geonode.geoserver.context_processors.geoserver_urls',
-                'geonode.themes.context_processors.custom_theme'
+                'geonode.themes.context_processors.custom_theme',
             ],
             # Either remove APP_DIRS or remove the 'loaders' option.
             # 'loaders': [
@@ -1945,7 +1945,6 @@ GEOIP_PATH = os.getenv('GEOIP_PATH', os.path.join(PROJECT_ROOT, 'GeoIPCities.dat
 SEARCH_RESOURCES_EXTENDED = strtobool(os.getenv('SEARCH_RESOURCES_EXTENDED', 'True'))
 # -- END Settings for MONITORING plugin
 
-
-# Settings for Wagtail
-WAGTAIL_SITE_NAME = 'IGRAC GGIS'
+# Wagtail Settings
+WAGTAIL_SITE_NAME = 'My Example Site'
 # -- END Settings for Wagtail
