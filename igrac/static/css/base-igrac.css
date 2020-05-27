@@ -2,6 +2,14 @@
     margin-top: 10px
 }
 
+.igrac-wagtail #wrap {
+    margin-top: 10px;
+}
+
+.igrac-wagtail #wrap, .igrac-wagtail #wrap * {
+    list-style-type: disc;
+}
+
 .map-wrapper {
     margin-top: 25px
 }
