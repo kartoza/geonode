@@ -9,15 +9,20 @@
 
 .map-item {
     display: inline-block;
-    padding: 15px 20px;
 }
 
 .map-item-wrappper {
-    padding: 10px;
+    padding-top: 25px;
+    padding-right: 25px;
     height: 160px;
     border: 1px solid lightgrey;
     box-shadow: 3px 5px 5px lightgrey;
     transition: transform 0.2s;
+    color: black;
+}
+
+.map-item-wrappper .map-abstract {
+    font-size: smaller;
 }
 
 .map-item-wrappper:hover {
