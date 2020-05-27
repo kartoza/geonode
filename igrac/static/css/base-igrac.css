@@ -5,9 +5,10 @@
 
 .igrac-wagtail #wrap {
     margin-top: 10px;
+    height: 100%;
 }
 
-.igrac-wagtail #wrap, .igrac-wagtail #wrap * {
+.igrac-wagtail #wrap * {
     list-style-type: disc;
 }
 

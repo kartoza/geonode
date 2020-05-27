@@ -1,8 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% load staticfiles %}
 
 {% load wagtailcore_tags %}
 
 {% block body_class %}igrac-wagtail{% endblock %}
+
+{% block extra_head %}
+    <link href="{% static "css/base-igrac.css" %}" rel="stylesheet" />
+{% endblock %}
 
 {% block body %}
     <h1>{{ page.title }}</h1>
