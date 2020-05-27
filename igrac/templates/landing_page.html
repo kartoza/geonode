@@ -24,11 +24,19 @@
             {% for map in maps %}
                 <div class="col-lg-4 map-item">
                     <a class="map-item-wrappper col-lg-12" href="{% url 'map_view_slug' slug=map.slug %}">
-                        <div class="col-lg-8">
+                        <div class="col-lg-6">
                             <img src="{{ map.map.thumbnail_url }}" />
                         </div>
-                        <div class="col-lg-4">
-                            <span>{{ map.map.title }}</span>
+                        <div class="col-lg-6">
+                            <div class="row">
+                                <span>
+                                    <strong>{{ map.map.title|truncatechars:12 }}</strong>
+                                </span>
+                            </div>
+                            <br>
+                            <div class="row map-abstract">
+                                <span>{{ map.map.abstract|truncatechars:110 }}</span>
+                            </div>
                         </div>
                     </a>
                 </div>
