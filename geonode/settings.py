@@ -607,6 +607,31 @@ INTEGRATION = 'geonode.tests.integration' in sys.argv
 #
 
 # Django automatically includes the "templates" dir in all the INSTALLED_APPS.
+
+MIDDLEWARE = (
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.sites.middleware.CurrentSiteMiddleware',
+    'dj_pagination.middleware.PaginationMiddleware',
+    # The setting below makes it possible to serve different languages per
+    # user depending on things like headers in HTTP requests.
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
+    'geonode.base.middleware.MaintenanceMiddleware',
+    'geonode.base.middleware.ReadOnlyMiddleware',   # a Middleware enabling Read Only mode of Geonode
+
+    # Wagtail moddleware
+    'wagtail.core.middleware.SiteMiddleware',
+    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
+)
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 TEMPLATES = [
     {
         'NAME': 'GeoNode Project Templates',
@@ -633,6 +658,9 @@ TEMPLATES = [
                 'geonode.context_processors.resource_urls',
                 'geonode.geoserver.context_processors.geoserver_urls',
                 'geonode.themes.context_processors.custom_theme',
+
+                # IGRAC context processor
+                'igrac.context_processors.resource_urls',
             ],
             # Either remove APP_DIRS or remove the 'loaders' option.
             # 'loaders': [
@@ -643,31 +671,6 @@ TEMPLATES = [
         },
     },
 ]
-
-MIDDLEWARE = (
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.contrib.sites.middleware.CurrentSiteMiddleware',
-    'dj_pagination.middleware.PaginationMiddleware',
-    # The setting below makes it possible to serve different languages per
-    # user depending on things like headers in HTTP requests.
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
-    'geonode.base.middleware.MaintenanceMiddleware',
-    'geonode.base.middleware.ReadOnlyMiddleware',   # a Middleware enabling Read Only mode of Geonode
-
-    # Wagtail moddleware
-    'wagtail.core.middleware.SiteMiddleware',
-    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
-)
-
-MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 # Security stuff
 SESSION_EXPIRED_CONTROL_ENABLED = ast.literal_eval(os.environ.get('SESSION_EXPIRED_CONTROL_ENABLED', 'True'))

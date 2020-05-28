@@ -21,7 +21,7 @@
 {% block body_outer %}
 
 <div class="page-header">
-  <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}" class="btn btn-primary pull-right" style="margin-left: 3px;">{% trans "Explore Layers" %}</a>
+  <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}" class="btn btn-primary pull-right" style="margin-left: 3px;">{% trans "Explore Layers" %}</a>
   <a href="{% url 'layer_detail' layername=resource.alternate %}" class="btn btn-primary pull-right" style="margin-left: 3px;">{% trans "Return to Layer" %}</a>
   <h2 class="page-title">{% trans "Upload Layer Metadata" %} <small>{% trans "(XML - ISO, FGDC, ebRIM, Dublin Core)" %}<small></h2>
 </div>

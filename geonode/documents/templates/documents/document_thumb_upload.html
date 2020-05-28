@@ -9,7 +9,7 @@
 
 {% block body_outer %}
   <div class="page-header">
-    <a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}" class="btn btn-primary pull-right">{% trans "Explore Documents" %}</a>
+    <a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}" class="btn btn-primary pull-right">{% trans "Explore Documents" %}</a>
     <h2 class="page-title">{% trans "Upload Document's Thumbnail" %}</h2>
   </div>
 

@@ -53,13 +53,13 @@
           <ul class="nav navbar-nav">
             {% block tabs %}
             <li id="nav_layers">
-              <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Layers" %}</a>
+              <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Layers" %}</a>
             </li>
             <li id="nav_maps">
-              <a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Maps" %}</a>
+              <a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Maps" %}</a>
             </li>
             <li id="nav_documents">
-              <a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Documents" %}</a>
+              <a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Documents" %}</a>
             </li>
            {% block extra_tab %}
            {% endblock %}
@@ -151,8 +151,8 @@
         <div class="col-md-2">
           <ul class="list-unstyled">
             <li>{% trans "Data" %}</li>
-            <li><a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Layers" %}</a></li>
-            <li><a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Documents" %}</a></li>
+            <li><a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Layers" %}</a></li>
+            <li><a href="{% url "document_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Documents" %}</a></li>
             <li><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}">{% trans "Remote Services" %}</a></li>
             {% if user.is_authenticated and not READ_ONLY_MODE %}
                 <li role="separator" class="divider"></li>
@@ -172,7 +172,7 @@
         <div class="col-md-2">
           <ul class="list-unstyled">
             <li>{% trans "Maps" %}</li>
-            <li><a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}">{% trans "Explore Maps" %}</a></li>
+            <li><a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Explore Maps" %}</a></li>
             {% if user.is_authenticated and not READ_ONLY_MODE %}
             <li> <a href="{% url "new_map" %}">{% trans "Create Map" %}</a></li>
             {% endif %}

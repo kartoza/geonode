@@ -5,7 +5,7 @@
 
 {% block body %}
 <div class="page-header">
-  <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ request.session.filter_by_group }}" class="btn btn-primary pull-right">{% trans "Explore Layers" %}</a>
+  <a href="{% url "layer_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}" class="btn btn-primary pull-right">{% trans "Explore Layers" %}</a>
   <h2 class="page-title">{% trans "Remove Layers" %}</h2>
 </div>
 <div class="row">

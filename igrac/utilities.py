@@ -1,4 +1,5 @@
 # coding=utf-8
+from geonode.groups.models import Group, GroupProfile
 
 
 STOP_WORDS = (
@@ -24,3 +25,16 @@ def check_slug(queryset, slug):
 
     return new_slug
 
+def get_default_filter_by_group(user):
+    """
+    Set layer/map/document filter by user's group by default
+    """
+    groups = GroupProfile.objects.filter(
+        group__in=user.groups.exclude(name='anonymous')
+    ).values_list('slug', flat=True)
+
+    filter = ""
+    for group in groups:
+        filter = filter + "&" + "group__group_profile__slug__in=" + group
+
+    return filter
