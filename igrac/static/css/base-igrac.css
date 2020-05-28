@@ -20,6 +20,7 @@
 
 .map-item {
     display: inline-block;
+    margin-top: 25px;
 }
 
 .map-item-wrappper {
