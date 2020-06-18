@@ -5,8 +5,6 @@
 {% block body_class %}{% trans "igrac-home" %}{% endblock %}
 
 {% block extra_head %}
-    <script src="https://kit.fontawesome.com/0aaf37ae1e.js" crossorigin="anonymous"></script>
-    <link href="{% static "css/base-igrac.css" %}" rel="stylesheet" />
     <script>
         function setCookie(cname,cvalue,exdays) {
             var d = new Date();
@@ -58,31 +56,6 @@
 {% endblock %}
 
 {% block banner %}
-    <section class="banner">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="banner-text">
-						<h2>The Global Groundwater Information System (GGIS)</h2>
-						<p>is an interactive, web-based portal to groundwater-related information and knowledge.</p>
-
-						<p>The GGIS consists of several modules structured around various themes.
-                        Each module has its own map-based viewer with underlying database to allow
-                        storing and visualizing geospatial data in a systematic way.
-                        The following <a href="https://www.un-igrac.org/disclaimer" target="_blank">disclaimer and license</a> are applicable to the GGIS,
-                        as well as to all other IGRAC products.</p> </div>
-                </div>
-            </div>
-			<div class="cta">
-				<div class="justify">
-			        <a class="btn btn-orange" href="https://www.un-igrac.org/" target="_blank">Visit IGRAC Website</a>
-				    <a class="btn btn-blue ml-auto btn-hide">Hide this banner <i class="fa fa-times-circle-o" aria-hidden="true" style="margin-left: 7px"></i></a>
-				</div>
-		  </div>
-        </div>
-
-        <div class="background"></div>
-    </section>
 {% endblock %}
 
 {% block body %}

@@ -69,8 +69,8 @@ body {
 	position: absolute;
 	top: 0;
 	width: 100%;
-	/*height: 56px;*/
-	background: #fff;
+	color: white!important;
+	background: #5860ff;
 	-webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.23);
 	-moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.23);
 	box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.23);
@@ -106,7 +106,7 @@ body {
 }
 .main-navigation li a:hover, .nav.navbar-nav.toolbar li a:hover, .nav.navbar-nav.navbar-right li a:hover {
 	color: #fff !important;
-	background: #ff6c0e !important;
+	background: rgba(255,255,255,0.05);
 }
 .navbar .user {
 	padding-right: 30px;
@@ -149,10 +149,18 @@ body {
 }
 #branding, .branding {
 	margin: 0;
+	font-weight: 600;
+	font-size: 1.25rem;
 }
 #branding .logo, .branding .logo {
 	height: 50px;
 	line-height: 50px;
+}
+
+#branding a:hover {
+	opacity: 0.8;
+	color: inherit;!important;
+	text-decoration: none;
 }
 
 .footer-wrapper {

@@ -38,6 +38,7 @@
 
     <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" />
     <link href="{% static "lib/css/ol.css" %}" rel="stylesheet" />
+    <link href="{% static "css/base-igrac.css" %}" rel="stylesheet" />
     <script src="{% static "lib/js/ol.js" %}"></script>
 
     {% block head %}
@@ -274,7 +275,7 @@
           <i class="fa fa-navicon fa-lg"></i>
         </button>
         <div id="branding">
-			<a class="logo" href="/" target="_blank"><i class="fa fa-home" aria-hidden="true"></i></a>
+			<a class="logo" href="/" target="_blank">BEP</a>
         </div>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
@@ -318,6 +319,9 @@
               <a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}{{ DEFAULT_GROUP_FILTER }}">{% trans "Map Viewers" %}</a>
               {% endif %}
           </li>
+          <li>
+              <a href="http://localhost:9000/">Benin GEP</a>
+          </li>
           {% if user.is_authenticated %}
           <li>
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "About" %}<i class="fa fa-angle-down fa-lg"></i></a>
@@ -357,7 +361,7 @@
 
             <li>
                 <div class="navbar-header branding">
-                    <a class="logo" href="https://www.un-igrac.org/" target="_blank"><img src="/static/geonode/img/logo-small.svg" width="100" height="27" alt="logo"/></a>
+                    <a class="logo" href="https://www.kartoza.com/" target="_blank"><img src="/static/geonode/img/logo-small-white.svg" width="27" height="27" alt="logo"/></a>
                 </div>
             </li>
             <li>
@@ -469,8 +473,7 @@
 
   {% block footer %}
       <div class="footer-wrapper">
-          <center><div class="footer-item">Brought to you by&nbsp;</div>
-              <a class="footer-item" href="https://www.un-igrac.org/" target="_blank"><img src="/static/img/logo-small.png" width="50" alt="logo" style="vertical-align: bottom"/></a>
+          <center>
               <div class="footer-item" style="padding-left: 15px">Web site developed by&nbsp;</div><a class="footer-item" href="https://kartoza.com/" target="_blank"><img src="/static/img/kartoza-icon.png" height="23" alt="kartoza_logo"/></a></center>
       </div>
   {% endblock %}
