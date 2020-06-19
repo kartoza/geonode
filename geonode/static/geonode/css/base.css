@@ -8178,3 +8178,10 @@ form-inline {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+#home-navbar{
+    font-size: 24px;
+}
+#home-navbar a{
+    padding-top: 11px!important;
+}

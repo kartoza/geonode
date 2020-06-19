@@ -36,7 +36,7 @@
 
     <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
 
-    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" />
+    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}" />
     <link href="{% static "lib/css/ol.css" %}" rel="stylesheet" />
     <link href="{% static "css/base-igrac.css" %}" rel="stylesheet" />
     <script src="{% static "lib/js/ol.js" %}"></script>
@@ -274,12 +274,12 @@
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
           <i class="fa fa-navicon fa-lg"></i>
         </button>
-        <div id="branding">
-			<a class="logo" href="/" target="_blank">BEP</a>
-        </div>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav toolbar">
+          <li id="home-navbar">
+            <a class="logo" href="/" target="_blank"><i class="fa fa-home" aria-hidden="true"></i></a>
+          </li>
           {% block tabs %}
 
           <li id="nav_layers">
@@ -320,7 +320,7 @@
               {% endif %}
           </li>
           <li>
-              <a href="http://localhost:9000/">Benin GEP</a>
+              <a href="http://localhost:9000/" title="Benin Electrification Programme">BEP</a>
           </li>
           {% if user.is_authenticated %}
           <li>
