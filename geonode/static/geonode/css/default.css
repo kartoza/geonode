@@ -106,8 +106,13 @@ body {
 }
 .main-navigation li a:hover, .nav.navbar-nav.toolbar li a:hover, .nav.navbar-nav.navbar-right li a:hover {
 	color: #fff !important;
-	background: rgba(255,255,255,0.05);
+	background: rgba(255,255,255,0.05)!important;
 }
+
+.nav > .open, .nav > .open > a{
+	background: rgba(255,255,255,0.05)!important;
+}
+
 .navbar .user {
 	padding-right: 30px;
 }

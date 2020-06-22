@@ -6,9 +6,9 @@
 
 {% block extra_head %}
     <script>
-        function setCookie(cname,cvalue,exdays) {
+        function setCookie(cname, cvalue, exdays) {
             var d = new Date();
-            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
             var expires = "expires=" + d.toGMTString();
             document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
         }
@@ -17,7 +17,7 @@
             var name = cname + "=";
             var decodedCookie = decodeURIComponent(document.cookie);
             var ca = decodedCookie.split(';');
-            for(var i = 0; i < ca.length; i++) {
+            for (var i = 0; i < ca.length; i++) {
                 var c = ca[i];
                 while (c.charAt(0) == ' ') {
                     c = c.substring(1);
@@ -30,12 +30,12 @@
         }
 
         function delete_cookie(name) {
-          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         }
 
         function checkCookieBanner() {
-            var hide_banner=getCookie("hideBanner");
-            if(hide_banner){
+            var hide_banner = getCookie("hideBanner");
+            if (hide_banner) {
                 var css = '.banner {display: none;} .open-banner {display: block;}',
                     head = document.head || document.getElementsByTagName('head')[0],
                     style = document.createElement('style');
@@ -43,14 +43,15 @@
                 head.appendChild(style);
 
                 style.type = 'text/css';
-                if (style.styleSheet){
-                  // This is required for IE8 and below.
-                  style.styleSheet.cssText = css;
+                if (style.styleSheet) {
+                    // This is required for IE8 and below.
+                    style.styleSheet.cssText = css;
                 } else {
-                  style.appendChild(document.createTextNode(css));
+                    style.appendChild(document.createTextNode(css));
                 }
             }
         }
+
         checkCookieBanner();
     </script>
 {% endblock %}
@@ -64,29 +65,28 @@
 {% endblock %}
 
 {% block extra_mainbody %}
-    <div class="open-banner">
-            <button onclick="openBanner()" class="btn btn-grey ml-auto">Show banner <i class="fa fa-eye" aria-hidden="true" style="margin-left: 7px"></i></button>
+    {% include "landing_page_background.html" %}
+    <div class="container content top-content">
+        <div>
+            <h2>{% trans "WELCOME TO THE" %}</h2>
+            <h1>{% trans "Benin Electrification Programme SDI" %}</h1>
         </div>
-    <div class="container">
-        <div id="content">
-            <h1>{% trans "Explore the viewers" %}</h1>
-        </div>
-        <div class="map-wrapper">
-            <div class="row">
-                {% for map in maps %}
-                    <div class="col-lg-4 map-item">
-                        <a class="map-item-wrappper" href="{% url 'map_view_slug' slug=map.slug %}" data-toggle="tooltip" data-placement="top" title="{{ map.map.title }}">
-                            <div class="viewer-thumb">
-                                <img src="{{ map.map.thumbnail_url }}" />
-                            </div>
-                            <div class="viewer-desc">
-                                <div class="viewer-title"><strong>{{ map.map.title|truncatechars:40 }}</strong></div>
-                                <div class="map-abstract">{{ map.map.abstract|truncatechars:110 }}</div>
-                            </div>
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
+    </div>
+    <div class="map-wrapper content bot-content">
+        <div class="row">
+            {% for map in maps %}
+                <div class="col-lg-4 map-item">
+                    <a class="map-item-wrappper" href="{% url 'map_view_slug' slug=map.slug %}" data-toggle="tooltip" data-placement="left" title="{{ map.map.title }}">
+                        <div class="viewer-thumb">
+                            <img src="{{ map.map.thumbnail_url }}"/>
+                        </div>
+                        <div class="viewer-desc">
+                            <div class="viewer-title"><strong>{{ map.map.title|truncatechars:40 }}</strong></div>
+                            <div class="map-abstract">{{ map.map.abstract|truncatechars:110 }}</div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
         </div>
     </div>
 {% endblock %}
@@ -98,6 +98,7 @@
             setCookie('hideBanner', true, 7);
             $('.open-banner').show();
         });
+
         function openBanner() {
             delete_cookie('hideBanner');
             $('.banner').slideDown();

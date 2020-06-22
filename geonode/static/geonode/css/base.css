@@ -55,6 +55,11 @@ abbr[title] {
   text-decoration: underline;
   text-decoration: underline dotted;
 }
+
+#navbar a {
+  color: white;
+}
+
 b,
 strong {
   font-weight: bold;
@@ -4501,7 +4506,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   }
 }
 .navbar-nav > li > .dropdown-menu {
-  margin-top: 0;
+  margin-top: 3px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
@@ -6856,7 +6861,7 @@ body {
   padding-top: 60px;
 }
 a {
-  color: white;
+  color: #2c689c;
 }
 h1,
 h2,
@@ -6942,8 +6947,8 @@ article.tab-pane {
   background-color: #2c689c;
 }
 .navbar-nav .dropdown-menu {
-  background-color: #2c689c;
-  border-top: 1px solid #2c689c;
+  background-color: #383da3;
+  border-top: 1px solid #383da3;
 }
 .navbar-nav .dropdown-menu a {
   color: white;
@@ -6953,7 +6958,7 @@ article.tab-pane {
   color: white;
 }
 .navbar-nav .dropdown-menu .divider {
-  background-color: #204d74;
+  background-color: #666;
 }
 .navbar-nav .search {
   left: 15px;
@@ -6982,11 +6987,11 @@ article.tab-pane {
 }
 .navbar-nav .avatar img {
   border-radius: 50%;
-  margin-bottom: -15px;
-  margin-right: 10px;
-  margin-top: -15px;
-  height: 42px;
-  width: 42px;
+  margin-bottom: -12px;
+  margin-right: 9px;
+  margin-top: -12px;
+  height: 35px;
+  width: 35px;
 }
 .navbar-nav .fa-angle-down {
   margin-left: 10px;

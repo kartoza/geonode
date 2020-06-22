@@ -1,0 +1,230 @@
+body.igrac-home {
+    min-height: 0;
+}
+
+.home-media svg * {
+    transform-box: fill-box;
+}
+
+#background-media {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    z-index: -999;;
+}
+
+#background-media .home-media {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#background-media svg {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    right: 0;
+}
+
+#wrap, .igrac-home #wrap {
+    background: none;
+    min-height: 0;
+    height: auto;
+    width: auto;
+}
+
+.inpage {
+    background: linear-gradient(to bottom, #464dcc 0%, #464dcc 37.5%, #383da3 37.5%);
+}
+
+#trbn1-bld1 {
+    animation: turbine 10s infinite linear;
+    transform-origin: 36% 50%;
+}
+
+#trbn2-bld1 {
+    animation: turbine 16s infinite linear;
+    transform-origin: 50.05% 65%;
+}
+
+#bldg2-w18 {
+    animation: light-toggle 8s infinite ease-in-out;
+}
+
+#bldg3-w4 {
+    animation: light-flicker 12s infinite step-end;
+}
+
+#bldg3-w2 {
+    animation: light-toggle 16s infinite ease-in-out;
+}
+
+#bldg4-w6 {
+    animation: light-toggle 12s infinite ease-in-out;
+}
+
+#cld1 {
+    animation: cloud-travel 16s infinite linear;
+}
+
+#cld2 {
+    animation: cloud-travel 25s infinite linear;
+}
+
+#cld3 {
+    animation: cloud-travel 27s infinite linear;
+}
+
+#smoke > * {
+    opacity: 0;
+}
+
+#smoke1 {
+    animation: smoke-puff1 7s linear 0s infinite;
+}
+
+#smoke2 {
+    animation: smoke-puff2 7s linear 0s infinite;
+}
+
+#smoke3 {
+    animation: smoke-puff3 7s linear 0s infinite;
+}
+
+@keyframes turbine {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes light-flicker {
+    0% {
+        fill: #ffc700
+    }
+    3% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+    6% {
+        fill: #ffc700
+    }
+    7% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+    8% {
+        fill: #ffc700
+    }
+    9% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+    10% {
+        fill: #ffc700
+    }
+    100% {
+        fill: #ffc700
+    }
+}
+
+@keyframes light-toggle {
+    0% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+    50% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+    52% {
+        fill: #ffc700
+    }
+    98% {
+        fill: #ffc700
+    }
+    100% {
+        fill: rgba(88, 96, 255, 0.36)
+    }
+}
+
+@keyframes illu-in {
+    from {
+        opacity: 0;
+        transform: translate(4%, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes cloud-travel {
+    0% {
+        transform: translate(0, 0);
+        opacity: 0;
+    }
+
+    6% {
+        opacity: 1;
+    }
+
+    94% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-8rem, 0);
+        opacity: 0;
+    }
+}
+
+@keyframes smoke-puff1 {
+    28% {
+        opacity: 0;
+    }
+
+    43% {
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes smoke-puff2 {
+    14% {
+        opacity: 0;
+    }
+
+    28% {
+        opacity: 1;
+    }
+
+    71% {
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 0;
+    }
+}
+
+@keyframes smoke-puff3 {
+    0% {
+        opacity: 0;
+    }
+
+    14% {
+        opacity: 1;
+    }
+
+    57% {
+        opacity: 1;
+    }
+
+    71% {
+        opacity: 0;
+    }
+}
