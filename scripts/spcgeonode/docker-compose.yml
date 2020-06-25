@@ -104,6 +104,7 @@ services:
       - static:/spcgeonode-static/
       - media:/spcgeonode-media/
       - certificates:/spcgeonode-certificates/
+      - ../../../frontend/explorer/dist:/frontend/
     restart: on-failure
 
   # Geoserver backend
