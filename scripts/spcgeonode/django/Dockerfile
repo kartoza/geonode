@@ -33,9 +33,9 @@ RUN echo "Geonode python dependencies"
 RUN pip install celery==4.4.0
 
 # Install geonode dependencies
-ADD requirements.txt /requirements.txt
-RUN pip install -r requirements.txt
-RUN rm requirements.txt
+ADD requirements_igrac.txt /requirements_igrac.txt
+RUN pip install -r requirements_igrac.txt
+RUN rm requirements_igrac.txt
 
 # Install pygdal (after requirements https://github.com/GeoNode/geonode/pull/4599)
 RUN pip install pygdal==$(gdal-config --version).*

@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^view/(?P<slug>[^/]+)$',
         view=map_view_with_slug,
         name='map_view_slug'),
+    url(r'^groundwater/', include('groundwater.urls')),
     url(r'^cms/', include(wagtailadmin_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
     url(r'^pages/', include(wagtail_urls)),

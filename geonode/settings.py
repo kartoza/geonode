@@ -114,6 +114,7 @@ if 'postgresql' in DATABASE_URL or 'postgis' in DATABASE_URL:
 DATABASES = {
     'default': _db_conf
 }
+DATABASES['default']['OPTIONS']={'options': '-c search_path=groundwater,public'}
 
 if os.getenv('DEFAULT_BACKEND_DATASTORE'):
     GEODATABASE_URL = os.getenv('GEODATABASE_URL',
@@ -466,6 +467,7 @@ INSTALLED_APPS = (
 
     # IGRAC
     'igrac',
+    'groundwater',
 
     #Wagtail
     'wagtail.contrib.forms',
