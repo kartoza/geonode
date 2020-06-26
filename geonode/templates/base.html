@@ -481,9 +481,13 @@
             <a class="footer-item" href="https://kartoza.com/" target="_blank"><img src="/static/img/kartoza-icon.png" height="23" alt="kartoza_logo"/></a></center>
 
         {#  form for change language #}
-        <form id="lang-form" class="form-inline" action="/i18n/setlang/" method="post" style="opacity: 0; width: 1px; position: absolute;">
+        <form id="lang-form" class="form-inline" action="/i18n/setlang/" method="post"
+          style="width: 300px;
+                position: absolute;
+                top: 8px;
+                right: 7px;">
             {% csrf_token %}
-            <select id="lang-select" class="col-md-6 pull-right" name="language" onchange="javascript:form.submit()">
+            <select id="lang-select" class="col-md-6 pull-right" name="language" onchange="changeLanguage($(this).val())" style="font-size: 12px; height: 24px;">
                 {% for lang in LANGUAGES %}
                     <option value="{{ lang.0 }}" {% ifequal LANGUAGE_CODE lang.0 %} selected="selected"{% endifequal %}>
                         {{ lang.1 }}
@@ -597,6 +601,11 @@
         document.cookie = cname + "=" + cvalue + "; " + expires;
     }
 
+    function changeLanguage(lang){
+        setCookie('lang', lang)
+        $('#lang-select').val(lang)
+        $('#lang-form').submit()
+    }
 
     // Autocomplete instance for the search found in the header.
     $(document).ready(function () {
@@ -613,9 +622,7 @@
         {# let's we check the language#}
         if ('{{ LANGUAGE_CODE }}' !== getCookie('lang')) {
             let lang = getCookie('lang') ? getCookie('lang') : 'fr'
-            setCookie('lang', lang)
-            $('#lang-select').val(lang)
-            $('#lang-form').submit()
+            changeLanguage(lang)
         }
     })
 
