@@ -467,7 +467,7 @@ INSTALLED_APPS = (
 
     # IGRAC
     'igrac',
-    'groundwater',
+    'gwml2',
 
     #Wagtail
     'wagtail.contrib.forms',
