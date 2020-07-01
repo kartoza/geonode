@@ -52,17 +52,17 @@ class CasingComponent(models.Model):
         related_name='casing_form',
         on_delete=models.SET_NULL, verbose_name='casingForm',
         help_text="Form of material used in the casing. E.g.")
-    casing_internal_diameter = models.ForeignKey(
+    casing_internal_diameter = models.OneToOneField(
         Quantity, null=True, blank=True,
         related_name='casing_internal_diameter',
         on_delete=models.SET_NULL, verbose_name='casingInternalDiameter',
         help_text="Internal diameter of the casing.")
-    casing_external_diameter = models.ForeignKey(
+    casing_external_diameter = models.OneToOneField(
         Quantity, null=True, blank=True,
         related_name='casing_external_diameter',
         on_delete=models.SET_NULL, verbose_name='casingExternalDiameter',
         help_text="External diameter of the casing.")
-    casing_wall_thickness = models.ForeignKey(
+    casing_wall_thickness = models.OneToOneField(
         Quantity, null=True, blank=True,
         related_name='casing_wall_thickness',
         on_delete=models.SET_NULL, verbose_name='casingWallThickness',

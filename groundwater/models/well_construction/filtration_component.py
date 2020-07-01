@@ -17,7 +17,7 @@ class FiltrationComponent(models.Model):
     Material used to filter the fluid in a borehole or well.
     """
 
-    filter_grain_size = models.ForeignKey(
+    filter_grain_size = models.OneToOneField(
         Quantity, null=True, blank=True,
         on_delete=models.SET_NULL,
         verbose_name="filterGrainSize",
@@ -33,7 +33,7 @@ class FiltrationComponent(models.Model):
     # TODO:
     #   need to ask about this construction component is
     #   just 1 for filtration or many?
-    construction_component = models.OneToOneField(
+    construction_component = models.ForeignKey(
         ConstructionComponent, null=True, blank=True,
         on_delete=models.SET_NULL,
         verbose_name="ConstructionComponent",

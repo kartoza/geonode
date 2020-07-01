@@ -8,14 +8,14 @@ class ConstructionComponent(models.Model):
     Elements used in borehole construction.
     """
 
-    from_component = models.ForeignKey(
+    from_component = models.OneToOneField(
         Quantity, null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='construction_component_from',
         db_column='from',
         help_text="Position of the top "
                   "(nearest to the borehole start) of the component.")
-    to_component = models.ForeignKey(
+    to_component = models.OneToOneField(
         Quantity, null=True, blank=True,
         on_delete=models.SET_NULL,
         related_name='construction_component_to',

@@ -32,4 +32,5 @@ class GWGeologyLog(models.Model):
         verbose_name='endDepth')
     gw_well = models.ForeignKey(
         GWWell,
-        null=True, blank=True, verbose_name="gwWell", on_delete=models.SET_NULL)  # many to one to GWWell
+        null=True, blank=True, verbose_name="gwWell",
+        on_delete=models.SET_NULL)  # many to one to GWWell

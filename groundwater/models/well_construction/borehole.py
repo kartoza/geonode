@@ -13,7 +13,7 @@ class Borehole(models.Model):
         null=True,
         verbose_name="bholeDateOfDrilling",
         help_text="Date of drilling.")
-    bhole_nominal_diameter = models.ForeignKey(
+    bhole_nominal_diameter = models.OneToOneField(
         Quantity, null=True, blank=True,
         on_delete=models.SET_NULL,
         verbose_name="bholeNominalDiameter",
