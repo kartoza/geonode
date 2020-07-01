@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import GW_Well, GW_GeologyLog
+from groundwater.models.well import GWWell, GWGeologyLog
 
 
-class GW_GeologyLogAdmin(admin.ModelAdmin):
-    list_display = ('phenomenonTime', 'resultTime', 'parameter', 'gw_level', 'reference', 'startDepth', 'endDepth')
+class GWGeologyLogAdmin(admin.ModelAdmin):
+    list_display = ('phenomenon_time', 'result_time', 'parameter', 'gw_level', 'reference', 'start_depth', 'end_depth')
 
 
-admin.site.register(GW_Well)
-admin.site.register(GW_GeologyLog, GW_GeologyLogAdmin)
+admin.site.register(GWWell)
+admin.site.register(GWGeologyLog, GWGeologyLogAdmin)

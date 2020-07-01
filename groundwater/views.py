@@ -6,7 +6,7 @@ from django.utils import dateparse
 from pyexcel_xls import get_data as xls_get
 from pyexcel_xlsx import get_data as xlsx_get
 from .forms import CsvWellForm
-from .models import GW_Well, GW_GeologyLog
+from groundwater.models.well import GWWell, GWGeologyLog
 
 
 class CsvUploadView(FormView):
@@ -76,7 +76,7 @@ class CsvUploadView(FormView):
                         continue
 
                     point = Point(x=record[3], y=record[2], srid=4326)
-                    well = GW_Well.objects.create(
+                    well = GWWell.objects.create(
                         gwwellname=record[0],
                         gwwelllocation=point,
                         gwwelltotallength=record[1]
@@ -95,16 +95,16 @@ class CsvUploadView(FormView):
                         continue
 
                     try:
-                        well = GW_Well.objects.get(gwwellname=record[3])
+                        well = GWWell.objects.get(gwwellname=record[3])
                         time = dateparse.parse_datetime(record[0])
-                        well_level_log = GW_GeologyLog.objects.create(
+                        well_level_log = GWGeologyLog.objects.create(
                             phenomenonTime=time,
                             resultTime=time,
                             gw_level=record[2],
                             reference=record[1]
                         )
                         well.gwwellgeology.add(well_level_log)
-                    except GW_Well.DoesNotExist:
+                    except GWWell.DoesNotExist:
                         pass
                 pass
             return self.form_valid(form)
