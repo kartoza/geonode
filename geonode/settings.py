@@ -19,6 +19,7 @@
 #########################################################################
 
 # Django settings for the GeoNode project.
+import copy
 import os
 import re
 import ast
@@ -1960,3 +1961,12 @@ SEARCH_RESOURCES_EXTENDED = strtobool(os.getenv('SEARCH_RESOURCES_EXTENDED', 'Tr
 WAGTAIL_SITE_NAME = 'My Example Site'
 WAGTAILMENUS_SITE_SPECIFIC_TEMPLATE_DIRS = True
 # -- END Settings for Wagtail
+
+# gwml2 database conf
+GWML2_DATABASE_NAME = 'groundwater'  # change this to desired name
+gwml2_database_conf = copy.copy(_db_conf)
+gwml2_database_conf['NAME'] = GWML2_DATABASE_NAME
+
+GWML2_DATABASE_CONFIG = 'gwml2'
+DATABASES[GWML2_DATABASE_CONFIG] = gwml2_database_conf
+DATABASE_ROUTERS = ['gwml2.router.GWML2Router']
