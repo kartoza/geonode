@@ -1963,9 +1963,8 @@ WAGTAILMENUS_SITE_SPECIFIC_TEMPLATE_DIRS = True
 # -- END Settings for Wagtail
 
 # gwml2 database conf
-GWML2_DATABASE_NAME = 'groundwater'  # change this to desired name
 gwml2_database_conf = copy.copy(_db_conf)
-gwml2_database_conf['NAME'] = GWML2_DATABASE_NAME
+gwml2_database_conf['NAME'] = 'groundwater'
 
 GWML2_DATABASE_CONFIG = 'gwml2'
 DATABASES[GWML2_DATABASE_CONFIG] = gwml2_database_conf
