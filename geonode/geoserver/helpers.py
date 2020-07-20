@@ -1102,13 +1102,14 @@ def set_styles(layer, gs_catalog):
             # make sure we are not using a default SLD (which won't be editable)
             if not default_style.workspace or default_style.workspace != layer.workspace:
                 sld_body = default_style.sld_body
+                style_name = layer.name if not settings.USE_DEFAULT_GEOSERVER_STYLE else default_style.name
                 try:
-                    gs_catalog.create_style(layer.name, sld_body, raw=True, workspace=layer.workspace)
+                    gs_catalog.create_style(style_name, sld_body, raw=True, workspace=layer.workspace)
                 except Exception:
                     tb = traceback.format_exc()
                     logger.debug(tb)
 
-                style = gs_catalog.get_style(layer.name, workspace=layer.workspace)
+                style = gs_catalog.get_style(style_name, workspace=layer.workspace)
             else:
                 style = default_style
             if style:
