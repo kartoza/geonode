@@ -204,7 +204,11 @@ def geoserver_upload(
             sld = f.read()
 
     else:
-        sld = get_sld_for(cat, publishing)
+        if settings.USE_DEFAULT_GEOSERVER_STYLE:
+            # Use default style from Geoserver
+            sld = None
+        else:
+            sld = get_sld_for(cat, publishing)
 
     style = None
     if sld:
