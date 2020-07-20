@@ -1922,3 +1922,9 @@ GEOIP_PATH = os.getenv('GEOIP_PATH', os.path.join(PROJECT_ROOT, 'GeoIPCities.dat
 #This controls if tastypie search on resourches is performed only with titles
 SEARCH_RESOURCES_EXTENDED = strtobool(os.getenv('SEARCH_RESOURCES_EXTENDED', 'True'))
 # -- END Settings for MONITORING plugin
+
+# This will assign layer to existing default geoserver style if there is
+# no SLD provided to avoid proliferation of styles in the system
+USE_DEFAULT_GEOSERVER_STYLE = ast.literal_eval(
+    os.environ.get('USE_DEFAULT_GEOSERVER_STYLE', 'False')
+)
