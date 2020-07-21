@@ -90,9 +90,11 @@ def updatelayers(request):
     workspace = params.get('workspace', None)
     store = params.get('store', None)
     filter = params.get('filter', None)
-    geoserver_update_layers.delay(
+    result = geoserver_update_layers.delay(
         ignore_errors=False, owner=owner, workspace=workspace,
         store=store, filter=filter)
+    # Attempt to run task synchronously
+    result.get()
 
     return HttpResponseRedirect(reverse('layer_browse'))
 
@@ -540,9 +542,9 @@ def _response_callback(**kwargs):
     content_type_list = ['application/xml', 'text/xml', 'text/plain', 'application/json', 'text/json']
 
     if content:
-        if isinstance(content, bytes):
-            content = content.decode('UTF-8')
         if not content_type:
+            if isinstance(content, bytes):
+                content = content.decode('UTF-8')
             if (re.match(r'^<.+>$', content)):
                 content_type = 'application/xml'
             elif (re.match(r'^({|[).+(}|])$', content)):
@@ -552,11 +554,17 @@ def _response_callback(**kwargs):
 
         # Replace Proxy URL
         try:
+            if isinstance(content, bytes):
+                _content = content.decode('UTF-8')
+            else:
+                _content = content
             if re.findall(r"(?=(\b" + '|'.join(content_type_list) + r"\b))", content_type):
                 _gn_proxy_url = urljoin(settings.SITEURL, '/gs/')
-                content = content\
+                content = _content\
                     .replace(ogc_server_settings.LOCATION, _gn_proxy_url)\
                     .replace(ogc_server_settings.PUBLIC_LOCATION, _gn_proxy_url)
+                for _ows_endpoint in list(dict.fromkeys(re.findall(rf'{_gn_proxy_url}w\ws', content, re.IGNORECASE))):
+                    content = content.replace(_ows_endpoint, f'{_gn_proxy_url}ows')
         except Exception as e:
             logger.exception(e)
 

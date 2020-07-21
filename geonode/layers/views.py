@@ -108,7 +108,7 @@ from geonode.utils import (
 from .tasks import delete_layer
 
 from geonode.geoserver.helpers import (ogc_server_settings,
-                                       set_layer_style)  # cascading_delete
+                                       set_layer_style)
 from geonode.base.utils import ManageResourceOwnerPermissions
 
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
@@ -750,6 +750,8 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
             context_dict['groups'] = [group for group in request.user.group_list_all()]
 
     register_event(request, 'view', layer)
+    context_dict['map_layers'] = [map_layer for map_layer in layer.maps() if
+                                  request.user.has_perm('view_resourcebase', map_layer.map.get_self_resource())]
     return TemplateResponse(
         request, template, context=context_dict)
 
@@ -793,7 +795,7 @@ def load_layer_data(request, template='layers/layer_detail.html'):
 
         # loop the dictionary based on the values on the list and add the properties
         # in the dictionary (if doesn't exist) together with the value
-        from collections import Iterable
+        from collections.abc import Iterable
         for i in range(len(decoded_features)):
             for key, value in decoded_features[i]['properties'].items():
                 if value != '' and isinstance(value, (string_types, int, float)) and (
@@ -1045,8 +1047,9 @@ def layer_metadata(
             la = Attribute.objects.get(id=int(form['id'].id))
             la.description = form["description"]
             la.attribute_label = form["attribute_label"]
-            la.visible = True if form["attribute_label"] else False  # form["visible"]
+            la.visible = form["visible"]
             la.display_order = form["display_order"]
+            la.featureinfo_type = form["featureinfo_type"]
             la.save()
 
         if new_poc is not None or new_author is not None:
@@ -1238,8 +1241,6 @@ def layer_replace(request, layername, template='layers/layer_replace.html'):
                         "You are attempting to replace a raster layer with a vector.")
                 else:
                     if check_ogc_backend(geoserver.BACKEND_PACKAGE):
-                        # delete geoserver's store before upload
-                        # cascading_delete(gs_catalog, layer.alternate)
                         out['ogc_backend'] = geoserver.BACKEND_PACKAGE
                     elif check_ogc_backend(qgis_server.BACKEND_PACKAGE):
                         try:
@@ -1314,17 +1315,9 @@ def layer_remove(request, layername, template='layers/layer_remove.html'):
     if (request.method == 'POST'):
         try:
             with transaction.atomic():
-                # Using Tastypie
-                # from geonode.api.resourcebase_api import LayerResource
-                # res = LayerResource()
-                # request_bundle = res.build_bundle(request=request)
-                # layer_bundle = res.build_bundle(request=request, obj=layer)
-                # layer_json = res.serialize(None,
-                #                            res.full_dehydrate(layer_bundle),
-                #                            "application/json")
-                # delete_layer.delay(instance=layer_json)
                 result = delete_layer.delay(layer_id=layer.id)
-                result.wait(10)
+                # Attempt to run task synchronously
+                result.get()
         except TimeoutError:
             # traceback.print_exc()
             pass

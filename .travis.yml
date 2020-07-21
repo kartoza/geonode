@@ -30,6 +30,7 @@ addons:
 branches:
   only:
     - master
+    - 3.x
 
 jobs:
   include:
@@ -165,35 +166,6 @@ jobs:
           - SESSION_EXPIRED_CONTROL_ENABLED: 'True'
           - CELERY_ALWAYS_EAGER: 'True'
 
-    - stage: frontend-tests
-      name: "BDD Tests"
-      virtualenv:
-          system_site_packages: false
-      env:
-          - BACKEND: 'geonode.geoserver'
-          - DOCKER_COMPOSE_VERSION: 1.19.0
-            # This is GeoServer server address
-          - GEOSERVER_SERVER_URL: http://localhost:8080/geoserver/
-          - GEOSERVER_SERVER_PORT: 8080
-          - ON_TRAVIS: 'True'
-          - TEST_RUN_INTEGRATION: 'False'
-          - TEST_RUN_INTEGRATION_CSW: 'False'
-          - TEST_RUN_INTEGRATION_BDD: 'True'
-          - MONITORING_ENABLED: 'False'
-          - SESSION_EXPIRED_CONTROL_ENABLED: 'True'
-          - CELERY_ALWAYS_EAGER: 'True'
-
-    - stage: frontend-tests
-      name: "Selenium Tests Core"
-      env:
-          - TEST_RUN_SELENIUM: 'True'
-
-    - stage: frontend-tests
-      name: "Selenium Tests SPCGeoNode"
-      env:
-          - TEST_RUN_SELENIUM: 'True'
-          - SPCGEONODE: 'True'
-
     - stage: integration-tests
       name: "Backend Integration Tests"
       virtualenv:
@@ -260,16 +232,47 @@ jobs:
           - ON_TRAVIS: 'True'
           - TEST_RUNNER_KEEPDB: 'True'
           - TEST_RUN_INTEGRATION: 'True'
+          - TEST_RUN_INTEGRATION_SERVER: 'True'
           - MONITORING_ENABLED: 'False'
           - SESSION_EXPIRED_CONTROL_ENABLED: 'True'
           - CELERY_ALWAYS_EAGER: 'True'
           - DATABASE_URL: 'postgresql://geonode:geonode@localhost:5432/upload_test'
           - GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY: 'leaflet'
 
+    - stage: frontend-tests
+      name: "BDD Tests"
+      virtualenv:
+          system_site_packages: false
+      env:
+          - BACKEND: 'geonode.geoserver'
+          - DOCKER_COMPOSE_VERSION: 1.19.0
+            # This is GeoServer server address
+          - GEOSERVER_SERVER_URL: http://localhost:8080/geoserver/
+          - GEOSERVER_SERVER_PORT: 8080
+          - ON_TRAVIS: 'True'
+          - TEST_RUN_INTEGRATION: 'False'
+          - TEST_RUN_INTEGRATION_CSW: 'False'
+          - TEST_RUN_INTEGRATION_BDD: 'True'
+          - MONITORING_ENABLED: 'False'
+          - SESSION_EXPIRED_CONTROL_ENABLED: 'True'
+          - CELERY_ALWAYS_EAGER: 'True'
+
+    - stage: frontend-tests
+      name: "Selenium Tests Core"
+      env:
+          - TEST_RUN_SELENIUM: 'True'
+
+    - stage: frontend-tests
+      name: "Selenium Tests SPCGeoNode"
+      env:
+          - TEST_RUN_SELENIUM: 'True'
+          - SPCGEONODE: 'True'
+
   fast_finish: true
 
   allow_failures:
-    - name: "GeoServer-backend Upload Tests"
+    - name: "Selenium Tests Core"
+    - name: "Selenium Tests SPCGeoNode"
 
 before_install:
   - if [ "$TEST_RUN_SELENIUM" = "True" ]; then
@@ -302,9 +305,9 @@ install:
       :;
     elif [ "$TEST_RUN_SELENIUM" = "True" ]; then
       pip install -r geonode-selenium/requirements.txt --upgrade --no-cache;
-      wget https://download.osgeo.org/geotiff/samples/spot/chicago/UTM2GTIF.TIF -P geonode-selenium/data;
-      wget https://download.osgeo.org/geotiff/samples/made_up/ntf_nord.tif -P geonode-selenium/data;
-      wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz -O geckodriver.tar.gz;
+      wget --no-check-certificate https://download.osgeo.org/geotiff/samples/spot/chicago/UTM2GTIF.TIF -P geonode-selenium/data;
+      wget --no-check-certificate https://download.osgeo.org/geotiff/samples/made_up/ntf_nord.tif -P geonode-selenium/data;
+      wget --no-check-certificate https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz -O geckodriver.tar.gz;
       mkdir bin;
       tar zxf geckodriver.tar.gz -C bin;
       export PATH=$PATH:$PWD/bin;

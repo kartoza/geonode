@@ -74,6 +74,7 @@ if EMAIL_ENABLE:
     EMAIL_HOST_USER = os.getenv('DJANGO_EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.getenv('DJANGO_EMAIL_HOST_PASSWORD', '')
     EMAIL_USE_TLS = ast.literal_eval(os.getenv('DJANGO_EMAIL_USE_TLS', 'False'))
+    EMAIL_USE_SSL = ast.literal_eval(os.getenv('DJANGO_EMAIL_USE_SSL', 'False'))
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'GeoNode <no-reply@geonode.org>')
 else:
     EMAIL_BACKEND = os.getenv('DJANGO_EMAIL_BACKEND',
@@ -82,6 +83,22 @@ else:
 # Make this unique, and don't share it with anybody.
 _DEFAULT_SECRET_KEY = 'myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a'
 SECRET_KEY = os.getenv('SECRET_KEY', _DEFAULT_SECRET_KEY)
+
+SITE_HOST_SCHEMA = os.getenv('SITE_HOST_SCHEMA', 'http')
+SITE_HOST_NAME = os.getenv('SITE_HOST_NAME', 'localhost')
+SITE_HOST_PORT = os.getenv('SITE_HOST_PORT', 8000)
+_default_siteurl = "%s://%s:%s/" % (SITE_HOST_SCHEMA,
+                                    SITE_HOST_NAME,
+                                    SITE_HOST_PORT) if SITE_HOST_PORT else "%s://%s/" % (SITE_HOST_SCHEMA, SITE_HOST_NAME)
+SITEURL = os.getenv('SITEURL', _default_siteurl)
+
+# we need hostname for deployed
+_surl = urlparse(SITEURL)
+HOSTNAME = _surl.hostname
+
+# add trailing slash to site url. geoserver url will be relative to this
+if not SITEURL.endswith('/'):
+    SITEURL = '{}/'.format(SITEURL)
 
 DATABASE_URL = os.getenv(
     'DATABASE_URL',
@@ -155,7 +172,7 @@ USE_L10N = ast.literal_eval(os.getenv('USE_I18N', 'True'))
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', "en")
 
-_DEFAULT_LANGUAGES = (
+_DEFAULT_LANGUAGES = """(
     ('af', 'Afrikaans'),
     ('sq', 'Albanian'),
     ('am', 'Amharic'),
@@ -187,9 +204,9 @@ _DEFAULT_LANGUAGES = (
     ('zh-cn', '中文'),
     ('ja', '日本語'),
     ('ko', '한국어'),
-)
+)"""
 
-LANGUAGES = os.getenv('LANGUAGES', _DEFAULT_LANGUAGES)
+LANGUAGES = ast.literal_eval(os.getenv('LANGUAGES', _DEFAULT_LANGUAGES))
 
 EXTRA_LANG_INFO = {
     'am': {
@@ -217,7 +234,6 @@ EXTRA_LANG_INFO = {
         'name_local': 'sinhala',
     },
 }
-
 
 AUTH_USER_MODEL = os.getenv('AUTH_USER_MODEL', 'people.Profile')
 
@@ -406,7 +422,6 @@ GEONODE_APPS = GEONODE_CORE_APPS + GEONODE_INTERNAL_APPS + GEONODE_CONTRIB_APPS
 
 INSTALLED_APPS = (
 
-
     # Boostrap admin theme
     # 'django_admin_bootstrapped.bootstrap3',
     # 'django_admin_bootstrapped',
@@ -415,7 +430,7 @@ INSTALLED_APPS = (
     'modeltranslation',
     'dal',
     'dal_select2',
-
+    'grappelli',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -437,6 +452,7 @@ INSTALLED_APPS = (
     'mptt',
     'storages',
     'floppyforms',
+    'tinymce',
 
     # Theme
     'django_forms_bootstrap',
@@ -453,7 +469,6 @@ INSTALLED_APPS = (
     'guardian',
     'oauth2_provider',
     'corsheaders',
-
     'invitations',
 
     # login with external providers
@@ -477,6 +492,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+GRAPPELLI_ADMIN_TITLE = os.getenv('GRAPPELLI_ADMIN_TITLE', 'GeoNode')
 
 # Documents application
 try:
@@ -690,12 +707,13 @@ OAUTH2_PROVIDER = {
     },
 
     'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',
-    # 'OAUTH2_VALIDATOR_CLASS': 'geonode.security.oauth2_validators.OIDCValidator',
+    'OAUTH2_SERVER_CLASS': 'geonode.security.oauth2_servers.OIDCServer',
+    'OAUTH2_VALIDATOR_CLASS': 'geonode.security.oauth2_validators.OIDCValidator',
 
     # OpenID Connect
-    # "OIDC_ISS_ENDPOINT": "http://localhost:8000",
-    # "OIDC_USERINFO_ENDPOINT": "http://localhost:8000/api/o/v4/tokeninfo/",
-    "OIDC_RSA_PRIVATE_KEY": b"""-----BEGIN RSA PRIVATE KEY-----
+    "OIDC_ISS_ENDPOINT": SITEURL,
+    "OIDC_USERINFO_ENDPOINT": f"{SITEURL}api/o/v4/tokeninfo/",
+    "OIDC_RSA_PRIVATE_KEY": """-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQCIThjbTwpYu4Lwqp8oA7PqD6Ij/GwpLFJuPbWVaeCDaX6T7mh8
 mJMIEgl/VIZasLH8SwU5mZ4sPeiqk7NgJq1XDo97q5mlFoNVHMCH38KQzSIBWtbq
 WnEEnQdiqBbCmmIebLd4OcfpbIVUI89cnCq7U0M1ie0KOopWSHWOP6/35QIDAQAB
@@ -803,21 +821,6 @@ THEME_ACCOUNT_CONTACT_EMAIL = os.getenv(
 # GeoNode specific settings
 #
 # per-deployment settings should go here
-SITE_HOST_SCHEMA = os.getenv('SITE_HOST_SCHEMA', 'http')
-SITE_HOST_NAME = os.getenv('SITE_HOST_NAME', 'localhost')
-SITE_HOST_PORT = os.getenv('SITE_HOST_PORT', 8000)
-_default_siteurl = "%s://%s:%s/" % (SITE_HOST_SCHEMA,
-                                    SITE_HOST_NAME,
-                                    SITE_HOST_PORT) if SITE_HOST_PORT else "%s://%s/" % (SITE_HOST_SCHEMA, SITE_HOST_NAME)
-SITEURL = os.getenv('SITEURL', _default_siteurl)
-
-# we need hostname for deployed
-_surl = urlparse(SITEURL)
-HOSTNAME = _surl.hostname
-
-# add trailing slash to site url. geoserver url will be relative to this
-if not SITEURL.endswith('/'):
-    SITEURL = '{}/'.format(SITEURL)
 
 # Login and logout urls override
 LOGIN_URL = os.getenv('LOGIN_URL', '{}account/login/'.format(SITEURL))
@@ -1224,6 +1227,20 @@ AUTO_GENERATE_AVATAR_SIZES = (
 )
 AVATAR_GRAVATAR_SSL = ast.literal_eval(os.getenv('AVATAR_GRAVATAR_SSL', 'False'))
 
+AVATAR_DEFAULT_URL = os.getenv('AVATAR_DEFAULT_URL', '/geonode/img/avatar.png')
+
+try:
+    # try to parse python notation, default in dockerized env
+    AVATAR_PROVIDERS = ast.literal_eval(os.getenv('AVATAR_PROVIDERS'))
+except ValueError:
+    # fallback to regular list of values separated with misc chars
+    AVATAR_PROVIDERS = (
+    'avatar.providers.PrimaryAvatarProvider',
+    'avatar.providers.GravatarAvatarProvider',
+    'avatar.providers.DefaultAvatarProvider'
+   ) if os.getenv('AVATAR_PROVIDERS') is None \
+        else re.split(r' *[,|:|;] *', os.getenv('AVATAR_PROVIDERS'))
+
 # Number of results per page listed in the GeoNode search pages
 CLIENT_RESULTS_LIMIT = int(os.getenv('CLIENT_RESULTS_LIMIT', '5'))
 
@@ -1533,6 +1550,50 @@ SEARCH_FILTERS = {
     'GROUP_CATEGORIES_ENABLED': True,
 }
 
+# HTML WYSIWYG Editor (TINYMCE) Menu Bar Settings
+TINYMCE_DEFAULT_CONFIG = {
+    "selector": "textarea#id_resource-featureinfo_custom_template",
+    "theme": "silver",
+    "height": 500,
+    "plugins": 'print preview paste importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists wordcount imagetools textpattern noneditable help charmap quickbars emoticons',
+    "imagetools_cors_hosts": ['picsum.photos'],
+    "menubar": 'file edit view insert format tools table help',
+    "toolbar": 'undo redo | bold italic underline strikethrough | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save | insertfile image media template link anchor codesample | ltr rtl',
+    "toolbar_sticky": "true",
+    "autosave_ask_before_unload": "true",
+    "autosave_interval": "30s",
+    "autosave_prefix": "{path}{query}-{id}-",
+    "autosave_restore_when_empty": "false",
+    "autosave_retention": "2m",
+    "image_advtab": "true",
+    "content_css": '//www.tiny.cloud/css/codepen.min.css',
+    "importcss_append": "true",
+    "image_caption": "true",
+    "quickbars_selection_toolbar": 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+    "noneditable_noneditable_class": "mceNonEditable",
+    "toolbar_mode": 'sliding',
+    "contextmenu": "link image imagetools table",
+    "templates": [
+        {
+            "title": 'New Table',
+            "description": 'creates a new table',
+            "content": '<div class="mceTmpl"><table width="98%%"  border="0" cellspacing="0" cellpadding="0"><tr><th scope="col"> </th><th scope="col"> </th></tr><tr><td> </td><td> </td></tr></table></div>'
+        },
+        {
+            "title": 'Starting my story',
+            "description": 'A cure for writers block',
+            "content": 'Once upon a time...'
+        },
+        {
+            "title": 'New list with dates',
+            "description": 'New List with dates',
+            "content": '<div class="mceTmpl"><span class="cdate">cdate</span><br /><span class="mdate">mdate</span><h2>My List</h2><ul><li></li><li></li></ul></div>'
+        }
+    ],
+    "template_cdate_format": '[Date Created (CDATE): %m/%d/%Y : %H:%M:%S]',
+    "template_mdate_format": '[Date Modified (MDATE): %m/%d/%Y : %H:%M:%S]',
+}
+
 # Make Free-Text Kaywords writable from users or read-only
 # - if True only admins can edit free-text kwds from admin dashboard
 FREETEXT_KEYWORDS_READONLY = ast.literal_eval(os.environ.get('FREETEXT_KEYWORDS_READONLY', 'False'))
@@ -1612,13 +1673,14 @@ else:
 
 CELERY_BROKER_URL = os.environ.get('BROKER_URL', _BROKER_URL)
 CELERY_RESULT_PERSISTENT = ast.literal_eval(os.environ.get('CELERY_RESULT_PERSISTENT', 'False'))
+CELERY_IGNORE_RESULT = ast.literal_eval(os.environ.get('CELERY_IGNORE_RESULT', 'False'))
 
 # Allow to recover from any unknown crash.
 CELERY_ACKS_LATE = ast.literal_eval(os.environ.get('CELERY_ACKS_LATE', 'True'))
 
 # Set this to False in order to run async
-CELERY_TASK_ALWAYS_EAGER = ast.literal_eval(os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'False' if ASYNC_SIGNALS else 'True'))
-CELERY_TASK_EAGER_PROPAGATES = ast.literal_eval(os.environ.get('CELERY_TASK_EAGER_PROPAGATES', 'False' if ASYNC_SIGNALS else 'True'))
+CELERY_TASK_ALWAYS_EAGER = ast.literal_eval(os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'True'))
+CELERY_TASK_EAGER_PROPAGATES = ast.literal_eval(os.environ.get('CELERY_TASK_EAGER_PROPAGATES', 'True'))
 CELERY_TASK_IGNORE_RESULT = ast.literal_eval(os.environ.get('CELERY_TASK_IGNORE_RESULT', 'True'))
 
 # I use these to debug kombu crashes; we get a more informative message.
@@ -1788,12 +1850,13 @@ ACCOUNT_APPROVAL_REQUIRED = ast.literal_eval(
     os.getenv('ACCOUNT_APPROVAL_REQUIRED', 'False')
 )
 ACCOUNT_ADAPTER = 'geonode.people.adapters.LocalAccountAdapter'
+ACCOUNT_AUTHENTICATION_METHOD = os.environ.get('ACCOUNT_AUTHENTICATION_METHOD', 'username_email')
 ACCOUNT_CONFIRM_EMAIL_ON_GET = ast.literal_eval(os.environ.get('ACCOUNT_CONFIRM_EMAIL_ON_GET', 'True'))
 ACCOUNT_EMAIL_REQUIRED = ast.literal_eval(os.environ.get('ACCOUNT_EMAIL_REQUIRED', 'True'))
-ACCOUNT_EMAIL_VERIFICATION = os.environ.get('ACCOUNT_EMAIL_VERIFICATION', 'optional')
+ACCOUNT_EMAIL_VERIFICATION = os.environ.get('ACCOUNT_EMAIL_VERIFICATION', 'none')
 
 SOCIALACCOUNT_ADAPTER = 'geonode.people.adapters.SocialAccountAdapter'
-SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_AUTO_SIGNUP = ast.literal_eval(os.environ.get('SOCIALACCOUNT_AUTO_SIGNUP', 'True'))
 #This will hide or show local registration form in allauth view. True will show form
 SOCIALACCOUNT_WITH_GEONODE_LOCAL_SINGUP = strtobool(os.environ.get('SOCIALACCOUNT_WITH_GEONODE_LOCAL_SINGUP', 'True'))
 

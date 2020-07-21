@@ -167,9 +167,13 @@ urlpatterns += [
     # Curated Thumbnail
     url(r'^base/(?P<res_id>[^/]+)/thumbnail_upload$', thumbnail_upload,
         name='thumbnail_upload'),
+
+    # tinymce WYSIWYG HTML Editor
+    url(r'^tinymce/', include('tinymce.urls')),
 ]
 
 urlpatterns += i18n_patterns(
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', admin.site.urls, name="admin"),
 )
 

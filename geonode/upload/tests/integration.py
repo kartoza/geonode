@@ -530,7 +530,7 @@ class TestUpload(UploaderBase):
         """Test uploading a zipped shapefile"""
         fd, abspath = self.temp_file('.zip')
         fp = os.fdopen(fd, 'wb')
-        zf = ZipFile(fp, 'w')
+        zf = ZipFile(fp, 'w', allowZip64=True)
         fpath = os.path.join(
             GOOD_DATA,
             'vector',
@@ -650,7 +650,7 @@ class TestUploadDBDataStore(UploaderBase):
 
     def test_time(self):
         """Verify that uploading time based shapefile works properly"""
-        cascading_delete(self.catalog, 'boxes_with_date')
+        cascading_delete(layer_name='boxes_with_date', catalog=self.catalog)
 
         timedir = os.path.join(GOOD_DATA, 'time')
         layer_name = 'boxes_with_date'
@@ -701,7 +701,7 @@ class TestUploadDBDataStore(UploaderBase):
     def test_configure_time(self):
         layer_name = 'boxes_with_end_date'
         # make sure it's not there (and configured)
-        cascading_delete(gs_catalog, layer_name)
+        cascading_delete(layer_name=layer_name, catalog=gs_catalog)
 
         def get_wms_timepositions():
             alternate_name = 'geonode:%s' % layer_name

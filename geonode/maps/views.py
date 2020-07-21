@@ -96,13 +96,13 @@ DEFAULT_MAPS_SEARCH_BATCH_SIZE = 10
 MAX_MAPS_SEARCH_BATCH_SIZE = 25
 
 _PERMISSION_MSG_DELETE = _("You are not permitted to delete this map.")
-_PERMISSION_MSG_GENERIC = _('You do not have permissions for this map.')
+_PERMISSION_MSG_GENERIC = _("You do not have permissions for this map.")
 _PERMISSION_MSG_LOGIN = _("You must be logged in to save this map")
 _PERMISSION_MSG_SAVE = _("You are not permitted to save or edit this map.")
 _PERMISSION_MSG_METADATA = _(
     "You are not allowed to modify this map's metadata.")
 _PERMISSION_MSG_VIEW = _("You are not allowed to view this map.")
-_PERMISSION_MSG_UNKNOWN = _('An unknown error has occured.')
+_PERMISSION_MSG_UNKNOWN = _("An unknown error has occured.")
 
 
 def _resolve_map(request, id, permission='base.change_resourcebase',
@@ -445,7 +445,9 @@ def map_remove(request, mapid, template='maps/map_remove.html'):
             except Exception:
                 logger.error("Could not build slack message for delete map.")
 
-            delete_map.delay(object_id=map_obj.id)
+            result = delete_map.delay(object_id=map_obj.id)
+            # Attempt to run task synchronously
+            result.get()
 
             try:
                 from geonode.contrib.slack.utils import send_slack_messages
@@ -453,7 +455,9 @@ def map_remove(request, mapid, template='maps/map_remove.html'):
             except Exception:
                 logger.error("Could not send slack message for delete map.")
         else:
-            delete_map.delay(object_id=map_obj.id)
+            result = delete_map.delay(object_id=map_obj.id)
+            # Attempt to run task synchronously
+            result.get()
 
         register_event(request, EventType.EVENT_REMOVE, map_obj)
 

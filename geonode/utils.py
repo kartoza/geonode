@@ -124,7 +124,7 @@ def unzip_file(upload_file, extension='.shp', tempdir=None):
     if not os.path.isdir(tempdir):
         os.makedirs(tempdir)
 
-    the_zip = ZipFile(upload_file)
+    the_zip = ZipFile(upload_file, allowZip64=True)
     the_zip.extractall(tempdir)
     for item in the_zip.namelist():
         if item.endswith(extension):
@@ -570,7 +570,7 @@ class GXPMapBase(object):
                     results.append(x)
             return results
 
-        configs = [l.source_config(access_token) for l in layers]
+        configs = [lyr.source_config(access_token) for lyr in layers]
 
         i = 0
         for source in uniqify(configs):
@@ -585,9 +585,9 @@ class GXPMapBase(object):
                     return k
             return None
 
-        def layer_config(l, user=None):
-            cfg = l.layer_config(user=user)
-            src_cfg = l.source_config(access_token)
+        def layer_config(lyr, user=None):
+            cfg = lyr.layer_config(user=user)
+            src_cfg = lyr.source_config(access_token)
             source = source_lookup(src_cfg)
             if source:
                 cfg["source"] = source
@@ -649,7 +649,7 @@ class GXPMapBase(object):
             'defaultSourceType': "gxp_wmscsource",
             'sources': sources,
             'map': {
-                'layers': [layer_config(l, user=user) for l in layers],
+                'layers': [layer_config(lyr, user=user) for lyr in layers],
                 'center': [self.center_x, self.center_y],
                 'projection': self.projection,
                 'zoom': self.zoom
@@ -1438,7 +1438,7 @@ class HttpClient(object):
         action = getattr(session, method.lower(), None)
         if action:
             response = action(
-                url=unquote(url),
+                url=url,
                 data=data,
                 headers=headers,
                 timeout=timeout or self.timeout,
@@ -1516,6 +1516,8 @@ def copy_tree(src, dst, symlinks=False, ignore=None):
                     pass
             else:
                 try:
+                    if ignore and s in ignore(dst, [s]):
+                        return
                     shutil.copy2(s, d)
                 except Exception:
                     pass
