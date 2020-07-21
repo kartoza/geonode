@@ -1022,13 +1022,22 @@ OGC_SERVER = {
 
 USE_GEOSERVER = 'geonode.geoserver' in INSTALLED_APPS and OGC_SERVER['default']['BACKEND'] == 'geonode.geoserver'
 
+# This will assign layer to existing default geoserver style if there is
+# no SLD provided to avoid proliferation of styles in the system
+USE_DEFAULT_GEOSERVER_STYLE = ast.literal_eval(
+    os.environ.get('USE_DEFAULT_GEOSERVER_STYLE', 'False')
+)
+
 # Uploader Settings
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000
 """
     DEFAULT_BACKEND_UPLOADER = {'geonode.rest', 'geonode.importer'}
 """
+DEFAULT_BACKEND_UPLOADER = os.getenv('DEFAULT_BACKEND_UPLOADER', 'geonode.rest')
+if USE_DEFAULT_GEOSERVER_STYLE:
+    DEFAULT_BACKEND_UPLOADER = 'geonode.rest'
 UPLOADER = {
-    'BACKEND': os.getenv('DEFAULT_BACKEND_UPLOADER', 'geonode.rest'),
+    'BACKEND': DEFAULT_BACKEND_UPLOADER,
     'OPTIONS': {
         'TIME_ENABLED': ast.literal_eval(os.getenv('TIME_ENABLED', 'False')),
         'MOSAIC_ENABLED': ast.literal_eval(os.getenv('MOSAIC_ENABLED', 'False')),
@@ -2114,4 +2123,3 @@ SEARCH_RESOURCES_EXTENDED = strtobool(os.getenv('SEARCH_RESOURCES_EXTENDED', 'Tr
 # -- END Settings for MONITORING plugin
 
 CATALOG_METADATA_TEMPLATE = os.getenv("CATALOG_METADATA_TEMPLATE", "catalogue/full_metadata.xml")
-
