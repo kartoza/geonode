@@ -1980,7 +1980,8 @@ def _render_thumbnail(req_body, width=240, height=200):
             resample=Image.ANTIALIAS)
         cover = resizeimage.resize_cover(
             im,
-            [_default_thumb_size['width'], _default_thumb_size['height']])
+            [_default_thumb_size['width'], _default_thumb_size['height']],
+            validate=False)
         imgByteArr = BytesIO()
         cover.save(imgByteArr, format='JPEG')
         content = imgByteArr.getvalue()
