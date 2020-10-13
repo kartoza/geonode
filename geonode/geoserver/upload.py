@@ -21,6 +21,7 @@
 import uuid
 import logging
 import geoserver
+import time
 
 from geoserver.catalog import ConflictingDataError, UploadError
 from geoserver.resource import FeatureType, Coverage
@@ -40,10 +41,43 @@ from .helpers import (GEOSERVER_LAYER_TYPES,
 
 logger = logging.getLogger(__name__)
 
+MAX_GET_STYLE_TRIES = 10
 
 def geoserver_layer_type(filename):
     the_type = layer_type(filename)
     return GEOSERVER_LAYER_TYPES[the_type]
+
+
+def get_style(cat, name, workspace, sld):
+    style = None
+    try:
+        style = cat.get_style(name, workspace=workspace)
+        if not style:
+            style = cat.get_style(name)
+    except Exception:
+        try:
+            style = cat.get_style(name + '_layer', workspace=workspace) or \
+                    cat.get_style(name + '_layer')
+            overwrite = style or False
+            cat.create_style(name + '_layer', sld, overwrite=overwrite,
+                             raw=True,
+                             workspace=workspace)
+            style = cat.get_style(name + '_layer', workspace=workspace) or \
+                    cat.get_style(name + '_layer')
+        except geoserver.catalog.ConflictingDataError as e:
+            msg = ('There was already a style named %s in GeoServer, '
+                   'cannot overwrite: "%s"' % (name, str(e)))
+            logger.warn(msg)
+            e.args = (msg,)
+
+        style = cat.get_style(name + "_layer", workspace=workspace) or \
+                cat.get_style(name + "_layer")
+        if style is None:
+            style = cat.get_style('point')
+            msg = ('Could not find any suitable style in GeoServer '
+                   'for Layer: "%s"' % (name))
+            logger.error(msg)
+    return style
 
 
 def geoserver_upload(
@@ -230,31 +264,17 @@ def geoserver_upload(
             e.args = (msg,)
             logger.exception(e)
 
-        if style is None:
-            try:
-                style = cat.get_style(name, workspace=workspace) or cat.get_style(name)
-            except Exception:
-                try:
-                    style = cat.get_style(name + '_layer', workspace=workspace) or \
-                        cat.get_style(name + '_layer')
-                    overwrite = style or False
-                    cat.create_style(name + '_layer', sld, overwrite=overwrite, raw=True,
-                                     workspace=workspace)
-                    style = cat.get_style(name + '_layer', workspace=workspace) or \
-                        cat.get_style(name + '_layer')
-                except geoserver.catalog.ConflictingDataError as e:
-                    msg = ('There was already a style named %s in GeoServer, '
-                           'cannot overwrite: "%s"' % (name, str(e)))
-                    logger.warn(msg)
-                    e.args = (msg,)
-
-                style = cat.get_style(name + "_layer", workspace=workspace) or \
-                    cat.get_style(name + "_layer")
-                if style is None:
-                    style = cat.get_style('point')
-                    msg = ('Could not find any suitable style in GeoServer '
-                           'for Layer: "%s"' % (name))
-                    logger.error(msg)
+        current_try = 1
+        while current_try < MAX_GET_STYLE_TRIES:
+            if style is None:
+                style = get_style(
+                    cat=cat, name=name, workspace=workspace, sld=sld
+                )
+            if style is not None:
+                break
+            else:
+                time.sleep(3) # Wait for style to finish uploading, and try again
+                current_try += 1
 
         if style:
             publishing.default_style = style
