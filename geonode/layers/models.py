@@ -373,6 +373,9 @@ class Layer(ResourceBase):
 
     def maps(self):
         from geonode.maps.models import MapLayer
+        if self.storeType == 'remoteStore':
+            return MapLayer.objects.filter(
+                name=self.alternate, store=self.store)
         return MapLayer.objects.filter(name=self.alternate)
 
     @property
