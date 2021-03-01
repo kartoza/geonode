@@ -86,6 +86,9 @@ class Style(models.Model, PermissionLevelMixin):
     sld_url = models.CharField(_('sld url'), null=True, max_length=1000)
     workspace = models.CharField(max_length=255, null=True, blank=True)
 
+    class Meta:
+        ordering = ['sld_title', 'name']
+
     def __str__(self):
         return "{0}".format(self.name)
 
