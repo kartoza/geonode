@@ -375,7 +375,7 @@ admin.site.register(ThesaurusKeywordLabel, ThesaurusKeywordLabelAdmin)
 
 class ResourceBaseAdminForm(autocomplete.FutureModelForm):
 
-    keywords = TagField(widget=TaggitSelect2Custom('autocomplete_hierachical_keyword'))
+    keywords = TagField(widget=TaggitSelect2Custom('autocomplete_hierachical_keyword'), required=False)
 
     class Meta:
         pass
