@@ -210,7 +210,7 @@
           <h4 class="list-group-item-heading">{% trans "Map Layers" %}</h4>
           <p>{% trans "This map uses the following layers:" %}</p>
           <ul class="list-unstyled">
-            {% for layer in resource.layer_set.all %}
+            {% for layer in layers %}
             {% ifnotequal layer.group 'background' %}
               {% if layer.local %}
               <li><a href="{% url "layer_detail" layer.name %}">{% if layer.layer_title %}{{ layer.layer_title }}{% else %}{{ layer.name }}{% endif %}</a></li>
