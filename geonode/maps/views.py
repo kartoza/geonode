@@ -145,7 +145,7 @@ def map_detail(request, mapid, template='maps/map_detail.html'):
     register_event(request, EventType.EVENT_VIEW, map_obj.title)
 
     config = json.dumps(config)
-    layers = MapLayer.objects.filter(map=map_obj.id)
+    layers = MapLayer.objects.filter(map=map_obj.id).order_by('name', 'store').distinct('name', 'store')
     links = map_obj.link_set.download()
 
     # Call this first in order to be sure "perms_list" is correct
