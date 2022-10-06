@@ -192,14 +192,16 @@ def geoserver_upload(
     cat.save(gs_resource)
     publishing = cat.get_layer(name) or gs_resource
     sld = None
-    try:
-        if 'sld' in files:
-            with open(files['sld'], 'rb') as f:
-                sld = f.read()
+    if 'sld' in files:
+        with open(files['sld'], 'rb') as f:
+            sld = f.read()
+
+    else:
+        if settings.USE_DEFAULT_GEOSERVER_STYLE:
+            # Use default style from Geoserver
+            sld = None
         else:
             sld = get_sld_for(cat, layer)
-    except Exception as e:
-        logger.exception(e)
 
     style = None
     if sld:

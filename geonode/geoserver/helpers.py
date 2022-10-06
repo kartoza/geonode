@@ -1222,6 +1222,7 @@ def set_styles(layer, gs_catalog):
 def save_style(gs_style, layer):
     style_name = os.path.basename(
         urlparse(gs_style.body_href).path).split('.')[0]
+    # sld_name = layer.name if not settings.USE_DEFAULT_GEOSERVER_STYLE else gs_style.name
     sld_name = gs_style.name
     sld_body = gs_style.sld_body
     if not gs_style.workspace:
