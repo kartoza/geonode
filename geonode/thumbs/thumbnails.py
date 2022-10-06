@@ -18,6 +18,7 @@
 #########################################################################
 import json
 import logging
+import time
 
 from io import BytesIO
 from PIL import Image, UnidentifiedImageError
@@ -248,6 +249,11 @@ def _generate_thumbnail_name(instance: Union[Layer, Map]) -> Optional[str]:
         raise ThumbnailError(
             "Thumbnail generation didn't recognize the provided instance."
         )
+
+    if settings.ADD_TIMESTAMP_IN_THUMBNAIL:
+        file_name = file_name.replace('.png', '.{timestamp}.png'.format(
+            timestamp=int(time.time())
+        ))
 
     return file_name
 

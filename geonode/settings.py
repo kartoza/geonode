@@ -1053,6 +1053,11 @@ USE_DEFAULT_GEOSERVER_STYLE = ast.literal_eval(
     os.environ.get('USE_DEFAULT_GEOSERVER_STYLE', 'False')
 )
 
+# This will add timestamp in the generated thumbnail
+ADD_TIMESTAMP_IN_THUMBNAIL = ast.literal_eval(
+    os.environ.get('ADD_TIMESTAMP_IN_THUMBNAIL', 'False')
+)
+
 # Uploader Settings
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000
 """
