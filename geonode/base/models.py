@@ -1546,6 +1546,8 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
 
     def download_links(self):
         """assemble download links for pycsw"""
+        import urllib
+        parsed_title = urllib.parse.quote(self.title, safe=" ")
         links = []
         for link in self.link_set.all():
             if link.link_type == 'metadata':  # avoid recursion
@@ -1557,7 +1559,11 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
                      'WWW:LINK-1.0-http--link',
                      link.url))
             elif link.link_type in ('OGC:WMS', 'OGC:WFS', 'OGC:WCS'):
-                links.append((self.title, link.name, link.link_type, link.url))
+                links.append((
+                    parsed_title,
+                    link.name,
+                    link.link_type,
+                    link.url))
             else:
                 _link_type = 'WWW:DOWNLOAD-1.0-http--download'
                 try:
@@ -1568,9 +1574,9 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
                             _link_type = f'WWW:DOWNLOAD-{_remote_service.type}'
                 except Exception as e:
                     logger.exception(e)
-                description = f'{self.title} ({link.name} Format)'
+                description = '%s (%s Format)' % (parsed_title, link.name)
                 links.append(
-                    (self.title,
+                    (parsed_title,
                      description,
                      _link_type,
                      link.url))
