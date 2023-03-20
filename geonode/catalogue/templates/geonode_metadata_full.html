@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load static %}
+
 <html>
 	<head>
     <meta charset="utf-8">
@@ -7,17 +9,15 @@
     <title>{{ resource.title }}</title>
     {% block head %}
       {% if DEBUG_STATIC %}
-      <link href="{{ STATIC_URL }}lib/css/jquery.dataTables.css" rel="stylesheet" />
-      <link href="{{ STATIC_URL }}lib/css/select2.css" rel="stylesheet"/>
-      <link href="{{ STATIC_URL }}lib/css/bootstrap.min.css" rel="stylesheet"/>
-      <link href="{{ STATIC_URL }}lib/css/jquery-ui.css" rel="stylesheet"/>
-      <link href="{{ STATIC_URL }}lib/css/bootstrap-datetimepicker.css" rel="stylesheet"/>
+      <link href="{% static "lib/css/jquery.dataTables.css" %}" rel="stylesheet" />
+      <link href="{% static "lib/css/select2.css" %}" rel="stylesheet"/>
+      <link href="{% static "lib/css/bootstrap.css" %}" rel="stylesheet"/>
+      <link href="{% static "lib/css/jquery-ui.css" %}" rel="stylesheet"/>
+      <link href="{% static "lib/css/bootstrap-datetimepicker.css" %}" rel="stylesheet" />
       {% else %}
-      <link href="{{ STATIC_URL }}lib/css/assets.min.css" rel="stylesheet"/>
+      <link href="{% static "lib/css/assets.min.css" %}" rel="stylesheet"/>
       {% endif %}
-      <link href="{{ STATIC_URL }}geonode/css/ext-compatibility.css" rel="stylesheet" />
-      <link href="{{ STATIC_URL }}geonode/css/ux-all.css" rel="stylesheet" />
-      <link href="{{ STATIC_URL }}geonode/css/base.css" rel="stylesheet" />
+	  <link href="{% static "geonode/css/base.css" %}" rel="stylesheet"/>
       <style type="text/css">[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}</style>
 	<style>
 	dl dd{ margin-left:20px; }
@@ -37,7 +37,7 @@
 				<div class="page-header">
 					<div class="row">
 						<div >
-						  <h4 >Resource Metadata</h4>
+						  <h4 >{% trans "Resource Metadata" %}</h4>
 						  <h2 class="page-title">{{ resource.title }}</h2>
 						</div>
 					</div>
@@ -46,10 +46,10 @@
 				<div class="row">
 				  <div class="col-md-8">
 					<dl>
-						<dt>Thumbnail</dt>
+						<dt>{% trans "Thumbnail" %}</dt>
 							<dd><img class='items-list thumb' style="border: 1px solid #ccc;margin-top:10px;" src='{{resource.thumbnail_url}}' alt="{{ resource.title }}"></dd>
 
-						<dt>Resource ID</dt>
+						<dt>{% trans "Resource ID" %}</dt>
 							<dd>{{resource.uuid}}</dd>
 
 						<dt>{% trans "Title" %}</dt>
@@ -59,7 +59,7 @@
 							<dd>{{resource.date}}, {% trans resource.date_type|title %} </dd>
 
 						<dt>{% trans "Abstract" %}</dt>
-							<dd>{{resource.abstract}}</dd>
+							<dd>{{resource.raw_abstract}}</dd>
 
 						<dt>{% trans "Edition" %}</dt>
 							{% if resource.edition %}
@@ -69,7 +69,7 @@
 							{% endif %}
 
 
-						<dt>{% trans "Owner" %}</dt>
+						<dt>{% trans "Responsible" %}</dt>
 							<dd>{{resource.owner}}</dd>
 
 						<dt>{% trans "Point of Contact" %}</dt>
@@ -79,7 +79,7 @@
 
 						<dt>{% trans "Purpose" %}</dt>
 								{% if resource.purpose %}
-									<dd>{{resource.purpose}}</dd>
+									<dd>{{resource.raw_purpose}}</dd>
 								{% else %}
 									<dd> -- </dd>
 								{% endif %}
@@ -93,7 +93,7 @@
 
 						<dt>{% trans "Restrictions" %}</dt>
 							<dd>{{resource.restriction_code_type}}</dd>
-							<dd>{{resource.constraints_other}}</dd>
+							<dd>{{resource.raw_constraints_other}}</dd>
 
 						<dt>{% trans "License" %}</dt>
 							<dd>{{resource.license}}</dd>
@@ -102,13 +102,13 @@
 							<dd>{{resource.language}}</dd>
 
 						<dt>{% trans "Temporal Extent" %}</dt>
-							<dt>Start </dt>
+							<dt>{% trans "Start" %} </dt>
 								{% if resource.temporal_extent_start %}
 									<dd> {{resource.temporal_extent_start}} </dd>
 								{% else %}
 									<dd> -- </dd>
 								{% endif %}
-							<dt>End </dt>
+							<dt>{% trans "End" %} </dt>
 								{% if resource.temporal_extent_end %}
 									<dd> {{resource.temporal_extent_end}} </dd>
 								{% else %}
@@ -117,26 +117,26 @@
 
 
 						<dt>{% trans "Supplemental Information" %}</dt>
-							<dd>{{resource.supplemental_information}}</dd>
+							<dd>{{resource.raw_supplemental_information}}</dd>
 
 						<dt>{% trans "Data Quality" %} </dt>
 							{% if resource.data_quality_statement %}
-							<dd>{{resource.data_quality_statement}}</dd>
+							<dd>{{resource.raw_data_quality_statement}}</dd>
 							{% else %}
 								<dd> -- </dd>
 							{% endif %}
 
-						<dt>Extent</dt>
+						<dt>{% trans "Extent" %}</dt>
 							<dd>
 								<ul class="nop">
-									<li>long min: {{resource.bbox_x0}}</li>
-									<li>long max: {{resource.bbox_x1}}</li>
-									<li>lat min: {{resource.bbox_y0}}</li>
-									<li>lat max: {{resource.bbox_y1}}</li>
+									<li>x0: {{resource.bbox_helper.xmin}}</li>
+									<li>x1: {{resource.bbox_helper.xmax}}</li>
+									<li>y0: {{resource.bbox_helper.ymin}}</li>
+									<li>y1: {{resource.bbox_helper.ymax}}</li>
 								</ul>
 							</dd>
 
-						<dt>Spatial Reference System Identifier</dt>
+						<dt>{% trans "Spatial Reference System Identifier" %}</dt>
 							<dd>{{resource.srid}}</dd>
 
 						<dt>{% trans "Keywords" %}</dt>
@@ -155,8 +155,8 @@
 							</dd>
 									{% endif %}
 
-						{% if "layer" in  request.META.HTTP_REFERER|stringformat:"s" %}
-						<dt>Attributes</dt>
+						{% if "dataset" in  request.META.HTTP_REFERER|stringformat:"s" %}
+						<dt>{% trans "Attributes" %}</dt>
 							<dd>
 								<table id="attr_table" class="table table-striped table-bordered table-condensed" style="margin-top:10px;font-size:14px;">
 								</table>
@@ -164,12 +164,10 @@
 							<script  type="text/javascript">
 								var content="{{extra_res_md.atrributes}}";
 								content = content.replace(/\&lt;/gi,"<").replace(/\&gt;/gi,">");
-								var headertab="<thead><tr><th style='width:25%'>Attribute name</th><th>Label</th><th>Description</th></tr></thead>";
+								var headertab="<thead><tr><th style='width:25%'>{% trans "Attribute name" %}</th><th>Label</th><th>{% trans "Description" %}</th></tr></thead>";
 								document.getElementById("attr_table").innerHTML=headertab+content;
 							</script>
-
 						{% endif %}
-
 				  </div>
 				 </div>
 			 </div>

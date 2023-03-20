@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -20,27 +19,37 @@
 
 """unit tests for geonode.upload.upload_preprocessing module"""
 
-from django.test import TestCase
-import mock
+from geonode.tests.base import GeoNodeBaseTestSupport
+
+try:
+    import unittest.mock as mock
+except ImportError:
+    from unittest import mock
 import os.path
 
+from django.conf import settings
+from django.utils.timezone import timedelta, now
+
 from geonode.upload import files
-from geonode.upload import upload_preprocessing
+from geonode.base import enumerations
+from geonode.upload.models import Upload
 from geonode.upload.utils import get_kml_doc
+from geonode.upload import upload_preprocessing
+from geonode.upload.tasks import finalize_incomplete_session_uploads
 
 
-class UploadPreprocessingTestCase(TestCase):
+class UploadPreprocessingTestCase(GeoNodeBaseTestSupport):
 
     MOCK_PREFIX = "geonode.upload.upload_preprocessing"
 
-    @mock.patch(MOCK_PREFIX+".convert_kml_ground_overlay_to_geotiff", autospec=True)
+    @mock.patch(MOCK_PREFIX + ".convert_kml_ground_overlay_to_geotiff", autospec=True)
     def test_preprocess_files_kml_ground_overlay(self, mock_handler):
         dirname = "phony"
         kml_path = "fake_path.kml"
         image_path = "another_fake_path.png"
         data = [
             files.SpatialFile(
-                base_file="fake_path.kml",
+                base_file=kml_path,
                 file_type=files.get_type("KML Ground Overlay"),
                 auxillary_files=[image_path],
                 sld_files=[],
@@ -53,26 +62,26 @@ class UploadPreprocessingTestCase(TestCase):
 
     def test_extract_bbox_param(self):
         fake_north = "70.000"
-        kml_bytes = """
+        kml_bytes = f"""
             <?xml version="1.0" encoding="UTF-8"?>
             <kml xmlns="http://earth.google.com/kml/2.1">
             <Document>
               <GroundOverlay id="groundoverlay">
                 <LatLonBox>
-                  <north>{}</north>
+                  <north>{fake_north}</north>
                 </LatLonBox>
               </GroundOverlay>
             </Document>
             </kml>
-        """.format(fake_north).strip()
-        kml_doc, ns = get_kml_doc(kml_bytes)
+        """.strip()
+        kml_doc, ns = get_kml_doc(kml_bytes.encode())
         result = upload_preprocessing._extract_bbox_param(
             kml_doc, ns, "north")
         self.assertEqual(result, fake_north)
 
-    @mock.patch(MOCK_PREFIX+".subprocess.check_output", autospec=True)
-    @mock.patch(MOCK_PREFIX+".get_kml_doc", autospec=True)
-    @mock.patch(MOCK_PREFIX+"._extract_bbox_param", autospec=True)
+    @mock.patch(MOCK_PREFIX + ".subprocess.check_output", autospec=True)
+    @mock.patch(MOCK_PREFIX + ".get_kml_doc", autospec=True)
+    @mock.patch(MOCK_PREFIX + "._extract_bbox_param", autospec=True)
     def test_convert_kml_ground_overlay_to_geotiff(self, mock_extract_param,
                                                    mock_get_kml_doc,
                                                    mock_subprocess):
@@ -86,7 +95,7 @@ class UploadPreprocessingTestCase(TestCase):
         mock_extract_param.side_effect = [fake_west, fake_north,
                                           fake_east, fake_south]
         mock_open = mock.mock_open(read_data=fake_kml_bytes)
-        with mock.patch(self.MOCK_PREFIX+".open", mock_open):
+        with mock.patch(self.MOCK_PREFIX + ".open", mock_open):
             upload_preprocessing.convert_kml_ground_overlay_to_geotiff(
                 "fake_kml_path",
                 fake_other_file_path
@@ -99,3 +108,47 @@ class UploadPreprocessingTestCase(TestCase):
                 fake_other_file_path,
                 os.path.splitext(fake_other_file_path)[0] + ".tif"
             ])
+
+    def test_only_expected_uploads_are_deleted(self):
+        UPLOAD_SESSION_EXPIRY_HOURS = getattr(settings, 'UPLOAD_SESSION_EXPIRY_HOURS', 24)
+        expiry_time = now() - timedelta(hours=UPLOAD_SESSION_EXPIRY_HOURS)
+        minutes_before = expiry_time - timedelta(minutes=2)
+        minutes_after = expiry_time - timedelta(minutes=-2)
+
+        # Uploads either PROCESSED or within expiry time
+        uploads_to_survive = [
+            Upload.objects.create(state=enumerations.STATE_INVALID, date=minutes_after),
+            Upload.objects.create(state=enumerations.STATE_COMPLETE, date=minutes_after),
+            Upload.objects.create(state=enumerations.STATE_PROCESSED, date=minutes_after),
+            Upload.objects.create(state=enumerations.STATE_PROCESSED, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_INCOMPLETE),
+            Upload.objects.create(state=enumerations.STATE_PENDING),
+            Upload.objects.create(state=enumerations.STATE_READY),
+            Upload.objects.create(state=enumerations.STATE_RUNNING),
+            Upload.objects.create(state=enumerations.STATE_WAITING)
+        ]
+        survived_upload_ids = {u.id for u in uploads_to_survive}
+
+        # Uploads not PROCESSED and before expiry time
+        uploads_to_be_deleted = [
+            Upload.objects.create(state=enumerations.STATE_INVALID, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_COMPLETE, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_INCOMPLETE, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_PENDING, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_READY, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_RUNNING, date=minutes_before),
+            Upload.objects.create(state=enumerations.STATE_WAITING, date=minutes_before)
+        ]
+        delete_upload_ids = {u.id for u in uploads_to_be_deleted}
+
+        uploads = Upload.objects.all()
+        upload_ids = {u.id for u in uploads}
+        self.assertEqual(uploads.count(), len(uploads_to_survive) + len(uploads_to_be_deleted))
+        self.assertEqual(upload_ids, survived_upload_ids.union(delete_upload_ids))
+
+        finalize_incomplete_session_uploads.delay()
+        uploads = Upload.objects.all()
+        upload_ids = {u.id for u in uploads}
+        # Only uploads_to_survive are not deleted
+        self.assertEqual(uploads.count(), len(uploads_to_survive))
+        self.assertEqual(upload_ids, survived_upload_ids)

@@ -1,4 +1,5 @@
-{% load staticfiles %}
+{% load i18n %}
+{% load static %}
 <script type="text/javascript">
 {% autoescape off %}
     var select_button_active = false;
@@ -16,10 +17,20 @@
       }
     });
 
+    var _area = $("#id_resource-extra_metadata").val()
+    if (_area) {
+        var areaAsObj = (0, eval)('(' + _area + ')');
+        var _value = JSON.stringify(areaAsObj,null,2);
+        $("#id_resource-extra_metadata").val(_value);
+    }
+
     var metadata_uri = $(location).attr('pathname').split('/').pop();
     var metadata_update_done = false;
+    var metadata_preview = false;
     var is_advanced = (metadata_uri.match(/metadata_advanced/i) != null);
+    var is_category_mandatory = {% if TOPICCATEGORY_MANDATORY %}true{% else %}false{% endif %};
     var is_group_mandatory = {% if GROUP_MANDATORY_RESOURCES %}true{% else %}false{% endif %};
+    var ui_mandatory_fields = {{ UI_MANDATORY_FIELDS }};
 
     var updateWizard = function() {
       var activeTab = $("#edit-metadata .wizard--progress li.is-active");
@@ -60,24 +71,77 @@
         animation: true,
         content: tooltipContent
       });
-
+    {% block completeness  %}
     var updateCompleteness = function(completeness) {
+        {% block extendcompleteness %}{% endblock extendcompleteness %}
       $('#profileCompleteness .progress-bar').html(parseFloat(((completeness)*100).toFixed(0)) + ' %').width(parseFloat(((completeness)*100).toFixed(2)) + '%');
       $('#profileCompleteness .completed').toggle(completeness === 1);
       $('#profileCompleteness .not-completed').toggle(completeness !== 1);
-      var mandatoryMissing =  $('#mandatory').find('.input-empty:not([id^=autocomlete])').length > 0;
+      
+      var mandatoryMissing = $('#mandatory').find('.input-empty:not([class^="select2"])').length > 0;
+          if (mandatoryMissing) {
+            var not_tinymce = true
+            var inputs = $('#mandatory').find('.input-empty:not([class^="select2"])');
+            var empty = inputs.length;
+            for (var i=0; i<inputs.length; i++) {
+              if (tinymce.get(inputs[i].id) !== null && tinymce.get(inputs[i].id).getContent().length == 0) {
+                  empty++;
+                  not_tinymce = false
+              } else if (typeof inputs[i].value !== undefined && inputs[i].value !== '' && not_tinymce) {
+                empty--;
+              }
+            }
+            mandatoryMissing = empty > 0;
+          }
+        var imgMissing = $('img#image').attr('src');
+        if (imgMissing && imgMissing.includes('missing_thumb')) {
+            mandatoryMissing = true
+        }
       var advancedMissing = $('#advanced').find('.input-empty').length > 0;
+          if (advancedMissing) {
+            var not_tinymce = true
+            var inputs = $('#advanced').find('.input-empty');
+            var empty = inputs.length;
+            for (var i=0; i<inputs.length; i++) {
+              if (tinymce.get(inputs[i].id) !== null && tinymce.get(inputs[i].id).getContent().length == 0) {
+                  empty++;
+                  not_tinymce = false
+              } else if (typeof inputs[i].value !== undefined && inputs[i].value !== '' && not_tinymce) {
+                empty--;
+              }
+            }
+            advancedMissing = empty > 0;
+          }
+
+        {% if UI_REQUIRED_FIELDS %}
+         var metadataMissing = $('#ownership').find('.input-empty').length > 0;
+          if (metadataMissing) {
+            var inputs = $('#ownership').find('.input-empty');
+            var empty = inputs.length;
+            for (var i=0; i<inputs.length; i++) {
+              if (typeof inputs[i].value !== undefined && inputs[i].value !== '') {
+                empty--;
+              }
+            }
+            metadataMissing = empty > 0;
+          }
+          $('#completeness-hints .metadata-hint')
+            .toggleClass('progress-bar-danger', metadataMissing)
+            .toggleClass('progress-bar-success', !metadataMissing)
+            .attr('title', metadataMissing ? gettext("some schema mandatory fields are missing") : gettext("Metadata Schema mandatory fields completed") )
+            .tooltip('fixTitle');
+        {% endif %}
+
       $('#completeness-hints .mandatory-hint')
         .toggleClass('progress-bar-danger', mandatoryMissing)
         .toggleClass('progress-bar-success', !mandatoryMissing)
-        .attr('title', mandatoryMissing ? "some schema mandatory fields are missing" : "Metadata Schema mandatory fields completed" )
+        .attr('title', mandatoryMissing ? gettext("some schema mandatory fields are missing") : gettext("Metadata Schema mandatory fields completed") )
         .tooltip('fixTitle');
       $('#completeness-hints .advanced-hint')
         .toggleClass('progress-bar-danger', advancedMissing)
         .toggleClass('progress-bar-success', !advancedMissing)
-        .attr('title', advancedMissing ? "some schema mandatory fields are missing" : "Metadata Schema mandatory fields completed" )
+        .attr('title', advancedMissing ? gettext("some schema mandatory fields are missing") : gettext("Metadata Schema mandatory fields completed") )
         .tooltip('fixTitle');
-
         //done button tooltip
         if(completeness === 1 && $('.metadata-edit-done').css('opacity')+"" === "0" && !tooltipShown && !gotIt) {
           tooltipShown = true;
@@ -95,6 +159,7 @@
         // show/hide done button
         $('.metadata-edit-done').animate(completeness === 1 ? {width: '100px', opacity: 1} : {width: 0, opacity: 0});
     }
+    {% endblock completeness  %}
 
     function getTab(number) {
       var activeTab = $("#edit-metadata .wizard--progress li.is-active");
@@ -137,25 +202,24 @@
                   down: 'fa fa-chevron-down'
               }
           };
-
-          /*
-            $('#id_resource-date_picker').datetimepicker(options=pickerOptions);
-            $('#id_resource-temporal_extent_start_picker').datetimepicker(pickerOptions);
-            $('#id_resource-temporal_extent_end_picker').datetimepicker(pickerOptions);
-          */
     });
 
     $(document).ready(function() {
         $('.has-external-popover').each(function(){
                 var help_text = $(this).attr("data-content");
-                $(this)
-                    .closest("div")
-                    .children("span:not(.input-group)")
-                    .append("<span class='external-popover' data-content='" + help_text + "'><strong><i class='fa fa fa-question-circle fa-1x'></i></strong></span>");
-            });
+                
+                // Removes the second help icon from select2 fields
+                if (help_text) {
+                    var spanPopoverText = $('<span>', { class: 'external-popover', 'data-content': help_text  }).append("<strong><i class='fa fa fa-question-circle fa-1x'></i></strong>");
+                    $(this)
+                        .closest("div")
+                        .children("span:not(.input-group):not(.select2)")  // Removes the second help icon for select2
+                        .append(spanPopoverText);
+            }});
+
         $('.external-popover').each(function(){
-                $(this).popover({'trigger':'hover'});
-            });
+            $(this).popover({'trigger':'hover'});
+        });
 
         $("#preview_image").show();
         $("#preview_map").hide();
@@ -167,41 +231,17 @@
             $(this).text(changeTxt.reverse()[0]);
             $("#preview_map, #preview_image").toggle(1000);
             $("#set_thumbnail").toggle();
-
-            // $("#preview_image_src").attr('src', $("#preview_image_src").attr('src')+'?'+Math.random());
-            src = $('#preview_image_src').attr('src');
-               // check for existing ? and remove if found
-               queryPos = src.indexOf('?');
-               if(queryPos != -1) {
-                  src = src.substring(0, queryPos);
-               }
-               $('#preview_image_src').attr('src', src + '?' + Math.random());
+            {% if dataset_form %}
+            $('#preview_image_src').attr('src', '{{ dataset_form.thumbnail_url.value }}');
+            {% elif map_form %}
+            $('#preview_image_src').attr('src', '{{ map_form.thumbnail_url.value }}');
+            {% endif %}
         });
-
-        /*function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#preview_image_src').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#imgInp").change(function(){
-            readURL(this);
-        });*/
     });
 
-    $(document).ready(function() {
-        var prevNum = 0, totalNum = 0;
-        var empty = 0;
-        $('#completeness-hints .mandatory-hint').click(getTab.bind(null, 1));
-        $('#completeness-hints .advanced-hint').click(getTab.bind(null, 2));
-
-        // set proper classes to count empty fields and display them
+    var prevNum = 0, totalNum = 0;
+    var empty = 0;
+    // set proper classes to count empty fields and display them
         var setInputEmpty = function( target, empty ) {
           if($(target).hasClass('value-select')) {
             // tkeywords
@@ -210,29 +250,40 @@
           } else if( !$(target).hasClass('autocomplete') ){
             // display error status for token fields if not completed
             $(target).toggleClass("input-empty", empty);
+            if (target.id.startsWith('id_tkeywords')) {
+                $("#" + target.id).closest("p").toggleClass("has-error", empty);   
+              }
+          }
+          var imgMissing = $('img#image').attr('src');
+          if (imgMissing && !imgMissing.includes('missing_thumb')) {
+              $('input#id_crop_file').removeClass("input-empty");
+              $('input#id_crop_file').parent().find(".mandatory-warning").remove();
           }
 
           if(target.id === 'id_resource-keywords') {
-            $(target).closest('.keywords-container').toggleClass('has-error', empty);
+            $(target).siblings('span').toggleClass('has-error', empty);
             $(target).toggleClass("input-empty", empty);
           }
-
+        {% block target %}
           if(target.id === 'category_form' ||
              target.id === 'id_resource-regions' ||
-             target.id === 'id_resource-group'
+             target.id === 'id_resource-group' || 
+             target.id === 'id_resource-date' ||
+             target.id === 'id_resource-links' || {{UI_REQUIRED_FIELDS}}.includes(target.id)
           ) {
               // group selector
               $(target).closest('#basicGroupInfo').toggleClass('has-error', empty);
 
               // category selector
               $(target).closest('#basicCategoryInfo').toggleClass('has-error', empty);
+              $(target).closest('#req_item').toggleClass('has-error', empty);
 
               // regions container
               $(target).closest('#regions_multiselect_container').toggleClass('has-error', empty);
-
               $(target).toggleClass("input-empty", empty);
           }
 
+        {% endblock target %}
           // bootstrap-select copies the select's classes, so it have to be removed
           if( $( '.bootstrap-select' ).hasClass("input-empty") ) {
             $( '.bootstrap-select' ).toggleClass("input-empty");
@@ -249,9 +300,8 @@
                 otherRestrictions = true;
             }
           } catch (err) {
-              otherRestrictions = false;
+              otherRestrictions = true;
           }
-
           return otherRestrictions;
         }
 
@@ -263,7 +313,7 @@
               if(otherRestrictionsSelected() && ee.value !== undefined && ee.value.trim() === '') {
                 if(!$(ee).hasClass("input-empty")) {
                     setInputEmpty(ee, true);
-                    $(ee).parent().append("<p class='xxs-font-size mandatory-warning'>&nbsp;&nbsp;&nbsp;<strong>* Field declared Mandatory by the Metadata Schema</strong></p>");
+                    $(ee).parent().append(gettext("<p class='xxs-font-size mandatory-warning'>&nbsp;&nbsp;&nbsp;<strong>{% trans "* Field declared Mandatory by the Metadata Schema" %}</strong></p>"));
                     empty++;
                 } else {
                     setInputEmpty(ee, false);
@@ -274,48 +324,80 @@
              }
           } catch (err) {
             // Log error
+            console.log(err);
             return false;
           }
-
           return true;
         }
 
         var isMandatoryField = function (el) {
-          if(el.id.indexOf("resource-constraints") >= 0) {
-            if(otherRestrictionsSelected()) {
-                return true;
+            var is_mandatory = false;
+
+            is_mandatory = ui_mandatory_fields.some(function(field){
+                return el.id == field;
+            })
+
+            if (el.id == 'id_resource-group') {
+                if (is_group_mandatory) {
+                    is_mandatory = true;
+                }
             }
-            return false;
-          }
 
-          var is_mandatory = (el.id.indexOf("autocomplete") < 0 &&
-                        !$(el).hasClass('value-select') &&
-                        el.type !== 'radio' &&
-                        el.type !== 'button');
+            // Workaround for Thesauri
+            if (el.id.startsWith('id_tkeywords') && $(el).hasClass('treq')) {
+                is_mandatory = true;
+            } else if (el.id.startsWith('id_tkeywords') && !$(el).hasClass('treq')) {
+                is_mandatory = false;
+            }
+
             return is_mandatory;
-        }
+        };
 
+    {% block onInputChange %}
         var onInputChange = function(e){
+            var e_target = null;
+            var e_target_value = null;
+            if (e.target.id == 'tinymce') {
+                e_target = $('#' + $(e.target).data().id)[0];
+                e_target_value = tinymce.get($(e.target).data().id).getContent();
+            }
+            else {
+                e_target = e.target;
+                e_target_value = e.target.value;
+            }
             toggleRestrictionsConstraints(e);
-
-            if(e.target.value !== undefined && e.target.value.trim() === ''){
-                if(!$(e.target).hasClass("input-empty")){
+            if(e_target_value !== undefined && e_target_value.trim() === ''){
+                if(!$(e_target).hasClass("input-empty")){
                     if(isMandatoryField(this)) {
-                        setInputEmpty(e.target, true);
-                        if(!!$(this).closest('#mdinfo').length) {
-                            $(e.target).parent().append("<p class='xxs-font-size mandatory-warning'>&nbsp;&nbsp;&nbsp;<strong>* Field declared Mandatory by the Metadata Schema</strong></p>");
+                        setInputEmpty(e_target, true);
+                        var mandatoryWarning = "<p class='xxs-font-size mandatory-warning'>&nbsp;&nbsp;&nbsp;<strong>{% trans "* Field declared Mandatory by the Metadata Schema" %}</strong></p>"
+                        if (!!$(this).closest('.date').length) {
+                            $(e_target).parent().parent().append(gettext(mandatoryWarning));
+                        } else if (!!$(this).closest('.check-select').length ) {
+                            $(e_target).parent().parent().append(gettext(mandatoryWarning));
+                        } else if (!!$(this).closest('#mdinfo').length || !!$(this).closest('#basicDescriptiveInfo').length || !!$(this).closest('#tadv_req').length || !!$(this).closest('#adv_req').length ) {
+                            $(e_target).parent().append(gettext(mandatoryWarning));
+                        } else if (e.target.id == 'tinymce') {
+                            $(e_target).parent().append(gettext(mandatoryWarning));
+
                         }
                         empty++;
                     }
                 }
             }
             else {
-                if($(e.target).hasClass("input-empty")) {
+                if($(e_target).hasClass("input-empty")) {
+                    console.log(e_target);
                     if(isMandatoryField(this)) {
                         empty--;
                     }
-                    setInputEmpty(e.target, false);
-                    $(e.target).parent().find(".mandatory-warning").remove();
+                    setInputEmpty(e_target, false);
+                    if (!!$(e_target).closest('.date').length) { 
+                        $(e_target).parent().parent().find(".mandatory-warning").remove();
+                    } else {
+                        $(e_target).parent().find(".mandatory-warning").remove();
+                    }
+                    
                 }
             }
 
@@ -326,13 +408,74 @@
                     updateCompleteness(perc);
                 } catch(err) {
                     // Log error
+                    // console.log(err);
                 }
             }
         };
+        {% endblock onInputChange %}
 
-        $('#category_form').change(onInputChange).change();
-        $('#id_resource-group').change(onInputChange).change();
+    $(document).ready(function() {
+
+        {% if resource.is_vector %}
+            if($("#id_resource-has_time").is(":checked")) {
+                $("#settings_time_series").show();
+                if ($("#id_timeseries-presentation").val() == 'LIST') {
+                    $("#precision_value").hide();
+                }
+            } else {
+                $("#settings_time_series").hide();
+            };
+
+            $("#id_resource-has_time").click(function() {
+                if($(this).is(":checked")) {
+                    $("#settings_time_series").show();
+                    if ($("#id_timeseries-presentation").val() == 'LIST') {
+                        $("#precision_value").hide();
+                    }
+                } else {
+                    $("#settings_time_series").hide();
+                }
+            });
+            
+            $("#id_timeseries-presentation").change(function() {
+                if(this.value != 'LIST') {
+                    $("#precision_value").show();
+                } else {
+                    $("#precision_value").hide();
+                }
+            });
+        {% endif %}
+        {% block hints %}
+
+        $('#completeness-hints .mandatory-hint').click(getTab.bind(null, 1));
+        $('#completeness-hints .advanced-hint').click(getTab.bind(null, 2));
+        {% endblock hints %}
+        
+
+        {% block trigger_onInputChange %}
+
+        {{UI_REQUIRED_FIELDS}}.forEach(element => $('#' + element).change(onInputChange).change());
+
+        ui_mandatory_fields.forEach(function(field){
+            $('#'+field).change(onInputChange).change();
+        })
+
+        var selection = document.querySelector('select[name="resource-keywords"]');
+        if (selection  !== null) {
+            selection.onchange=onInputChange
+        }
+        
+        {{REQ_THESAURI}}.forEach(element => document.querySelector('select[name="'+ element + '"]').onchange=onInputChange);
+        
+        // workaround to trigger the change in advanced metadata editing
+        // otherwise will remain not-required untill a change on the item
+        for (item in {{REQ_THESAURI}}) {
+            $("#id_" + {{REQ_THESAURI}}[item]).trigger("change");
+        }
+
         $('#id_resource-regions').change(onInputChange).change();
+        $('#id_resource-temporal_extent_end').on('blur', function() {$(this).change(onInputChange).change();})
+        $('#id_resource-temporal_extent_start').on('blur', function() {$(this).change(onInputChange).change();})
         $('#mandatory').find(":input:not(.value-select):not(.autocomplete)").each(function(){
             if(isMandatoryField(this)) {
                 prevNum++;
@@ -360,6 +503,7 @@
             }
         });
 
+        {% endblock trigger_onInputChange %}
         // Dataset attributes sorting
         $(document).ready(function() {
             //Helper function to keep table row from collapsing when being sorted
@@ -416,8 +560,13 @@
         $('#btn_next_dwn').click(function(){getNextTab()});
 
         $('#btn_upd_md_up').click(function(){
-            if((!is_advanced && $('#category_form').hasClass("input-empty")) ||
-                (is_advanced && !$('#category_form input:checked').val())) {
+            if
+            ( is_category_mandatory &&
+                (
+                    (!is_advanced && $('#category_form').hasClass("input-empty")) ||
+                    (is_advanced && !$('#category_form input:checked').val())
+                )
+            ) {
                 $('#category_mandatoryDialog').modal();
             } else if
               ( is_group_mandatory &&
@@ -428,13 +577,18 @@
               ) {
                 $('#group_mandatoryDialog').modal();
             } else {
-                $('#preview_pleaseWaitDialog').modal();
+                validateRequiredInput()
             }
         });
 
         $('#btn_upd_md_dwn').click(function(){
-            if((!is_advanced && $('#category_form').hasClass("input-empty")) ||
-                (is_advanced && !$('#category_form input:checked').val())) {
+            if
+            ( is_category_mandatory &&
+                (
+                    (!is_advanced && $('#category_form').hasClass("input-empty")) ||
+                    (is_advanced && !$('#category_form input:checked').val())
+                )
+            ) {
                 $('#category_mandatoryDialog').modal();
             } else if
               ( is_group_mandatory &&
@@ -445,13 +599,34 @@
               ) {
                 $('#group_mandatoryDialog').modal();
             } else {
-                $('#preview_pleaseWaitDialog').modal();
+                validateRequiredInput()
             }
         });
+        
+        function validateRequiredInput() {
+            var errors = ['{% trans "Following items are required:" %}']
+            $( ':input[required]').each( function () {
+                if ( this.value.trim() == '' ) {
+                    errors.push(this.id)
+                }
+            });
+            if (errors.length > 1) {
+                console.error("Following items are required: " + errors)
+                $(".general_errors").find("p").html(errors.join('<br>'));
+                $('#error_mandatoryDialog').modal();
+            } else {
+                $('#preview_pleaseWaitDialog').modal();
+            }
+        }
 
         $('#btn_upd_md_done').click(function(){
-            if((!is_advanced && $('#category_form').hasClass("input-empty")) ||
-                (is_advanced && !$('#category_form input:checked').val())) {
+            if
+            ( is_category_mandatory &&
+                (
+                    (!is_advanced && $('#category_form').hasClass("input-empty")) ||
+                    (is_advanced && !$('#category_form input:checked').val())
+                )
+            ) {
                 $('#category_mandatoryDialog').modal();
             } else if
               ( is_group_mandatory &&
@@ -463,14 +638,30 @@
                 $('#group_mandatoryDialog').modal();
             } else {
                 $('#preview_pleaseWaitDialog').modal();
-                $('#metadata_update').submit();
                 metadata_update_done = true;
+                metadata_preview = false;
             }
         });
 
-        $('#preview_tab').on('show.bs.tab', function(){
-            if((!is_advanced && $('#category_form').hasClass("input-empty")) ||
-                (is_advanced && !$('#category_form input:checked').val())) {
+        $('#preview_tab').on('show.bs.tab', function(e){
+            var errors = ['{% trans "Please, fill the following items before clicking on preview:" %}<br>']
+                $( ':input[required]').each( function () {
+                    if ( this.value.trim() == '' ) {
+                        errors.push(this.id)
+                    }
+                });
+            if (errors.length > 1) {
+	                e.preventDefault();
+                    console.error("Please, fill the following items before clicking on preview: " + errors)
+                    $(".general_errors").find("p").html(errors.join('<br>'));
+                    $('#error_mandatoryDialog').modal();
+                } else if
+            ( is_category_mandatory &&
+                (
+                    (!is_advanced && $('#category_form').hasClass("input-empty")) ||
+                    (is_advanced && !$('#category_form input:checked').val())
+                )
+            ) {
                 $('#category_mandatoryDialog').modal();
             } else if
               ( is_group_mandatory &&
@@ -483,8 +674,9 @@
             } else {
                 $('#preview_pleaseWaitDialog').modal();
                 try {
-                    $('#preview_encoder_iframe')[0].style.width='0';
-                    $('#preview_encoder_iframe')[0].style.height='0';
+                    $('#preview_encoder_iframe')[0].style.width='100%';
+                    $('#preview_encoder_iframe')[0].style.height='4500px';
+                    metadata_preview = true;
                     $('#metadata_update').submit();
 
                     // buttons visibility
@@ -511,8 +703,13 @@
         });
 
         $('#metadata_update').submit(function(e) {
-            if((!is_advanced && $('#category_form').hasClass("input-empty")) ||
-                (is_advanced && !$('#category_form input:checked').val())) {
+            if
+            ( is_category_mandatory &&
+                (
+                    (!is_advanced && $('#category_form').hasClass("input-empty")) ||
+                    (is_advanced && !$('#category_form input:checked').val())
+                )
+            ) {
                 $('#category_mandatoryDialog').modal();
             } else if
               ( is_group_mandatory &&
@@ -526,7 +723,12 @@
                 var formData = $(this).serializeArray();
                 formData.forEach(function(entry) {
                     try{
-                        if(entry["name"].contains("keywords")) {
+                        if((typeof entry["name"]) === "string" &&
+                            entry["name"].includes("keywords")) {
+                            entry["value"] = escape(entry["value"]);
+                        }
+                        else if((typeof entry["name"]) !== "string" &&
+                            entry["name"].contains("keywords")) {
                             entry["value"] = escape(entry["value"]);
                         }
                     }catch(err){
@@ -561,23 +763,37 @@
                             if(xhr.responseJSON && xhr.responseJSON['errors']) {
                                 var errors = "<ul>";
                                 for(error in xhr.responseJSON['errors']) {
-                                    errors += "<li>" + error + ": " + xhr.responseJSON['errors'][error][0] + "</li>";
+                                    errors += "<li>" + error + ": " + xhr.responseJSON['errors'][error] + "</li>";
                                 }
                                 errors += "</ul>";
                                 $("#preview_errorDialog .modal-body").html(errors);
                             } else {
-                                $("#preview_errorDialog .modal-body").html(xhr.responseText);
+                                if (xhr.responseText.indexOf('<!DOCTYPE html>') >= 0) {
+                                    $("#preview_errorDialog .modal-body").html("Unknown Error Occurred.");
+                                } else {
+                                    $("#preview_errorDialog .modal-body").html(xhr.responseText);
+                                }
                             }
                         } catch(err) {
-                            $("#preview_errorDialog .modal-body").html(xhr.responseText);
+                            if (xhr.responseText.indexOf('<!DOCTYPE html>') >= 0) {
+                                $("#preview_errorDialog .modal-body").html(err);
+                            } else {
+                                $("#preview_errorDialog .modal-body").html(xhr.responseText);
+                            }
                         }
                         $('#preview_errorDialog').modal();
                         metadata_update_done = false;
                     }).always(function (a, textStatus, b) {
                           $('#preview_pleaseWaitDialog').modal('hide');
-                          if(textStatus === 'success' && metadata_update_done) {
+                          if(textStatus === 'success' && metadata_update_done && !metadata_preview) {
                               if(new RegExp(".*/metadata$").test(e.target.action)) {
-                                  window.location.replace(e.target.action.replace('/metadata',''));
+                                  $.ajax({
+                                    type: "POST",
+                                    url: "{% url 'metadata_update_redirect' %}",
+                                    data: { url: e.target.action },
+                                    }).done(function(redirect_url){
+                                        window.location.replace(redirect_url)
+                                     })
                               } else if(new RegExp(".*/"+metadata_uri+"$").test(e.target.action)) {
                                   window.location.replace(e.target.action.replace('/'+metadata_uri,''));
                               }
@@ -594,7 +810,7 @@
                 updateCompleteness(perc);
             } catch(err) {
                 // Log error
-                console.log(err);
+                // console.log(err);
             }
         }
     });
@@ -611,119 +827,120 @@
       {% endif %}
         $('.has-popover').popover({'trigger':'hover'});
 
+        /** 
+        NOTE: This is commented as it needs updating to work with select2 and autocomlete light.
+        
         var params = typeof FILTER_TYPE == 'undefined' ? {} : {'type': FILTER_TYPE};
-        $.ajax('/h_keywords_api', {params: params}).success(function(data){
-            data = JSON.parse(data)
-            var kws = parseKeywords(data);
-
-            {% if freetext_readonly %}
-                $('#id_resource-keywords').tokenfield({
-                    createTokensOnBlur: true,
-                    autocomplete: {
-                        source: kws,
-                        delay: 100
-                    },
-                    showAutocompleteOnFocus: true
-                }).on('tokenfield:createtoken', function (event) {
-                    var exists = false;
-                    $.each(kws, function(index, value) {
-                        if (event.attrs.value === value) {
-                            exists = true;
+        $.ajax({
+            url: {% url 'h_keywords_api' %},
+            params: params,
+            success: function(data) {
+                data = JSON.parse(data)
+                var kws = parseKeywords(data);
+                {% if freetext_readonly %}
+                    $('#id_resource-keywords').tokenfield({
+                        createTokensOnBlur: true,
+                        autocomplete: {
+                            source: kws,
+                            delay: 100
+                        },
+                        showAutocompleteOnFocus: true
+                    }).on('tokenfield:createtoken', function (event) {
+                        var exists = false;
+                        $.each(kws, function(index, value) {
+                            if (event.attrs.value === value) {
+                                exists = true;
+                            }
+                        });
+                        if(!exists) {
+                            event.preventDefault(); //prevents creation of token
                         }
+                        var existingTokens = $(this).tokenfield('getTokens');
+                        $.each(existingTokens, function(index, token) {
+                            if (token.value === event.attrs.value)
+                                event.preventDefault();  //prevents creation of token
+                        });
                     });
-                    if(!exists) {
-                        event.preventDefault(); //prevents creation of token
+                    $('#id_resource-keywords').tokenfield('readonly');
+                    $('div.token .close').click(function() {
+                        const token_close_button = $(this);
+                        const token_item = token_close_button.parent();
+                        token_item.remove();
+                        return false;
+                    }); 
+                {% else %}
+                    $('#id_resource-keywords').tokenfield({
+                        createTokensOnBlur: true,
+                        autocomplete: {
+                            source: kws,
+                            delay: 100
+                        },
+                        showAutocompleteOnFocus: true
+                    }).on('tokenfield:createtoken', function (event) {
+                        var existingTokens = $(this).tokenfield('getTokens');
+                        $.each(existingTokens, function(index, token) {
+                            if (token.value === event.attrs.value)
+                                event.preventDefault();  //prevents creation of token
+                        });
+                    });
+                {% endif %}
+                if (window.location.href.match('/metadata_advanced$')) {
+                    if (!select_button_active) {
+                        const select_button = $('<button id="id_freetext_keyword_select" class="btn btn-primary">Select</button>');
+                        const select_button_parent = $('#id_resource-keywords').parent().parent();
+                        select_button_parent.append(select_button);
+                        select_button_active = true;
                     }
-
-                    var existingTokens = $(this).tokenfield('getTokens');
-                    $.each(existingTokens, function(index, token) {
-                        if (token.value === event.attrs.value)
-                            event.preventDefault();  //prevents creation of token
+                    $('#id_freetext_keyword_select').click(function() {
+                        $('#id_resource-keywords-tokenfield').blur().focus();
                     });
-                });
-                // $('#id_resource-keywords').tokenfield('readonly');
-                /* $('div.token .close').click(function() {
-                    const token_close_button = $(this);
-                    const token_item = token_close_button.parent();
-                    token_item.remove();
-                    return false;
-                }); */
-            {% else %}
-                $('#id_resource-keywords').tokenfield({
-                    createTokensOnBlur: true,
-                    autocomplete: {
-                        source: kws,
-                        delay: 100
-                    },
-                    showAutocompleteOnFocus: true
-                }).on('tokenfield:createtoken', function (event) {
-                    var existingTokens = $(this).tokenfield('getTokens');
-                    $.each(existingTokens, function(index, token) {
-                        if (token.value === event.attrs.value)
-                            event.preventDefault();  //prevents creation of token
-                    });
-                });
-            {% endif %}
-
-            if (window.location.href.match('/metadata_advanced$')) {
-                /*if (!select_button_active) {
-                    const select_button = $('<button id="id_freetext_keyword_select" class="btn btn-primary">Select</button>');
-                    const select_button_parent = $('#id_resource-keywords').parent().parent();
-                    select_button_parent.append(select_button);
-                    select_button_active = true;
+                    const resource_group = $('#id_resource-group');
+                    resource_group.empty();
+                    resource_group.append('<option value="">-----</option>');
+                    {% for group in metadata_author_groups %}
+                        {% if resource.group == group.group %}
+                            resource_group.append(
+                                '<option value="{{ group.group.id }}" selected="selected">{{ group.group.name }}</option>'
+                            );
+                        {% else %}
+                            resource_group.append(
+                                '<option value="{{ group.group.id }}">{{ group.group.name }}</option>'
+                            );
+                        {% endif %}
+                    {% endfor %}
                 }
-                $('#id_freetext_keyword_select').click(function() {
-                    $('#id_resource-keywords-tokenfield').blur().focus();
-                });*/
-
-                const resource_group = $('#id_resource-group');
-                resource_group.empty();
-                resource_group.append('<option value="">-----</option>');
-                {% for group in metadata_author_groups %}
-                    {% if resource.group == group.group %}
-                        resource_group.append(
-                            '<option value="{{ group.group.id }}" selected="selected">{{ group.group.name }}</option>'
-                        );
-                    {% else %}
-                        resource_group.append(
-                            '<option value="{{ group.group.id }}">{{ group.group.name }}</option>'
-                        );
-                    {% endif %}
-                {% endfor %}
+                $('#treeview').treeview({
+                    color: "#428bca",
+                    expandIcon: "fa fa-folder",
+                    collapseIcon: "fa fa-folder-open",
+                    nodeIcon: "fa fa-tag",
+                    showTags: true,
+                    showIcon: true,
+                    showCheckbox: false,
+                    data: data,
+                    levels: 1,
+                    onNodeSelected: function($event, $data) {
+                        var kws = $('#id_resource-keywords').tokenfield('getTokens');
+                        var newToken = $data.text
+                        var exists = false
+                        for (var i=0; i<kws.length; i++) {
+                            if (kws[i]['value'].indexOf(newToken) >=0) {
+                                exists = true
+                            }
+                        }
+                        if (!exists) {
+                            $('#id_resource-keywords').tokenfield('createToken', $data.text);
+                        }
+                        // $('#treeview-toggle').click();
+                    }
+                });
+                $('#treeview-toggle').click((e, value) => {
+                $('#treeview').toggle();
+                var icon = $(this).find('i');
+                icon.toggleClass('fa-folder').toggleClass('fa-folder-open');
+                });
             }
-
-            $('#treeview').treeview({
-                color: "#428bca",
-                expandIcon: "fa fa-folder",
-                collapseIcon: "fa fa-folder-open",
-                nodeIcon: "fa fa-tag",
-                showTags: true,
-                showIcon: true,
-                showCheckbox: false,
-                data: data,
-                levels: 1,
-                onNodeSelected: function($event, $data) {
-                    var kws = $('#id_resource-keywords').tokenfield('getTokens');
-                    var newToken = $data.text
-                    var exists = false
-                    for (var i=0; i<kws.length; i++) {
-                        if (kws[i]['value'].indexOf(newToken) >=0) {
-                            exists = true
-                        }
-                    }
-                    if (!exists) {
-                        $('#id_resource-keywords').tokenfield('createToken', $data.text);
-                    }
-                    // $('#treeview-toggle').click();
-                }
-            });
-
-            $('#treeview-toggle').click((e, value) => {
-              $('#treeview').toggle();
-              var icon = $(this).find('i');
-              icon.toggleClass('fa-folder').toggleClass('fa-folder-open');
-            });
-        });
+        }); */
 
         var parseKeywords = function(data) {
             var kws = [];
@@ -741,6 +958,6 @@
             return kws;
         };
 
-    });
+    }); 
 {% endautoescape %}
 </script>

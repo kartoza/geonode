@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations, models
 from django.conf import settings
-import geonode.utils
 
 
 class Migration(migrations.Migration):
@@ -17,7 +13,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Map',
             fields=[
-                ('resourcebase_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='base.ResourceBase')),
+                ('resourcebase_ptr', models.OneToOneField(parent_link=True, on_delete=models.CASCADE,
+                                                          auto_created=True, primary_key=True, serialize=False, to='base.ResourceBase')),
                 ('title_en', models.CharField(help_text='name by which the cited resource is known', max_length=255, null=True, verbose_name='title')),
                 ('abstract_en', models.TextField(help_text='brief narrative summary of the content of the resource(s)', null=True, verbose_name='abstract', blank=True)),
                 ('purpose_en', models.TextField(help_text='summary of the intentions with which the resource(s) was developed', null=True, verbose_name='purpose', blank=True)),
@@ -35,7 +32,6 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=('base.resourcebase', geonode.utils.GXPMapBase),
         ),
         migrations.CreateModel(
             name='MapLayer',
@@ -54,12 +50,11 @@ class Migration(migrations.Migration):
                 ('layer_params', models.TextField(verbose_name='layer params')),
                 ('source_params', models.TextField(verbose_name='source params')),
                 ('local', models.BooleanField(default=False)),
-                ('map', models.ForeignKey(related_name='layer_set', to='maps.Map')),
+                ('map', models.ForeignKey(related_name='layer_set', to='maps.Map', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['stack_order'],
             },
-            bases=(models.Model, geonode.utils.GXPLayerBase),
         ),
         migrations.CreateModel(
             name='MapSnapshot',
@@ -67,8 +62,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('config', models.TextField(verbose_name='JSON Configuration')),
                 ('created_dttm', models.DateTimeField(auto_now_add=True)),
-                ('map', models.ForeignKey(related_name='snapshot_set', to='maps.Map')),
-                ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('map', models.ForeignKey(related_name='snapshot_set', to='maps.Map', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)),
             ],
         ),
     ]

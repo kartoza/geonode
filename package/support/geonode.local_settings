@@ -17,12 +17,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-import os
-import re
-import sys
-from urlparse import urlparse
 
-import geonode
+""" There are 3 ways to override GeoNode settings:
+   1. Using environment variables, if your changes to GeoNode are minimal.
+   2. Creating a downstream project, if you are doing a lot of customization.
+   3. Override settings in a local_settings.py file, legacy.
+"""
+
+import ast
+import os
+from urlparse import urlparse, urlunparse
 from geonode.settings import *
 
 # Setting debug to true makes Django serve static media and
@@ -37,6 +41,14 @@ DEBUG_STATIC = False
 SITENAME = 'GeoNode'
 SITEURL = 'http://localhost/'
 
+# we need hostname for deployed
+_surl = urlparse(SITEURL)
+HOSTNAME = _surl.hostname
+
+# add trailing slash to site url. geoserver url will be relative to this
+if not SITEURL.endswith('/'):
+    SITEURL = '{}/'.format(SITEURL)
+
 ALLOWED_HOSTS = [urlparse(SITEURL).hostname] if os.getenv('ALLOWED_HOSTS') is None \
     else re.split(r' *[,|:|;] *', os.getenv('ALLOWED_HOSTS'))
 
@@ -49,23 +61,32 @@ DATABASE_PORT = '5432'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': DATABASE_NAME,
         'USER': DATABASE_USER,
         'PASSWORD': DATABASE_PASSWORD,
         'HOST': DATABASE_HOST,
         'PORT': DATABASE_PORT,
-        'CONN_TOUT': 900,
+        'CONN_MAX_AGE': 0,
+        'CONN_TOUT': 5,
+        'OPTIONS': {
+            'connect_timeout': 5,
+        }
     },
     # vector datastore for uploads
     'datastore': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        # 'ENGINE': '', # Empty ENGINE name disables
         'NAME': 'geonode_data',
         'USER': DATABASE_USER,
         'PASSWORD': DATABASE_PASSWORD,
         'HOST': DATABASE_HOST,
         'PORT': DATABASE_PORT,
-        'CONN_TOUT': 900,
+        'CONN_MAX_AGE': 0,
+        'CONN_TOUT': 5,
+        'OPTIONS': {
+            'connect_timeout': 5,
+        }
     }
 }
 
@@ -74,7 +95,7 @@ GEOSERVER_LOCATION = os.getenv(
 )
 
 GEOSERVER_PUBLIC_LOCATION = os.getenv(
-    'GEOSERVER_PUBLIC_LOCATION', '{}geoserver/'.format(SITEURL)
+    'GEOSERVER_PUBLIC_LOCATION', '{}gs/'.format(SITEURL)
 )
 
 OGC_SERVER_DEFAULT_USER = os.getenv(
@@ -102,39 +123,27 @@ OGC_SERVER = {
         'PRINT_NG_ENABLED': True,
         'GEONODE_SECURITY_ENABLED': True,
         'GEOFENCE_SECURITY_ENABLED': True,
-        'GEOGIG_ENABLED': False,
         'WMST_ENABLED': False,
         'BACKEND_WRITE_ENABLED': True,
         'WPS_ENABLED': True,
         'LOG_FILE':'/usr/share/geoserver/data/logs/geoserver.log',
         # Set to dictionary identifier of database containing spatial data in DATABASES dictionary to enable
         'DATASTORE': 'datastore',
-        'PG_GEOGIG': False,
-        'TIMEOUT': 10  # number of seconds to allow for HTTP requests
+        'TIMEOUT': 60  # number of seconds to allow for HTTP requests
     }
 }
 
-# WARNING: Map Editing is affected by this. GeoExt Configuration is cached for 5 minutes
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-#         'LOCATION': '/var/tmp/django_cache',
-#     }
-# }
 # If you want to enable Mosaics use the following configuration
 UPLOADER = {
-    'BACKEND': 'geonode.rest',
-    # 'BACKEND': 'geonode.importer',
+    'BACKEND': 'geonode.importer',
     'OPTIONS': {
         'TIME_ENABLED': False,
         'MOSAIC_ENABLED': False,
-        'GEOGIG_ENABLED': False,
     },
     'SUPPORTED_CRS': [
         'EPSG:4326',
         'EPSG:3785',
         'EPSG:3857',
-        'EPSG:900913',
         'EPSG:32647',
         'EPSG:32736'
     ],
@@ -165,11 +174,18 @@ SECRET_KEY = 'THE_SECRET_KEY'
 
 CATALOGUE = {
     'default': {
-        # The underlying CSW backend
-        # ("pycsw_http", "pycsw_local", "geonetwork", "deegree")
+        # The underlying CSW implementation
+        # default is pycsw in local mode (tied directly to GeoNode Django DB)
         'ENGINE': 'geonode.catalogue.backends.pycsw_local',
+        # pycsw in non-local mode
+        # 'ENGINE': 'geonode.catalogue.backends.pycsw_http',
+        # deegree and others
+        # 'ENGINE': 'geonode.catalogue.backends.generic',
         # The FULLY QUALIFIED base url to the CSW instance for this GeoNode
         'URL': '%scatalogue/csw' % SITEURL,
+        # 'URL': 'http://localhost:8080/geonetwork/srv/en/csw',
+        # 'URL': 'http://localhost:8080/deegree-csw-demo-3.0.4/services',
+        'ALTERNATES_ONLY': True,
     }
 }
 
@@ -225,7 +241,7 @@ PYCSW = {
     }
 }
 
-GEONODE_ROOT = os.path.dirname(geonode.__file__)
+GEONODE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 TEMPLATE_DIRS = (
     '/etc/geonode/templates',
@@ -242,7 +258,9 @@ STATICFILES_DIRS = [
 
 # default map projection
 # Note: If set to EPSG:4326, then only EPSG:4326 basemaps will work.
-DEFAULT_MAP_CRS = "EPSG:900913"
+DEFAULT_MAP_CRS = "EPSG:3857"
+
+DEFAULT_LAYER_FORMAT = "image/png8"
 
 # Where should newly created maps be focused?
 DEFAULT_MAP_CENTER = (0, 0)
@@ -252,146 +270,13 @@ DEFAULT_MAP_CENTER = (0, 0)
 # maximum zoom is between 12 and 15 (for Google Maps, coverage varies by area)
 DEFAULT_MAP_ZOOM = 0
 
-# Default preview library
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'geoext'  # DEPRECATED use HOOKSET instead
-GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.GeoExtHookSet"
-
-# To enable the REACT based Client enable those
-# INSTALLED_APPS += ('geonode-client', )
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'react'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.ReactHookSet"
-
-# To enable the Leaflet based Client enable those
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'leaflet'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.LeafletHookSet"
-
 # To enable the MapStore2 based Client enable those
-# INSTALLED_APPS += ('geonode_mapstore_client', )
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'mapstore'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode_mapstore_client.hooksets.MapStoreHookSet"
+INSTALLED_APPS += ('geonode_mapstore_client', )
+GEONODE_CLIENT_HOOKSET = "geonode_mapstore_client.hooksets.MapStoreHookSet"
 
-# LEAFLET_CONFIG = {
-#    'TILES': [
-#        # Find tiles at:
-#        # http://leaflet-extras.github.io/leaflet-providers/preview/
-#
-#        # Map Quest
-#        ('Map Quest',
-#         'http://otile4.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-#         'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> '
-#         '&mdash; Map data &copy; '
-#         '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'),
-#        # Stamen toner lite.
-#        # ('Watercolor',
-#        #  'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.png',
-#        #  'Map tiles by <a href="http://stamen.com">Stamen Design</a>, \
-#        #  <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; \
-#        #  <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, \
-#        #  <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
-#        # ('Toner Lite',
-#        #  'http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png',
-#        #  'Map tiles by <a href="http://stamen.com">Stamen Design</a>, \
-#        #  <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; \
-#        #  <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, \
-#        #  <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
-#    ],
-#    'PLUGINS': {
-#        'esri-leaflet': {
-#            'js': 'lib/js/esri-leaflet.js',
-#            'auto-include': True,
-#        },
-#        'leaflet-fullscreen': {
-#            'css': 'lib/css/leaflet.fullscreen.css',
-#            'js': 'lib/js/Leaflet.fullscreen.min.js',
-#            'auto-include': True,
-#        },
-#    },
-#    'SRID': 3857,
-#    'RESET_VIEW': False
-#}
-
-ALT_OSM_BASEMAPS = os.environ.get('ALT_OSM_BASEMAPS', False)
-CARTODB_BASEMAPS = os.environ.get('CARTODB_BASEMAPS', False)
-STAMEN_BASEMAPS = os.environ.get('STAMEN_BASEMAPS', False)
-THUNDERFOREST_BASEMAPS = os.environ.get('THUNDERFOREST_BASEMAPS', False)
-MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', '<MAPBOX_ACCESS_TOKEN>')
+MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', None)
 BING_API_KEY = os.environ.get('BING_API_KEY', None)
-GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '<GOOGLE_API_KEY>')
-
-MAP_BASELAYERS = [{
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer",
-    "args": ["No background"],
-    "name": "background",
-    "visibility": False,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer.XYZ",
-    "title": "UNESCO",
-    "args": ["UNESCO", "http://en.unesco.org/tiles/${z}/${x}/${y}.png"],
-    "wrapDateLine": True,
-    "name": "background",
-    "attribution": "&copy; UNESCO",
-    "visibility": False,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer.XYZ",
-    "title": "UNESCO GEODATA",
-    "args": ["UNESCO GEODATA", "http://en.unesco.org/tiles/geodata/${z}/${x}/${y}.png"],
-    "name": "background",
-    "attribution": "&copy; UNESCO",
-    "visibility": False,
-    "wrapDateLine": True,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer.XYZ",
-    "title": "Humanitarian OpenStreetMap",
-    "args": ["Humanitarian OpenStreetMap", "http://a.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png"],
-    "name": "background",
-    "attribution": "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>, Tiles courtesy of <a href='http://hot.openstreetmap.org/' target='_blank'>Humanitarian OpenStreetMap Team</a>",
-    "visibility": False,
-    "wrapDateLine": True,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer.XYZ",
-    "title": "MapBox Satellite Streets",
-    "args": ["MapBox Satellite Streets", "http://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/${z}/${x}/${y}?access_token="+MAPBOX_ACCESS_TOKEN],
-    "name": "background",
-    "attribution": "&copy; <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> &copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <a href='https://www.mapbox.com/feedback/' target='_blank'>Improve this map</a>",
-    "visibility": False,
-    "wrapDateLine": True,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer.XYZ",
-    "title": "MapBox Streets",
-    "args": ["MapBox Streets", "http://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/${z}/${x}/${y}?access_token="+MAPBOX_ACCESS_TOKEN],
-    "name": "background",
-    "attribution": "&copy; <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> &copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <a href='https://www.mapbox.com/feedback/' target='_blank'>Improve this map</a>",
-    "visibility": False,
-    "wrapDateLine": True,
-    "fixed": True,
-    "group":"background"
-}, {
-    "source": {"ptype": "gxp_osmsource"},
-    "type": "OpenLayers.Layer.OSM",
-    "title": "OpenStreetMap",
-    "name": "mapnik",
-    "attribution": "&copy; <a href='http://osm.org/copyright'>OpenStreetMap</a> contributors",
-    "visibility": True,
-    "wrapDateLine": True,
-    "fixed": True,
-    "group": "background"
-}]
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', None)
 
 if 'geonode.geoserver' in INSTALLED_APPS:
     LOCAL_GEOSERVER = {
@@ -404,6 +289,28 @@ if 'geonode.geoserver' in INSTALLED_APPS:
     baselayers = MAP_BASELAYERS
     MAP_BASELAYERS = [LOCAL_GEOSERVER]
     MAP_BASELAYERS.extend(baselayers)
+
+# To enable the MapStore2 based Client enable those
+# if 'geonode_mapstore_client' not in INSTALLED_APPS:
+#     INSTALLED_APPS += (
+#         'mapstore2_adapter',
+#         'geonode_mapstore_client',)
+# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'mapstore'  # DEPRECATED use HOOKSET instead
+# GEONODE_CLIENT_HOOKSET = "geonode_mapstore_client.hooksets.MapStoreHookSet"
+
+if 'geonode.geoserver' in INSTALLED_APPS:
+    LOCAL_GEOSERVER = {
+        "type": "wms",
+        "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
+        "visibility": True,
+        "title": "Local GeoServer",
+        "group": "background",
+        "format": "image/png8",
+        "restUrl": "/gs/rest"
+    }
+    # baselayers = MAPSTORE_BASELAYERS
+    # MAPSTORE_BASELAYERS = [LOCAL_GEOSERVER]
+    # MAPSTORE_BASELAYERS.extend(baselayers)
 
 # Use kombu broker by default
 # REDIS_URL = 'redis://localhost:6379/1'
@@ -463,12 +370,13 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
         'mail_admins': {
-            'level': 'ERROR', 'filters': ['require_debug_false'],
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
         }
     },
@@ -476,18 +384,20 @@ LOGGING = {
         "django": {
             "handlers": ["console"], "level": "ERROR", },
         "geonode": {
-            "handlers": ["console"], "level": "DEBUG", },
-        "gsconfig.catalog": {
-            "handlers": ["console"], "level": "DEBUG", },
+            "handlers": ["console"], "level": "INFO", },
+        "geoserver-restconfig.catalog": {
+            "handlers": ["console"], "level": "ERROR", },
         "owslib": {
-            "handlers": ["console"], "level": "DEBUG", },
+            "handlers": ["console"], "level": "ERROR", },
         "pycsw": {
+            "handlers": ["console"], "level": "INFO", },
+        "celery": {
             "handlers": ["console"], "level": "ERROR", },
     },
 }
 
 # Additional settings
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 GEOIP_PATH = "/usr/local/share/GeoIP"
 
@@ -495,13 +405,14 @@ GEOIP_PATH = "/usr/local/share/GeoIP"
 MONITORING_ENABLED = True
 
 if MONITORING_ENABLED:
-    if 'geonode.contrib.monitoring' not in INSTALLED_APPS:
-        INSTALLED_APPS += ('geonode.contrib.monitoring',)
-    if 'geonode.contrib.monitoring.middleware.MonitoringMiddleware' not in MIDDLEWARE_CLASSES:
+    if 'geonode.monitoring' not in INSTALLED_APPS:
+        INSTALLED_APPS += ('geonode.monitoring',)
+    if 'geonode.monitoring.middleware.MonitoringMiddleware' not in MIDDLEWARE_CLASSES:
         MIDDLEWARE_CLASSES += \
-            ('geonode.contrib.monitoring.middleware.MonitoringMiddleware',)
+            ('geonode.monitoring.middleware.MonitoringMiddleware',)
     MONITORING_CONFIG = None
-    MONITORING_SERVICE_NAME = 'local-geonode'
+    MONITORING_HOST_NAME = os.getenv("MONITORING_HOST_NAME", HOSTNAME)
+    MONITORING_SERVICE_NAME = 'geonode'
 
 #Define email service on GeoNode
 EMAIL_ENABLE = True
@@ -513,6 +424,7 @@ if EMAIL_ENABLE:
     EMAIL_HOST_USER = ''
     EMAIL_HOST_PASSWORD = ''
     EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = False
     DEFAULT_FROM_EMAIL = 'Example.com <no-reply@localhost>'
 
 # Documents Thumbnails
@@ -523,6 +435,7 @@ if UNOCONV_ENABLE:
     UNOCONV_TIMEOUT = os.getenv('UNOCONV_TIMEOUT', 30)  # seconds
 
 # Advanced Security Workflow Settings
+ACCOUNT_APPROVAL_REQUIRED = False
 CLIENT_RESULTS_LIMIT = 20
 API_LIMIT_PER_PAGE = 1000
 FREETEXT_KEYWORDS_READONLY = False
@@ -533,6 +446,7 @@ GROUP_MANDATORY_RESOURCES = False
 MODIFY_TOPICCATEGORY = True
 USER_MESSAGES_ALLOW_MULTIPLE_RECIPIENTS = True
 DISPLAY_WMS_LINKS = True
+CREATE_LAYER = True
 
 # For more information on available settings please consult the Django docs at
 # https://docs.djangoproject.com/en/dev/ref/settings

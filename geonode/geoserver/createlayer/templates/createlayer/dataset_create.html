@@ -1,0 +1,97 @@
+{% extends "geonode_base.html" %}
+{% load i18n %}
+{% load base_tags %}
+{% load static %}
+{% load bootstrap_tags %}
+{% load client_lib_tags %}
+
+{% block title %} {% trans "Create Dataset"  %} - {{ block.super }}  {% endblock %}
+
+{% block body_class %}layer create{% endblock %}
+
+
+{% block head %}
+
+{{ block.super }}
+{% endblock %}
+
+{% block body_outer %}
+
+<div class="page-header">
+  <h2 class="page-title">{% trans "Create an empty dataset" %}</h2>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+
+    {% if error %}
+    <div id="errors" class="alert alert-danger">
+      <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <section>
+      <form id="layer-create-form"  method="post" action="{% url "dataset_create" %}">
+        {% csrf_token %}
+        {{ form|as_bootstrap }}
+
+        <div class="input-attrs-wrap">
+          <button id="add-attr-button" class="add-attr-button btn btn-primary">{% trans "Add Attribute" %}</button>
+        </div>
+
+        <button type="submit" id="layer-create-button" class="btn btn-danger" style="margin-top:20px">{% trans "Create" %}</button>
+
+      </form>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_script %}
+
+{{ block.super }}
+
+<script type="text/javascript">
+
+    // code inspired by https://www.sanwebe.com/2013/03/addremove-input-fields-dynamically-with-jquery
+    var max_attrs = 50;
+
+    var attr_type_select = '<select class="form-control"" \
+                                  name="attr-type" style="margin-top:15px"> \
+                                <option value="string">{% trans "String" %}</option> \
+                                <option value="integer">{% trans "Integer" %}</option> \
+                                <option value="float">{% trans "Float" %}</option> \
+                                <option value="date">{% trans "Date" %}</option> \
+                            </select>'
+
+    var x = 1;
+    $(".add-attr-button").click(function(e){
+        e.preventDefault();
+        if(x < max_attrs){
+            $(".input-attrs-wrap").append('<div class="attr-definition"><input type="text" class="form-control" style="margin-top:15px" />' + attr_type_select + '<a href="#" class="remove-attr">Remove</a></div>');
+            x++;
+        }
+    });
+
+    $(".input-attrs-wrap").on("click", ".remove-attr", function(e){
+        e.preventDefault();
+        $(this).parent('div').remove();
+        x--;
+    })
+
+    // copy permissions and attributes
+    $('#layer-create-form').submit(function(){
+      var attrs = {};
+      $('.attr-definition').each(function(i, obj) {
+          attr_name = obj.childNodes[0].value;
+          attr_type = obj.childNodes[1].value;
+          attrs[attr_name] = attr_type;
+      });
+      $('#attributes').val(JSON.stringify(attrs));
+    });
+
+</script>
+
+{% endblock extra_script %}

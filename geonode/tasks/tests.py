@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -18,13 +17,17 @@
 #
 #########################################################################
 
-from django.test import TestCase
+from geonode.tests.base import GeoNodeBaseTestSupport
 
 
-class TasksTest(TestCase):
+class TasksTest(GeoNodeBaseTestSupport):
+
     """
     Tests geonode.messaging
     """
+
     def setUp(self):
+        super().setUp()
+
         self.adm_un = "admin"
         self.adm_pw = "admin"

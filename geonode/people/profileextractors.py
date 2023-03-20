@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -20,8 +19,10 @@
 
 """Profile extractor utilities for social account providers"""
 
+from django.conf import settings
 
-class BaseExtractor(object):
+
+class BaseExtractor:
     """Base class for social account data extractors.
 
     In order to define new extractors you just need to define a class that
@@ -98,31 +99,97 @@ class FacebookExtractor(BaseExtractor):
 class LinkedInExtractor(BaseExtractor):
 
     def extract_email(self, data):
-        return data.get("emailAddress", "")
+        try:
+            element = data.get("elements")[0]
+        except IndexError:
+            email = ""
+        else:
+            email = element.get("handle~", {}).get("emailAddress", "")
+        return email
 
     def extract_first_name(self, data):
-        return data.get("firstName", "")
+        return self._extract_field("firstName", data)
 
     def extract_last_name(self, data):
-        return data.get("lastName", "")
+        return self._extract_field("lastName", data)
 
-    def extract_position(self, data):
-        latest = _get_latest_position(data)
-        return latest.get("title", "") if latest is not None else ""
+    def _extract_field(self, name, data):
+        current_language = settings.LANGUAGE_CODE
+        localized_field_values = data.get(name, {}).get("localized", {})
+        for locale, name in localized_field_values.items():
+            split_locale = locale.partition("_")[0]
+            if split_locale == current_language:
+                result = name
+                break
+        else:  # try to return first one, if it exists
+            try:
+                result = list(localized_field_values.items())[0][-1]
+            except IndexError:
+                result = ""
+        return result
+
+
+class OpenIDExtractor(BaseExtractor):
+
+    def extract_email(self, data):
+        return data.get("email", "")
+
+    def extract_first_name(self, data):
+        return data.get("first_name", "")
+
+    def extract_last_name(self, data):
+        return data.get("last_name", "")
+
+    def extract_country(self, data):
+        country = data.get("country", "")
+        if country:
+            from geonode.base.enumerations import COUNTRIES
+            for _cnt in COUNTRIES:
+                if country == _cnt[1]:
+                    country = _cnt[0]
+                    break
+        return country
+
+    def extract_language(self, data):
+        language = data.get("language", "")
+        if language:
+            from .languages import LANGUAGES
+            for _cnt in LANGUAGES:
+                if language == _cnt[1]:
+                    language = _cnt[0]
+                    break
+        return language
+
+    def extract_timezone(self, data):
+        timezone = data.get("timezone", "")
+        if timezone:
+            from .timezones import TIMEZONES
+            for _cnt in TIMEZONES:
+                if timezone == _cnt[1]:
+                    timezone = _cnt[0]
+                    break
+        return timezone
+
+    def extract_city(self, data):
+        return data.get("city", "")
+
+    def extract_zipcode(self, data):
+        return data.get("postal_code", "")
 
     def extract_organization(self, data):
-        latest = _get_latest_position(data)
-        if latest is not None:
-            organization = latest.get("company", {}).get("name", "")
-        else:
-            organization = ""
-        return organization
+        return data.get("organization", "")
 
-    def extract_profile(self, data):
-        headline = data.get("headline", "")
-        summary = data.get("summary", "")
-        profile = "\n".join((headline, summary))
-        return profile.strip()
+    def extract_voice(self, data):
+        return data.get("phone", "")
+
+    def extract_groups(self, data):
+        return data.get("groups", "")
+
+    def extract_roles(self, data):
+        return data.get("roles", "")
+
+    def extract_keywords(self, data):
+        return data.get("keywords", "")
 
 
 def _get_latest_position(data):

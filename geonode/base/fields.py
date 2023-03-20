@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,38 +17,13 @@
 #
 #########################################################################
 
-import logging
-import traceback
-
 from django import forms
-from django.conf import settings
-
-from geonode.base.models import Thesaurus
-
-logger = logging.getLogger("geonode.base.fields")
 
 
-class MultiThesauriField(forms.MultiValueField):
-    def __init__(self, label=None, required=True, help_text=None, widget=None):
-        fields_list = []
-        for el in settings.THESAURI:
-            choices_list = []
-            thesaurus_name = el['name']
-            try:
-                t = Thesaurus.objects.get(identifier=thesaurus_name)
-                for tk in t.thesaurus.all():
-                    tkl = tk.keyword.filter(lang='en')
-                    choices_list.append((tkl[0].id, tkl[0].label))
-                fields_list.append(forms.MultipleChoiceField(choices=tuple(choices_list)))
-            except:
-                tb = traceback.format_exc()
-                logger.error(tb)
+class MultiThesauriField(forms.ModelMultipleChoiceField):
 
-        fields = tuple(fields_list)
-
-        super(MultiThesauriField, self).__init__(fields, required, widget, label)
-
-    def compress(self, data_list):
-        if data_list:
-            return '%s' % (data_list[0])
-        return None
+    def label_from_instance(self, obj):
+        # Note: Not using .get() because filter()[0] is used in original
+        # code. The hard-coded language is currently used throughout
+        # geonode.
+        return obj.keyword.first().label

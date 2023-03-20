@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -42,8 +41,8 @@ class Command(BaseCommand):
         # check if old notifications exist
         try:
             c.execute('select medium, send, notice_type_id, user_id from notification_noticesetting;')
-        except ProgrammingError, err:
-            log.error("No table for notification app, exiting")
+        except ProgrammingError as err:
+            log.error(f"No table for notification app, exiting: {err}")
             # no source of data, bye!
             return
 
@@ -55,5 +54,5 @@ class Command(BaseCommand):
                 c.execute("""insert into pinax_notifications_noticesetting
                                (medium, send, notice_type_id, user_id)
                              values (%s, %s, %s, %s)""", ns)
-            except IntegrityError, err:
+            except IntegrityError as err:
                 log.error('Cannot insert notifications for %s: %s', ns, err, exc_info=err)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -20,25 +19,34 @@
 
 import logging
 import time
+import json
+from datetime import datetime
 
 # from django.conf import settings
 from kombu.mixins import ConsumerMixin
-from geonode.geoserver.signals import geoserver_post_save_local
-from geonode.security.views import send_email_consumer  # , send_email_owner_on_view
-# from geonode.social.signals import notification_post_save_resource2
-from geonode.layers.views import layer_view_counter
-from geonode.layers.models import Layer
+from geonode.security.views import send_email_consumer
+from geonode.layers.views import dataset_view_counter
+from geonode.layers.models import Dataset
+from geonode.geoserver.helpers import gs_slurp
 
-from queues import queue_email_events, queue_geoserver_events,\
-                   queue_notifications_events, queue_all_events,\
-                   queue_geoserver_catalog, queue_geoserver_data,\
-                   queue_geoserver, queue_layer_viewers
+from .queues import (
+    queue_email_events,
+    queue_geoserver_events,
+    queue_notifications_events,
+    queue_all_events,
+    queue_geoserver_catalog,
+    queue_geoserver_data,
+    queue_geoserver,
+    queue_dataset_viewers
+)
 
 logger = logging.getLogger(__package__)
 
 
 class Consumer(ConsumerMixin):
+
     def __init__(self, connection, messages_limit=None):
+        self.last_message = None
         self.connection = connection
         self.messages_limit = messages_limit
 
@@ -58,8 +66,8 @@ class Consumer(ConsumerMixin):
                      callbacks=[self.on_geoserver_data]),
             Consumer(queue_geoserver,
                      callbacks=[self.on_geoserver_all]),
-            Consumer(queue_layer_viewers,
-                     callbacks=[self.on_layer_viewer]),
+            Consumer(queue_dataset_viewers,
+                     callbacks=[self.on_dataset_viewer]),
         ]
 
     def _check_message_limit(self):
@@ -70,40 +78,42 @@ class Consumer(ConsumerMixin):
             return True
 
     def on_consume_end(self, connection, channel):
-        super(Consumer, self).on_consume_end(connection, channel)
+        super().on_consume_end(connection, channel)
         logger.debug("finished.")
 
     def on_message(self, body, message):
-        # logger.debug("broadcast: RECEIVED MSG - body: %r" % (body,))
+        logger.debug(f"broadcast: RECEIVED MSG - body: {body}")
         message.ack()
         self._check_message_limit()
 
     def on_email_messages(self, body, message):
-        # logger.debug("on_email_messages: RECEIVED MSG - body: %r" % (body,))
-        layer_uuid = body.get("layer_uuid")
+        logger.debug(f"on_email_messages: RECEIVED MSG - body: {body}")
+        dataset_uuid = body.get("dataset_uuid")
         user_id = body.get("user_id")
-        send_email_consumer(layer_uuid, user_id)
+        send_email_consumer(dataset_uuid, user_id)
         # Not sure if we need to send ack on this fanout version.
         message.ack()
         logger.debug("on_email_messages: finished")
         self._check_message_limit()
 
     def on_geoserver_messages(self, body, message):
-        # logger.debug("on_geoserver_messages: RECEIVED MSG - body: %r" % (body,))
-        layer_id = body.get("id")
-        try:
-            layer = _wait_for_layer(layer_id)
-        except Layer.DoesNotExist as err:
-            logger.exception(err)
-            return
-        geoserver_post_save_local(layer)
+        logger.debug(f"on_geoserver_messages: RECEIVED MSG - body: {body}")
+        # dataset_id = body.get("id")
+        # try:
+        #     layer = _wait_for_dataset(dataset_id)
+        # except Dataset.DoesNotExist as err:
+        #     logger.debug(err)
+        #     return
+
+        # geoserver_post_save_local(layer)
+
         # Not sure if we need to send ack on this fanout version.
         message.ack()
         logger.debug("on_geoserver_messages: finished")
         self._check_message_limit()
 
     def on_notifications_messages(self, body, message):
-        # logger.debug("on_notifications_message: RECEIVED MSG - body: %r" % (body,))
+        logger.debug(f"on_notifications_message: RECEIVED MSG - body: {body}")
         body.get("id")
         body.get("app_label")
         body.get("model")
@@ -114,50 +124,86 @@ class Consumer(ConsumerMixin):
         self._check_message_limit()
 
     def on_geoserver_all(self, body, message):
-        # logger.debug("on_geoserver_all: RECEIVED MSG - body: %r" % (body,))
+        logger.debug(f"on_geoserver_all: RECEIVED MSG - body: {body}")
         message.ack()
         logger.debug("on_geoserver_all: finished")
         # TODO:Adding consurmer's producers.
         self._check_message_limit()
 
     def on_geoserver_catalog(self, body, message):
-        # logger.debug("on_geoserver_catalog: RECEIVED MSG - body: %r" % (body,))
+        logger.debug(f"on_geoserver_catalog: RECEIVED MSG - body: {body}")
+        try:
+            _update_dataset_data(body, self.last_message)
+            self.last_message = json.loads(body)
+        except Exception:
+            logger.debug(f"Could not encode message {body}")
         message.ack()
         logger.debug("on_geoserver_catalog: finished")
         self._check_message_limit()
 
     def on_geoserver_data(self, body, message):
-        # logger.debug("on_geoserver_data: RECEIVED MSG - body: %r" % (body,))
+        logger.debug(f"on_geoserver_data: RECEIVED MSG - body: {body}")
+        try:
+            _update_dataset_data(body, self.last_message)
+            self.last_message = json.loads(body)
+        except Exception:
+            logger.debug(f"Could not encode message {body}")
         message.ack()
         logger.debug("on_geoserver_data: finished")
         self._check_message_limit()
 
     def on_consume_ready(self, connection, channel, consumers, **kwargs):
-        # logger.debug(">>> Ready:")
-        # logger.debug(connection)
-        # logger.debug("{} consumers:".format(len(consumers)))
-        # for i, consumer in enumerate(consumers, start=1):
-        #     logger.debug("{0} {1}".format(i, consumer))
-        super(Consumer, self).on_consume_ready(connection, channel, consumers,
-                                               **kwargs)
+        logger.debug(">>> Ready:")
+        logger.debug(connection)
+        logger.debug(f"{len(consumers)} consumers:")
+        for i, consumer in enumerate(consumers, start=1):
+            logger.debug(f"{i} {consumer}")
+        super().on_consume_ready(
+            connection, channel, consumers, **kwargs)
 
-    def on_layer_viewer(self, body, message):
-        # logger.debug("on_layer_viewer: RECEIVED MSG - body: %r" % (body,))
+    def on_dataset_viewer(self, body, message):
+        logger.debug(f"on_dataset_viewer: RECEIVED MSG - body: {body}")
         viewer = body.get("viewer")
-        # owner_layer = body.get("owner_layer")
-        layer_id = body.get("layer_id")
-        layer_view_counter(layer_id, viewer)
+        # owner_dataset = body.get("owner_dataset")
+        dataset_id = body.get("dataset_id")
+        dataset_view_counter(dataset_id, viewer)
 
         # TODO Disabled for now. This should be handeld through Notifications
         # if settings.EMAIL_ENABLE:
-        #     send_email_owner_on_view(owner_layer, viewer, layer_id)
+        #     send_email_owner_on_view(owner_dataset, viewer, dataset_id)
         message.ack()
-        logger.debug("on_layer_viewer: finished")
+        logger.debug("on_dataset_viewer: finished")
         self._check_message_limit()
 
 
-def _wait_for_layer(layer_id, num_attempts=5, wait_seconds=1):
-    """Blocks execution while the Layer instance is not found on the database
+def _update_dataset_data(body, last_message):
+    message = json.loads(body)
+    workspace = message["source"]["workspace"] if "workspace" in message["source"] else None
+    store = message["source"]["store"] if "store" in message["source"] else None
+    filter = message["source"]["name"]
+
+    update_dataset = False
+    if not last_message:
+        last_message = message
+        update_dataset = True
+    last_workspace = message["source"]["workspace"] if "workspace" in message["source"] else None
+    last_store = message["source"]["store"] if "store" in message["source"] else None
+    last_filter = last_message["source"]["name"]
+    if (last_workspace, last_store, last_filter) != (workspace, store, filter):
+        update_dataset = True
+    else:
+        timestamp_t1 = datetime.strptime(last_message["timestamp"], '%Y-%m-%dT%H:%MZ')
+        timestamp_t2 = datetime.strptime(message["timestamp"], '%Y-%m-%dT%H:%MZ')
+        timestamp_delta = timestamp_t2 - timestamp_t1
+        if timestamp_t2 > timestamp_t1 and timestamp_delta.seconds > 60:
+            update_dataset = True
+
+    if update_dataset:
+        gs_slurp(True, workspace=workspace, store=store, filter=filter, remove_deleted=True, execute_signals=True)
+
+
+def _wait_for_dataset(dataset_id, num_attempts=5, wait_seconds=1):
+    """Blocks execution while the Dataset instance is not found on the database
 
     This is a workaround for the fact that the
     ``geonode.geoserver.signals.geoserver_post_save_local`` function might
@@ -166,18 +212,21 @@ def _wait_for_layer(layer_id, num_attempts=5, wait_seconds=1):
 
     """
 
-    for current in range(1, num_attempts+1):
+    for current in range(1, num_attempts + 1):
         try:
-            instance = Layer.objects.get(id=layer_id)
-            logger.debug("Attempt {}/{} - Found layer in the "
-                         "database".format(current, num_attempts))
+            instance = Dataset.objects.get(id=dataset_id)
+            logger.debug(
+                f"Attempt {current}/{num_attempts} - Found layer in the "
+                "database")
             break
-        except Layer.DoesNotExist:
+        except Dataset.DoesNotExist:
             time.sleep(wait_seconds)
-            logger.debug("Attempt {}/{} - Could not find layer "
-                         "instance".format(current, num_attempts))
+            logger.debug(
+                f"Attempt {current}/{num_attempts} - Could not find layer "
+                "instance")
     else:
-        logger.debug("Reached maximum attempts and layer {!r} is still not "
-                     "saved. Exiting...".format(layer_id))
-        raise Layer.DoesNotExist
+        logger.debug(
+            f"Reached maximum attempts and layer {dataset_id} is still not "
+            "saved. Exiting...")
+        raise Dataset.DoesNotExist
     return instance

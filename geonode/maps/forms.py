@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,22 +17,30 @@
 #
 #########################################################################
 
-from autocomplete_light.registry import autodiscover
-
 from geonode.maps.models import Map
-
-autodiscover() # flake8: noqa
-
-from geonode.base.forms import ResourceBaseForm
+from geonode.base.forms import ResourceBaseForm, get_tree_data
 
 
 class MapForm(ResourceBaseForm):
 
     class Meta(ResourceBaseForm.Meta):
         model = Map
-        exclude = ResourceBaseForm.Meta.exclude + (
-            'zoom',
-            'projection',
-            'center_x',
-            'center_y',
-        )
+        exclude = ResourceBaseForm.Meta.exclude
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['regions'].choices = get_tree_data()
+        for field in self.fields:
+            help_text = self.fields[field].help_text
+            self.fields[field].help_text = None
+            if help_text != '':
+                self.fields[field].widget.attrs.update(
+                    {
+                        'class': 'has-external-popover',
+                        'data-content': help_text,
+                        'placeholder': help_text,
+                        'data-placement': 'right',
+                        'data-container': 'body',
+                        'data-html': 'true'
+                    }
+                )

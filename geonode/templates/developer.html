@@ -20,7 +20,6 @@
 
     <p>GeoNode is built using several open source projects, each with its own community. If you are interested in contributing new features to the GeoNode, we encourage you to do so by contributing to one of the projects on which it is built:</p>
     <ul>
-      <li><a href="http://geoext.org">GeoExt</a> - The JavaScript toolkit for rich web mapping applications</li>
       <li><a href="http://geoserver.org">GeoServer</a> - Standards based server for geospatial information</li>
       <li><a href="http://geowebcache.org">GeoWebCache</a> - Cache engine for WMS Tiles</li><li><a href="http://openlayers.org">OpenLayers</a> - Pure JavaScript library powering the maps of GeoExt</li>
       <li><a href="http://pycsw.org">pycsw</a> - CSW, OpenSearch and OAI-PMH metadata catalogue server</li>
@@ -48,7 +47,7 @@
     <p><code>var geonodeLayer = new OpenLayers.Layer.WMS("GeoNode Risk Data", "http://demo.geonode.org/geoserver/wms",{ layers: "risk:nicaragua_admin" });</code></p>
 
     <h3>Google Maps Example Code</h3>
-    <p>To include a GeoNode map layer in a Google Map, include the layer namein the URL template.</p>
+    <p>To include a GeoNode map layer in a Google Map, include the dataset name in the URL template.</p>
     <p><code>var tilelayer =  new GTileLayer(null, null, null, {tileUrlTemplate: 'http://demo.geonode.org/geoserver/gwc/service/gmaps?layers=risk:nicaragua_admin&#38;zoom={Z}&#38;x={X}&#38;y={Y}', isPng:true, opacity:0.5 } );</code></p>
 
     <h3>Shapefile/GeoJSON/GML Output</h3>
@@ -88,10 +87,6 @@
       <tr>
         <td><strong>{% trans "Metadata search via OAI-PMH:" %}</strong></td>
         <td><a href="{{CATALOGUE_BASE_URL}}?mode=oaipmh&verb=Identify">OAI-PMH 2.0</a></td>
-      </tr>
-      <tr>
-        <td><strong>{% trans "Open Data:" %}</strong></td>
-        <td><a href="{{SITEURL}}/data.json">data.json</a></td>
       </tr>
       <tr>
         <td><strong>{% trans "Cached tiles via WMTS:" %}</strong></td>

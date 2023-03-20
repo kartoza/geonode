@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations, models
 
 
@@ -19,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcebase',
             name='group',
-            field=models.ForeignKey(blank=True, to='auth.Group', null=True),
+            field=models.ForeignKey(blank=True, to='auth.Group', null=True, on_delete=models.CASCADE),
         ),
 
         migrations.AddField(
@@ -50,6 +47,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='region',
             name='srid',
-            field=models.CharField(default=b'EPSG:4326', max_length=255),
+            field=models.CharField(default='EPSG:4326', max_length=255),
         ),
     ]

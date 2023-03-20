@@ -1,6 +1,6 @@
 {% extends "groups/group_base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 
 {% block title %} {% trans "Explore Group Categories" %} - {{ block.super }} {% endblock %}
 
@@ -8,7 +8,7 @@
 
 {% block body %}
   <div class="page-header">
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and not READ_ONLY_MODE and user.is_superuser %}
     <a href="{% url "group_category_create" %}" class="btn btn-primary pull-right">{% trans "Create a New Group Category" %}</a>
     {% endif %}
     <h2>{% trans "Explore Group Categories" %}</h2>
@@ -19,7 +19,6 @@
   {% include "search/_search_user_content.html" %}
   {% endwith %}
   {% endwith %}
-  {% include "_bulk_permissions_form.html" %}
 {% endblock %}
 
 {% block extra_script %}

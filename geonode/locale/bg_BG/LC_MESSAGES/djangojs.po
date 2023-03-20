@@ -25,7 +25,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GeoNode\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 02:28-0500\n"
+"POT-Creation-Date: 2021-07-08 09:03+0300\n"
 "PO-Revision-Date: 2016-08-23 11:58+0000\n"
 "Last-Translator: Julien Collaer <julien.collaer@opengeode.be>\n"
 "Language-Team: Bulgarian (Bulgaria) (http://www.transifex.com/geonode/"
@@ -36,165 +36,364 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: geonode/static/geonode/js/search/search.js:373
-msgid "Enter your text here ..."
-msgstr "Въведете вашия текст тук ..."
+msgid "STORE_UPDATED"
+msgstr ""
 
-#: geonode/static/geonode/js/search/search.js:414
-msgid "Enter your region here ..."
-msgstr "Въведете вашият регион тук ..."
-
-#: geonode/static/geonode/js/upload/FileType.js:33
 #, javascript-format
 msgid "Missing a %s file, which is required"
 msgstr "Липсва файл %s, който се изисква"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:7
 msgid "ESRI Shapefile"
 msgstr "ESRI шейпфайл"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:13
-#: geonode/static/geonode/js/upload/FileTypes.js:18
+msgid "ASCII Text File"
+msgstr ""
+
 msgid "GeoTIFF"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:24
 msgid "Comma Separated Value"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:29
 msgid "Google Earth KML"
 msgstr "Google Earth KML"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:34
+#, fuzzy
+#| msgid "Google Earth KML"
+msgid "Google Earth KML with a GroundOverlay"
+msgstr "Google Earth KML"
+
+#, fuzzy
+#| msgid "Google Earth KML"
+msgid "Google Earth KMZ"
+msgstr "Google Earth KML"
+
 msgid "GeoJSON"
 msgstr "GeoJSON"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:39
 msgid "Zip Archive"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:45
 msgid "ERDAS Imagine"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:50
-#: geonode/static/geonode/js/upload/FileTypes.js:55
 msgid "National Imagery Transmission Format"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:61
 msgid "Controlled Image Base-1 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:68
 msgid "Controlled Image Base-5 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:75
 msgid "Controlled Image Base-10 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:82
 msgid "CADRG-Global Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:89
 msgid "CADRG-Jet Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:96
 msgid "CADRG-Operational Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:103
 msgid "CADRG-Tactical Pilotage Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:110
 msgid "CADRG-Joint Operations Graphic"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:117
 msgid "CADRG-Topographic Line Map 100K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:124
 msgid "CADRG-Topographic Line Map 50K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:131
 msgid "JPEG2000"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:136
 msgid "MrSID-Multi-resolution Seamless Image Database"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:331
-msgid "Layer Info"
-msgstr "Информация за слой"
+#, fuzzy
+#| msgid "Metadata Links:"
+msgid "XML Metadata File"
+msgstr "Линкове към метаданни:"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:332
-msgid "Edit Metadata"
-msgstr "Редакция на метаданни"
+msgid "Style Layer Descriptor"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:333
-msgid "Manage Styles"
-msgstr "Управляване на стилове"
+msgid "JPEG"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:336
-msgid "The column %1 was renamed to %2 <br/>"
-msgstr "Колона %1 беше преименувана на %2 <br/>"
+msgid "PNG"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:342
-msgid "Your layer was successfully uploaded"
-msgstr "Вашият слой бе успешно качен"
+msgid "GIF"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:371
-msgid "Performing Final GeoServer Config Step"
-msgstr "Изпълнение на последна стъпка по конфигуриране на GeoServer"
+#, fuzzy
+#| msgid "Unexpected Error"
+msgid "Unexpected error!"
+msgstr "Непредвидена грешка"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:386
-#: geonode/static/geonode/js/upload/LayerInfo.js:412
-msgid "You need to specify more information in order to complete your upload"
-msgstr "Трябва да посочите допълнително информация, за да завършите качването"
+msgid ""
+" - 400 Bad Request. Server cannot or will not process the request due to "
+"something that is perceived to be a client error (e.g., malformed request "
+"syntax, invalid request message framing, or deceptive request routing)."
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You need to specify more information in order to complete your upload."
-msgstr "Трябва да посочите допълнително информация, за да завършите качването"
+msgid ""
+" - 401 Unauthorized. Request was not sent with the proper authentication "
+"credentials."
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You can continue configuring your layer."
-msgstr "Можете да продължите с настройките по вашия слой"
+msgid ""
+" - 403 Forbidden. This is generally related to permission rules on your "
+"server. Contact the system administrator for more information regarding this "
+"error message."
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:422
-#: geonode/static/geonode/js/upload/LayerInfo.js:509
+msgid ""
+" - 404 Not Found. Origin server was unable or unwilling to find the resource "
+"requested."
+msgstr ""
+
+msgid ""
+" - 405 Method Not Allowed. Origin server is aware of the requested resource, "
+"but the request method used is not supported."
+msgstr ""
+
+msgid ""
+" - 406 Not Acceptable. Resource is not available at the origin that adheres "
+"to negotiation headers that were  set prior (e.g. via 'Accept-Charset' and "
+"'Accept-Language' headers)."
+msgstr ""
+
+msgid ""
+" - 407 Authentication Required. The client did not send the required "
+"authentication with the request."
+msgstr ""
+
+msgid ""
+" - 408 Request Timeout. The origin server did not receive the complete "
+"request in what it considers a reasonable time."
+msgstr ""
+
+msgid ""
+" - 409 Conflict. The request did not complete because of a conflict with the "
+"current state of the resource. Typically happens on a PUT request where "
+"multiple clients are attempting to edit the same resource."
+msgstr ""
+
+msgid ""
+" - 410 Gone. The resource requested is permanently missing at the origin."
+msgstr ""
+
+msgid ""
+" - 411 Length Required. Client did not define the 'Content-Length' of the "
+"request body in the headers and this is required to obtain the resource."
+msgstr ""
+
+msgid ""
+" - 412 Precondition Failed. Server denies the request because the resource "
+"failed to meet the conditions specified by the client."
+msgstr ""
+
+msgid ""
+" - 413 Payload Too Large. Refusal from the server to process the request "
+"because the payload sent from the client is larger than the server wished to "
+"accept. Server has the optional to close the connection."
+msgstr ""
+
+msgid ""
+" - 414 URI Too Long. Refusal from the server that the URI was too long to be "
+"processed. For example, if a client is attempting a GET request with an "
+"unusually long URI after a POST, this could be seen as a security risk and a "
+"414 gets generated."
+msgstr ""
+
+msgid ""
+" - 415 Unsupported Media Type. Refusal from the server to process the format "
+"of the current payload. One way to identify and fix this issue would be to "
+"look at the 'Content-Type' or 'Content-Encoding' headers sent in the "
+"client’s request."
+msgstr ""
+
+msgid ""
+" - 417 Expectation Failed. Failure of server to meet the requirements "
+"specified in the 'Expect' header of the client’s request."
+msgstr ""
+
+msgid ""
+" - 429 Too Many Requests. Client has sent too many requests in the specified "
+"amount of time according to the server."
+msgstr ""
+
+msgid ""
+" - 499 Client Close Request. Nginx specific response code to indicate when "
+"the connection has been closed by the client while the server is still "
+"processing its request, making server unable to send a status code back."
+msgstr ""
+
+msgid ""
+" - 500 Internal Server Error. This error indicates that the server has "
+"encountered an unexpected condition. This often occurs when an application "
+"request cannot be fulfilled due to the application being configured "
+"incorrectly on the server."
+msgstr ""
+
+msgid ""
+" - 501 Not Implemented. This error indicates that the HTTP method sent by "
+"the client is not supported by the server. This is most often caused by the "
+"server being out of date. It is a very rare error and generally requires "
+"that the web server be updated."
+msgstr ""
+
+msgid ""
+" - 502 Bad Gateway. This error is usually due to improperly configured proxy "
+"servers. The first step in resolving the issue is to clear the client's "
+"cache."
+msgstr ""
+
+msgid ""
+" - 503 Service Unavailable. This error occurs when the server is unable to "
+"handle requests due to a temporary overload or due to the server being "
+"temporarily closed for maintenance. The error indicates that the server will "
+"only temporarily be down."
+msgstr ""
+
+msgid ""
+" - 504 Gateway Timeout. GeoNode lost the connection with GeoServer or DB due "
+"to a connection timeout. Consider using the management commands to import "
+"data!"
+msgstr ""
+
+msgid ""
+" - 505 HTTP Version Not Supported. This error occurs when the server refuses "
+"to support the HTTP protocol that has been specified by the client computer. "
+"This can be caused by the protocol not being specified properly by the "
+"client computer; for example, if an invalid version number has been "
+"specified."
+msgstr ""
+
+msgid ""
+" - 506 Variant Also Negotiates. This error indicates that the server is not "
+"properly configured. Contact the system administrator to resolve this issue."
+msgstr ""
+
+msgid ""
+" - 507 Insufficient Storage. This error indicates that the server is out of "
+"free memory. This is most likely to occur when an application that is being "
+"requested cannot allocate the necessary system resources to run. To resolve "
+"the issue, the server's hard disk may need to be cleaned of any unnecessary "
+"documents to free up more hard disk space, its memory may need to be "
+"expanded, or it may simply need to be restarted. Contact the system "
+"administrator for more information regarding this error message."
+msgstr ""
+
+msgid ""
+" - 509 Bandwidth Limit Exceeded. This error occurs when the bandwidth limit "
+"imposed by the system administrator has been reached. The only fix for this "
+"issue is to wait until the limit is reset in the following cycle. Consult "
+"the system administrator for information about acquiring more bandwidth."
+msgstr ""
+
+msgid ""
+" - 510 Not Extended. This error occurs when an extension attached to the "
+"HTTP request is not supported by the web server. To resolve the issue, you "
+"may need to update the server."
+msgstr ""
+
+#, fuzzy
+#| msgid "Unknown Map"
+msgid "Unknwon"
+msgstr "Неизвестна карта"
+
+msgid ""
+" Error Code. Contact the system administrator for more information regarding "
+"this error message."
+msgstr ""
+
+msgid "Additional info: "
+msgstr ""
+
+msgid "Finalizing"
+msgstr ""
+
 msgid "Unexpected Error"
 msgstr "Непредвидена грешка"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:438
+msgid "Your "
+msgstr ""
+
+#, fuzzy
+#| msgid "Layer Info"
+msgid " Info"
+msgstr "Информация за слой"
+
+msgid "Edit Metadata"
+msgstr "Редакция на метаданни"
+
+#, fuzzy
+#| msgid "Edit Metadata"
+msgid "Upload Metadata"
+msgstr "Редакция на метаданни"
+
+msgid "Upload SLD"
+msgstr ""
+
+msgid "Manage Styles"
+msgstr "Управляване на стилове"
+
+msgid "Please wait until GeoNode finished configuring it!"
+msgstr ""
+
+msgid "The column %1 was renamed to %2 <br/>"
+msgstr "Колона %1 беше преименувана на %2 <br/>"
+
+msgid "Performing Final GeoServer Config Step"
+msgstr "Изпълнение на последна стъпка по конфигуриране на GeoServer"
+
+msgid "You need to specify more information in order to complete your upload"
+msgstr "Трябва да посочите допълнително информация, за да завършите качването"
+
+msgid "Files are ready to be ingested!"
+msgstr ""
+
+msgid "A temporal dimension may be added to this Layer."
+msgstr ""
+
 msgid "Performing GeoServer Config Step"
 msgstr "Изпълнение на последна стъпка по конфигуриране на GeoServer"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:516
+msgid ""
+"<br>Please check your network connection. In case of Layer Upload make sure "
+"GeoServer is running and accepting connections."
+msgstr ""
+
+msgid "<br>"
+msgstr ""
+
+msgid "<br>Bad request or URL not found."
+msgstr ""
+
+#, fuzzy
+#| msgid "Unknown Map"
+msgid "<br>Unknown."
+msgstr "Неизвестна карта"
+
 msgid "Layer files uploaded, configuring in GeoServer"
 msgstr "Слоевете са качени, конфигуриране в GeoServer"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:532
-msgid "Select or create a Geogig repository."
-msgstr "Изберете или създайте Geogig хранилище."
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:695
 msgid "Remove"
 msgstr "Премахване"
 
-#: geonode/static/geonode/js/upload/upload.js:125
 #, javascript-format
 msgid "The file %s is an unsupported file type, please select another file."
 msgstr "Файлът  %s е неподдържан формат, моля изберете друг"
 
-#: geonode/static/geonode/js/upload/upload.js:285
 msgid ""
 "You are trying to upload an incomplete set of files or not all mandatory "
 "options have been validated.\n"
@@ -206,556 +405,568 @@ msgstr ""
 "\n"
 "Моля проверете за грешки."
 
-#: geonode/static/lib/js/assets.min.js:2
-msgid "<iframe frameborder='0' width='0' height='0'/>"
-msgstr ""
+#, javascript-format
+msgid "Available %s"
+msgstr "Available %s"
 
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<script>"
-msgstr ""
-
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<div>"
-msgstr ""
-
-#: geonode/templates/lang.js:9 geonode/templates/lang.js:236
-msgid "Cancel"
-msgstr "Отмени"
-
-#: geonode/templates/lang.js:10
-msgid "Save as Copy"
-msgstr "Запази копие"
-
-#: geonode/templates/lang.js:11
-msgid "About this Map"
-msgstr "За картата"
-
-#: geonode/templates/lang.js:12 geonode/templates/lang.js:96
-#: geonode/templates/lang.js:165
-msgid "Abstract"
-msgstr "Резюме"
-
-#: geonode/templates/lang.js:13
-msgid "Save"
-msgstr "Запеметяване"
-
-#: geonode/templates/lang.js:14 geonode/templates/lang.js:100
-#: geonode/templates/lang.js:109 geonode/templates/lang.js:162
-#: geonode/templates/lang.js:184 geonode/templates/lang.js:219
-msgid "Title"
-msgstr "Заглавие"
-
-#: geonode/templates/lang.js:20
-msgid "Connection Error"
-msgstr "Грешка при свързване"
-
-#: geonode/templates/lang.js:21
-msgid "The server returned an error"
-msgstr "Сървърът връща грешка"
-
-#: geonode/templates/lang.js:22
-msgid "Details..."
-msgstr "Информация..."
-
-#: geonode/templates/lang.js:28 geonode/templates/lang.js:31
-msgid "Add Layers"
-msgstr "Добавете слоеве"
-
-#: geonode/templates/lang.js:29
-msgid "Area"
-msgstr "Площ"
-
-#: geonode/templates/lang.js:30
-msgid "Background"
-msgstr "Фон"
-
-#: geonode/templates/lang.js:32
-msgid "Done"
-msgstr "Изпълнено"
-
-#: geonode/templates/lang.js:33
-msgid "Available Layers"
-msgstr "Налични слоеве"
-
-#: geonode/templates/lang.js:35 geonode/templates/lang.js:121
-msgid "Height"
-msgstr "Височина"
-
-#: geonode/templates/lang.js:36
-msgid "Get Feature Info"
-msgstr "Получаване на информация за обекта"
-
-#: geonode/templates/lang.js:37 geonode/templates/lang.js:122
-msgid "Large"
-msgstr "Голям"
-
-#: geonode/templates/lang.js:38
-msgid "or add a new server."
-msgstr "или добави нов сървър"
-
-#: geonode/templates/lang.js:39
-msgid "Map Layers"
-msgstr "Картни слоеве"
-
-#: geonode/templates/lang.js:40
-msgid "View available data from:"
-msgstr "Преглед на налични данни от:"
-
-#: geonode/templates/lang.js:41
-msgid "Data"
-msgstr "Данни"
-
-#: geonode/templates/lang.js:42
-msgid "Layers"
-msgstr "Слоеве"
-
-#: geonode/templates/lang.js:43
-msgid "Legend"
-msgstr "Легенда"
-
-#: geonode/templates/lang.js:44
-msgid "Length"
-msgstr "Дължина"
-
-#: geonode/templates/lang.js:45
-msgid "Loading Map..."
-msgstr "Зареждане на картата..."
-
-#: geonode/templates/lang.js:46 geonode/templates/lang.js:123
-msgid "Map Size"
-msgstr "Големина на картата"
-
-#: geonode/templates/lang.js:47
-msgid "Measure"
-msgstr "Измерване"
-
-#: geonode/templates/lang.js:48 geonode/templates/lang.js:97
-#: geonode/templates/lang.js:163
-msgid "Contact"
-msgstr "Контакт"
-
-#: geonode/templates/lang.js:49 geonode/templates/lang.js:55
-msgid "Permalink"
-msgstr "Permalink"
-
-#: geonode/templates/lang.js:50 geonode/templates/lang.js:124
-msgid "Mini"
-msgstr "Малък"
-
-#: geonode/templates/lang.js:51
-msgid "Pan Map"
-msgstr "Навигиране по карта"
-
-#: geonode/templates/lang.js:52
-msgid "Zoom to Next Extent"
-msgstr "Отиди на следващо приближение"
-
-#: geonode/templates/lang.js:53
-msgid "Zoom to Previous Extent"
-msgstr "Върни на предишно приближение"
-
-#: geonode/templates/lang.js:54
-msgid "This map has not yet been saved."
-msgstr "Картата не е запеметена"
-
-#: geonode/templates/lang.js:56 geonode/templates/lang.js:125
-msgid "Premium"
-msgstr "Премиум"
-
-#: geonode/templates/lang.js:57
-msgid "Print Map"
-msgstr "Отпечатване на картата"
-
-#: geonode/templates/lang.js:58
-msgid "Print Preview"
-msgstr "Изглед за печат"
-
-#: geonode/templates/lang.js:59
-msgid "Properties"
-msgstr "Характеристики"
-
-#: geonode/templates/lang.js:60 geonode/templates/lang.js:126
-msgid "Publish Map"
-msgstr "Публикуване на карта"
-
-#: geonode/templates/lang.js:61 geonode/templates/lang.js:62
-msgid "Remove Layer"
-msgstr "Премахване на слой"
-
-#: geonode/templates/lang.js:63
-msgid "Sorry, your map could not be saved."
-msgstr "Съжаляваме, но картата не може да бъде запаметена."
-
-#: geonode/templates/lang.js:64
-msgid "Error While Saving"
-msgstr "Грешка при запаметяване"
-
-#: geonode/templates/lang.js:65
-msgid "Save Map"
-msgstr "Запази картата"
-
-#: geonode/templates/lang.js:66
-msgid "You must be logged in to save this map."
-msgstr "Трябва да сте регистриран потребител, за да запазите картата."
-
-#: geonode/templates/lang.js:67 geonode/templates/lang.js:128
-msgid "Small"
-msgstr "Малък"
-
-#: geonode/templates/lang.js:68
+#, javascript-format
 msgid ""
-"Error contacting server.\n"
-" Please check the url and try again."
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
 msgstr ""
-"Грешка при свързване със сървъра.\n"
-"Моля проверете адреса и опитайте отново. "
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
 
-#: geonode/templates/lang.js:69
-msgid "Layer Properties"
-msgstr "Свойства на слоя"
+#, javascript-format
+msgid "Type into this box to filter down the list of available %s."
+msgstr "Type into this box to filter down the list of available %s."
 
-#: geonode/templates/lang.js:70
-msgid "Change layer format and style"
-msgstr "Промяна на формат и стил на слой"
+msgid "Filter"
+msgstr "Filter"
 
-#: geonode/templates/lang.js:71
-msgid "Edit Styles"
-msgstr "Редактиране на стилове"
+msgid "Choose all"
+msgstr "Choose all"
 
-#: geonode/templates/lang.js:72
-msgid "Edit layer styles"
-msgstr "Редактиране на стилове на слой"
+#, javascript-format
+msgid "Click to choose all %s at once."
+msgstr "Click to choose all %s at once."
 
-#: geonode/templates/lang.js:73
-msgid "Switch to Google Earth 3D Viewer"
-msgstr "Превключване към Google Earth 3D Viewer"
+msgid "Choose"
+msgstr "Choose"
 
-#: geonode/templates/lang.js:74
+#, javascript-format
+msgid "Chosen %s"
+msgstr "Chosen %s"
+
+#, javascript-format
 msgid ""
-"The map that you are trying to load does not exist.  Creating a new map "
-"instead."
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
 msgstr ""
-"Картата, която се опитвате да заредите не съществува. Създаване на нова "
-"карта."
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
 
-#: geonode/templates/lang.js:75
-msgid "Unknown Map"
-msgstr "Неизвестна карта"
+msgid "Remove all"
+msgstr "Remove all"
 
-#: geonode/templates/lang.js:76 geonode/templates/lang.js:129
-msgid "Width"
-msgstr "Широчина"
+#, javascript-format
+msgid "Click to remove all chosen %s at once."
+msgstr "Click to remove all chosen %s at once."
 
-#: geonode/templates/lang.js:77
-msgid "Zoom In"
-msgstr "Приближаване"
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
+msgstr[1] "94d7ef36d54e81afde607d8fd121772b_pl_1"
 
-#: geonode/templates/lang.js:78
-msgid "Zoom Out"
-msgstr "Отдалечаване"
-
-#: geonode/templates/lang.js:79
-msgid "Zoom level"
-msgstr "Ниво на приближение"
-
-#: geonode/templates/lang.js:80
-msgid "Zoom Level"
-msgstr "Ниво на приближение"
-
-#: geonode/templates/lang.js:81
-msgid "Zoom to Layer Extent"
-msgstr "Приближение до нивото на слоя"
-
-#: geonode/templates/lang.js:82
-msgid "Zoom to Visible Extent"
-msgstr "Изглед до налични данни"
-
-#: geonode/templates/lang.js:88
-msgid "Zoom Level {zoom}"
-msgstr "Ниво на приближение"
-
-#: geonode/templates/lang.js:94
-msgid "Create Map"
-msgstr "Създаване на карта"
-
-#: geonode/templates/lang.js:95
-msgid "Export Map"
-msgstr "Експортиране на карта"
-
-#: geonode/templates/lang.js:98
-msgid "Map"
-msgstr "Карта"
-
-#: geonode/templates/lang.js:99 geonode/templates/lang.js:166
-msgid "View this Map"
-msgstr "Прегледай картата"
-
-#: geonode/templates/lang.js:101
-msgid "Open Map"
-msgstr "Отвори карта"
-
-#: geonode/templates/lang.js:107 geonode/templates/lang.js:183
-msgid "Name"
-msgstr "Име"
-
-#: geonode/templates/lang.js:108
-msgid "Queryable"
-msgstr "С възможност за запитване"
-
-#: geonode/templates/lang.js:115
-msgid "No background"
-msgstr "Без фон"
-
-#: geonode/templates/lang.js:127
 msgid ""
-"Your map is ready to be published to the web!  Simply copy the following "
-"HTML to embed the map in your website:"
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
 msgstr ""
-"Картата ви  е готова за публикуване! Копирайте следния HTML, за да вградите "
-"картата във вашата интернет страница."
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
 
-#: geonode/templates/lang.js:136 geonode/templates/lang.js:202
-msgid "Abstract:"
-msgstr "Описание:"
+msgid ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
+msgstr ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
 
-#: geonode/templates/lang.js:137 geonode/templates/lang.js:204
-msgid "No attribution information is provided for this layer."
-msgstr "За слоя няма въведена атрибутивна информация."
+msgid ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
 
-#: geonode/templates/lang.js:138 geonode/templates/lang.js:205
-msgid "Provided by:"
-msgstr "Осигурено от:"
+msgid "'"
+msgstr ""
 
-#: geonode/templates/lang.js:139 geonode/templates/lang.js:206
-msgid "Download:"
-msgstr "Изтегляне:"
+msgid "-1"
+msgstr ""
 
-#: geonode/templates/lang.js:140 geonode/templates/lang.js:208
-msgid "No keywords are listed for this layer."
-msgstr "Няма въведени ключови думи за този слой."
+msgid "trailingComments"
+msgstr ""
 
-#: geonode/templates/lang.js:141 geonode/templates/lang.js:209
-msgid "Keywords:"
-msgstr "Ключови думи:"
+msgid "leadingComments"
+msgstr ""
 
-#: geonode/templates/lang.js:142 geonode/templates/lang.js:210
-msgid "No metadata URLs are defined for this layer."
-msgstr "За слоя не са зададени метаданни URLs. "
-
-#: geonode/templates/lang.js:143 geonode/templates/lang.js:211
-msgid "Metadata Links:"
-msgstr "Линкове към метаданни:"
-
-#: geonode/templates/lang.js:149
-msgid "Paper size:"
-msgstr "Размер на страницата:"
-
-#: geonode/templates/lang.js:150
-msgid "Resolution:"
-msgstr "Резолюция:"
-
-#: geonode/templates/lang.js:151
-msgid "Print"
-msgstr "Отпечатване"
-
-#: geonode/templates/lang.js:152
-msgid "Enter map title here."
-msgstr "Въведете тук заглавие на картата."
-
-#: geonode/templates/lang.js:153
-msgid "Include legend?"
-msgstr "Включване на легенда?"
-
-#: geonode/templates/lang.js:154
-msgid "Enter comments here."
+#, fuzzy
+#| msgid "Enter comments here."
+msgid "innerComments"
 msgstr "Въведете коментари тук."
 
-#: geonode/templates/lang.js:155
-msgid "Creating PDF..."
-msgstr "Създаване на PDF..."
+msgid "Multiselect"
+msgstr ""
 
-#: geonode/templates/lang.js:164
-msgid "Last Modified"
-msgstr "Последно редактиран"
-
-#: geonode/templates/lang.js:167 geonode/templates/lang.js:188
-msgid "Prev"
-msgstr "Предишен"
-
-#: geonode/templates/lang.js:168 geonode/templates/lang.js:189
-msgid "Next"
-msgstr "Следващ"
-
-#: geonode/templates/lang.js:169 geonode/templates/lang.js:190
-msgid "of"
-msgstr "на"
-
-#: geonode/templates/lang.js:170 geonode/templates/lang.js:191
-msgid "Your search did not match any items."
-msgstr "Търсенето ви не съвпада с наличните данни."
-
-#: geonode/templates/lang.js:171
-msgid "Search Maps"
-msgstr "Търсене на карти"
-
-#: geonode/templates/lang.js:172 geonode/templates/lang.js:192
-msgid "Search"
-msgstr "Търсене"
-
-#: geonode/templates/lang.js:173 geonode/templates/lang.js:193
-msgid "Showing"
-msgstr "Показване"
-
-#: geonode/templates/lang.js:174
-msgid "Loading"
-msgstr "Зареждане"
-
-#: geonode/templates/lang.js:175 geonode/templates/lang.js:195
-msgid "permalink"
-msgstr "permalink"
-
-#: geonode/templates/lang.js:182
-msgid "Select"
+#, fuzzy
+#| msgid "Select"
+msgid "SelectList"
 msgstr "Избери"
 
-#: geonode/templates/lang.js:185
-msgid "Select:"
-msgstr "Избери"
+msgid "show:"
+msgstr ""
 
-#: geonode/templates/lang.js:186
-msgid "All"
-msgstr "Всички"
+msgid "DraftEditor/root"
+msgstr ""
 
-#: geonode/templates/lang.js:187
-msgid "None"
-msgstr "Няма"
+msgid "DraftEditor/editorContainer"
+msgstr ""
 
-#: geonode/templates/lang.js:194
-msgid "Loading..."
-msgstr "Зареждане"
+msgid "-"
+msgstr ""
 
-#: geonode/templates/lang.js:196
-msgid "You do not have permission to view this data"
-msgstr "Нямате достъп за разглеждане на тези данни"
+msgid "uirevision"
+msgstr ""
 
-#: geonode/templates/lang.js:197
-msgid "This data is stored on a remote server"
-msgstr "Данните се съхраняват на отделен сървър"
+msgid "bgcolor"
+msgstr ""
 
-#: geonode/templates/lang.js:203
-msgid "No abstract is provided for this layer."
-msgstr "Не е предоставено описание за слоя"
+msgid "bordercolor"
+msgstr ""
 
-#: geonode/templates/lang.js:207
-msgid "No download URLs are definied for this layer."
-msgstr "За слоя не са дефинирани URLs за сваляне"
+msgid "borderwidth"
+msgstr ""
 
-#: geonode/templates/lang.js:217
-msgid "Selected Layers"
-msgstr "Избрани слоеве"
+msgid "orientation"
+msgstr ""
 
-#: geonode/templates/lang.js:218
-msgid "No Layers Selected"
-msgstr "Няма избрани слоеве"
+msgid "traceorder"
+msgstr ""
 
-#: geonode/templates/lang.js:220
-msgid "Clear Selected"
-msgstr "Премахни маркирането"
+msgid "tracegroupgap"
+msgstr ""
 
-#: geonode/templates/lang.js:221
-msgid "Clear All"
-msgstr "Изчисти всички"
+msgid "itemsizing"
+msgstr ""
 
-#: geonode/templates/lang.js:227
-msgid "Operation Failed"
-msgstr "Операцията е неуспешна"
+msgid "itemclick"
+msgstr ""
 
-#: geonode/templates/lang.js:228
-msgid "No layers are currently selected."
-msgstr "Няма текущо избрани слоеве"
+msgid "itemdoubleclick"
+msgstr ""
 
-#: geonode/templates/lang.js:235
-msgid "Downloading..."
-msgstr "Изтегляне"
+msgid "x"
+msgstr ""
 
-#: geonode/templates/lang.js:237
-msgid "Please wait"
-msgstr "Моля изчакайте"
+msgid "xanchor"
+msgstr ""
 
-#~ msgid "Available %s"
-#~ msgstr "Available %s"
+msgid "y"
+msgstr ""
 
-#~ msgid ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
-#~ msgstr ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
+msgid "yanchor"
+msgstr ""
 
-#~ msgid "Type into this box to filter down the list of available %s."
-#~ msgstr "Type into this box to filter down the list of available %s."
+msgid "valign"
+msgstr ""
 
-#~ msgid "Filter"
-#~ msgstr "Filter"
+msgid "title.text"
+msgstr ""
 
-#~ msgid "Choose all"
-#~ msgstr "Choose all"
+msgid "title.side"
+msgstr ""
 
-#~ msgid "Click to choose all %s at once."
-#~ msgstr "Click to choose all %s at once."
+msgid "visible"
+msgstr ""
 
-#~ msgid "Choose"
-#~ msgstr "Choose"
+msgid "thickness"
+msgstr ""
 
-#~ msgid "Chosen %s"
-#~ msgstr "Chosen %s"
+msgid "autorange"
+msgstr ""
 
-#~ msgid ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
-#~ msgstr ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
+msgid "range"
+msgstr ""
 
-#~ msgid "Remove all"
-#~ msgstr "Remove all"
+msgid "bingroup"
+msgstr ""
 
-#~ msgid "Click to remove all chosen %s at once."
-#~ msgstr "Click to remove all chosen %s at once."
+msgid "Print configuration broken ("
+msgstr ""
 
-#~ msgid "%(sel)s of %(cnt)s selected"
-#~ msgid_plural "%(sel)s of %(cnt)s selected"
-#~ msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
-#~ msgstr[1] "94d7ef36d54e81afde607d8fd121772b_pl_1"
+msgid "Print configuration not available ("
+msgstr ""
 
-#~ msgid ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
-#~ msgstr ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
+msgid "go"
+msgstr ""
+
+msgid "goBack"
+msgstr ""
+
+msgid "goForward"
+msgstr ""
+
+msgid "Abort"
+msgstr ""
+
+msgid "As Sibling"
+msgstr ""
+
+msgid "As child"
+msgstr ""
+
+#, fuzzy
+#~| msgid "Now"
+#~ msgid "No"
+#~ msgstr "Now"
+
+#~ msgid "Enter your text here ..."
+#~ msgstr "Въведете вашия текст тук ..."
+
+#~ msgid "Enter your region here ..."
+#~ msgstr "Въведете вашият регион тук ..."
+
+#~ msgid "Your layer was successfully uploaded"
+#~ msgstr "Вашият слой бе успешно качен"
 
 #~ msgid ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "You need to specify more information in order to complete your upload."
 #~ msgstr ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "Трябва да посочите допълнително информация, за да завършите качването"
+
+#~ msgid "You can continue configuring your layer."
+#~ msgstr "Можете да продължите с настройките по вашия слой"
+
+#~ msgid "Cancel"
+#~ msgstr "Отмени"
+
+#~ msgid "Save as Copy"
+#~ msgstr "Запази копие"
+
+#~ msgid "About this Map"
+#~ msgstr "За картата"
+
+#~ msgid "Abstract"
+#~ msgstr "Резюме"
+
+#~ msgid "Save"
+#~ msgstr "Запеметяване"
+
+#~ msgid "Title"
+#~ msgstr "Заглавие"
+
+#~ msgid "Connection Error"
+#~ msgstr "Грешка при свързване"
+
+#~ msgid "The server returned an error"
+#~ msgstr "Сървърът връща грешка"
+
+#~ msgid "Details..."
+#~ msgstr "Информация..."
+
+#~ msgid "Add Layers"
+#~ msgstr "Добавете слоеве"
+
+#~ msgid "Area"
+#~ msgstr "Площ"
+
+#~ msgid "Background"
+#~ msgstr "Фон"
+
+#~ msgid "Done"
+#~ msgstr "Изпълнено"
+
+#~ msgid "Available Layers"
+#~ msgstr "Налични слоеве"
+
+#~ msgid "Height"
+#~ msgstr "Височина"
+
+#~ msgid "Get Feature Info"
+#~ msgstr "Получаване на информация за обекта"
+
+#~ msgid "Large"
+#~ msgstr "Голям"
+
+#~ msgid "or add a new server."
+#~ msgstr "или добави нов сървър"
+
+#~ msgid "Map Layers"
+#~ msgstr "Картни слоеве"
+
+#~ msgid "View available data from:"
+#~ msgstr "Преглед на налични данни от:"
+
+#~ msgid "Data"
+#~ msgstr "Данни"
+
+#~ msgid "Layers"
+#~ msgstr "Слоеве"
+
+#~ msgid "Legend"
+#~ msgstr "Легенда"
+
+#~ msgid "Length"
+#~ msgstr "Дължина"
+
+#~ msgid "Loading Map..."
+#~ msgstr "Зареждане на картата..."
+
+#~ msgid "Map Size"
+#~ msgstr "Големина на картата"
+
+#~ msgid "Measure"
+#~ msgstr "Измерване"
+
+#~ msgid "Contact"
+#~ msgstr "Контакт"
+
+#~ msgid "Permalink"
+#~ msgstr "Permalink"
+
+#~ msgid "Mini"
+#~ msgstr "Малък"
+
+#~ msgid "Pan Map"
+#~ msgstr "Навигиране по карта"
+
+#~ msgid "Zoom to Next Extent"
+#~ msgstr "Отиди на следващо приближение"
+
+#~ msgid "Zoom to Previous Extent"
+#~ msgstr "Върни на предишно приближение"
+
+#~ msgid "This map has not yet been saved."
+#~ msgstr "Картата не е запеметена"
+
+#~ msgid "Premium"
+#~ msgstr "Премиум"
+
+#~ msgid "Print Map"
+#~ msgstr "Отпечатване на картата"
+
+#~ msgid "Print Preview"
+#~ msgstr "Изглед за печат"
+
+#~ msgid "Properties"
+#~ msgstr "Характеристики"
+
+#~ msgid "Publish Map"
+#~ msgstr "Публикуване на карта"
+
+#~ msgid "Remove Layer"
+#~ msgstr "Премахване на слой"
+
+#~ msgid "Sorry, your map could not be saved."
+#~ msgstr "Съжаляваме, но картата не може да бъде запаметена."
+
+#~ msgid "Error While Saving"
+#~ msgstr "Грешка при запаметяване"
+
+#~ msgid "Save Map"
+#~ msgstr "Запази картата"
+
+#~ msgid "You must be logged in to save this map."
+#~ msgstr "Трябва да сте регистриран потребител, за да запазите картата."
+
+#~ msgid "Small"
+#~ msgstr "Малък"
 
 #~ msgid ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
+#~ "Error contacting server.\n"
+#~ " Please check the url and try again."
 #~ msgstr ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
+#~ "Грешка при свързване със сървъра.\n"
+#~ "Моля проверете адреса и опитайте отново. "
+
+#~ msgid "Layer Properties"
+#~ msgstr "Свойства на слоя"
+
+#~ msgid "Change layer format and style"
+#~ msgstr "Промяна на формат и стил на слой"
+
+#~ msgid "Edit Styles"
+#~ msgstr "Редактиране на стилове"
+
+#~ msgid "Edit layer styles"
+#~ msgstr "Редактиране на стилове на слой"
+
+#~ msgid "Switch to Google Earth 3D Viewer"
+#~ msgstr "Превключване към Google Earth 3D Viewer"
+
+#~ msgid ""
+#~ "The map that you are trying to load does not exist.  Creating a new map "
+#~ "instead."
+#~ msgstr ""
+#~ "Картата, която се опитвате да заредите не съществува. Създаване на нова "
+#~ "карта."
+
+#~ msgid "Width"
+#~ msgstr "Широчина"
+
+#~ msgid "Zoom In"
+#~ msgstr "Приближаване"
+
+#~ msgid "Zoom Out"
+#~ msgstr "Отдалечаване"
+
+#~ msgid "Zoom level"
+#~ msgstr "Ниво на приближение"
+
+#~ msgid "Zoom Level"
+#~ msgstr "Ниво на приближение"
+
+#~ msgid "Zoom to Layer Extent"
+#~ msgstr "Приближение до нивото на слоя"
+
+#~ msgid "Zoom to Visible Extent"
+#~ msgstr "Изглед до налични данни"
+
+#~ msgid "Zoom Level {zoom}"
+#~ msgstr "Ниво на приближение"
+
+#~ msgid "Create Map"
+#~ msgstr "Създаване на карта"
+
+#~ msgid "Export Map"
+#~ msgstr "Експортиране на карта"
+
+#~ msgid "Map"
+#~ msgstr "Карта"
+
+#~ msgid "View this Map"
+#~ msgstr "Прегледай картата"
+
+#~ msgid "Open Map"
+#~ msgstr "Отвори карта"
+
+#~ msgid "Name"
+#~ msgstr "Име"
+
+#~ msgid "Queryable"
+#~ msgstr "С възможност за запитване"
+
+#~ msgid "No background"
+#~ msgstr "Без фон"
+
+#~ msgid ""
+#~ "Your map is ready to be published to the web!  Simply copy the following "
+#~ "HTML to embed the map in your website:"
+#~ msgstr ""
+#~ "Картата ви  е готова за публикуване! Копирайте следния HTML, за да "
+#~ "вградите картата във вашата интернет страница."
+
+#~ msgid "Abstract:"
+#~ msgstr "Описание:"
+
+#~ msgid "No attribution information is provided for this layer."
+#~ msgstr "За слоя няма въведена атрибутивна информация."
+
+#~ msgid "Provided by:"
+#~ msgstr "Осигурено от:"
+
+#~ msgid "Download:"
+#~ msgstr "Изтегляне:"
+
+#~ msgid "No keywords are listed for this layer."
+#~ msgstr "Няма въведени ключови думи за този слой."
+
+#~ msgid "Keywords:"
+#~ msgstr "Ключови думи:"
+
+#~ msgid "No metadata URLs are defined for this layer."
+#~ msgstr "За слоя не са зададени метаданни URLs. "
+
+#~ msgid "Paper size:"
+#~ msgstr "Размер на страницата:"
+
+#~ msgid "Resolution:"
+#~ msgstr "Резолюция:"
+
+#~ msgid "Print"
+#~ msgstr "Отпечатване"
+
+#~ msgid "Enter map title here."
+#~ msgstr "Въведете тук заглавие на картата."
+
+#~ msgid "Include legend?"
+#~ msgstr "Включване на легенда?"
+
+#~ msgid "Creating PDF..."
+#~ msgstr "Създаване на PDF..."
+
+#~ msgid "Last Modified"
+#~ msgstr "Последно редактиран"
+
+#~ msgid "Prev"
+#~ msgstr "Предишен"
+
+#~ msgid "Next"
+#~ msgstr "Следващ"
+
+#~ msgid "of"
+#~ msgstr "на"
+
+#~ msgid "Your search did not match any items."
+#~ msgstr "Търсенето ви не съвпада с наличните данни."
+
+#~ msgid "Search Maps"
+#~ msgstr "Търсене на карти"
+
+#~ msgid "Search"
+#~ msgstr "Търсене"
+
+#~ msgid "Showing"
+#~ msgstr "Показване"
+
+#~ msgid "Loading"
+#~ msgstr "Зареждане"
+
+#~ msgid "permalink"
+#~ msgstr "permalink"
+
+#~ msgid "Select:"
+#~ msgstr "Избери"
+
+#~ msgid "All"
+#~ msgstr "Всички"
+
+#~ msgid "None"
+#~ msgstr "Няма"
+
+#~ msgid "Loading..."
+#~ msgstr "Зареждане"
+
+#~ msgid "You do not have permission to view this data"
+#~ msgstr "Нямате достъп за разглеждане на тези данни"
+
+#~ msgid "This data is stored on a remote server"
+#~ msgstr "Данните се съхраняват на отделен сървър"
+
+#~ msgid "No abstract is provided for this layer."
+#~ msgstr "Не е предоставено описание за слоя"
+
+#~ msgid "No download URLs are definied for this layer."
+#~ msgstr "За слоя не са дефинирани URLs за сваляне"
+
+#~ msgid "Selected Layers"
+#~ msgstr "Избрани слоеве"
+
+#~ msgid "No Layers Selected"
+#~ msgstr "Няма избрани слоеве"
+
+#~ msgid "Clear Selected"
+#~ msgstr "Премахни маркирането"
+
+#~ msgid "Clear All"
+#~ msgstr "Изчисти всички"
+
+#~ msgid "Operation Failed"
+#~ msgstr "Операцията е неуспешна"
+
+#~ msgid "No layers are currently selected."
+#~ msgstr "Няма текущо избрани слоеве"
+
+#~ msgid "Downloading..."
+#~ msgstr "Изтегляне"
+
+#~ msgid "Please wait"
+#~ msgstr "Моля изчакайте"
 
 #~ msgid ""
 #~ "January February March April May June July August September October "
@@ -772,9 +983,6 @@ msgstr "Моля изчакайте"
 
 #~ msgid "Hide"
 #~ msgstr "Hide"
-
-#~ msgid "Now"
-#~ msgstr "Now"
 
 #~ msgid "Clock"
 #~ msgstr "Clock"

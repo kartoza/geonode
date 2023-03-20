@@ -1,0 +1,19 @@
+[tool.black]
+line-length = 120
+target-version = ['py37']
+exclude = '''
+/(
+    geonode/.*/migrations/.*
+  | geonode/.*/settings.py
+  | management
+  | scripts
+  | docs
+  | static
+  | migrations
+  | node_modules
+)/
+'''
+
+[build-system]
+requires = ["setuptools >= 40.8", "pip >= 19.1", "wheel"]
+build-backend = "setuptools.build_meta"

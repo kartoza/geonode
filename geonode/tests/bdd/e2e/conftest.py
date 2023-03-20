@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -20,10 +19,10 @@
 
 import os
 import signal
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 import pytest
-from geonode import settings as gn_settings
+# from geonode import settings as gn_settings
 from geonode.tests.bdd import __file__ as bdd_path
 from splinter import Browser
 
@@ -39,19 +38,18 @@ from splinter import Browser
 @pytest.yield_fixture(scope='function', autouse=True)
 def en_browser(browser, bdd_server):
     """Browser login page from live server."""
-    browser = Browser('phantomjs')
+    browser = Browser('firefox', headless=True)
     en_browser = browser
-    en_browser.visit(urljoin(bdd_server.url, gn_settings.LOGIN_URL))
+    en_browser.visit(urljoin(bdd_server.url, '/account/login/'))
     yield en_browser
     try:
-        # kill the specific phantomjs child proc
         en_browser.service.process.send_signal(signal.SIGTERM)
-    except:
+    except Exception:
         pass
     try:
         # quit the node proc
         en_browser.quit()
-    except:
+    except Exception:
         pass
 
 

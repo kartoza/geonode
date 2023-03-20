@@ -1,8 +1,10 @@
 {% extends "metadata_base.html" %}
 {% load i18n %}
-{% load bootstrap_tags %}
+{% load static %}
 {% load base_tags %}
+{% load bootstrap_tags %}
 {% load guardian_tags %}
+{% load client_lib_tags %}
 
 {% block title %}{{ map.title }} — {{ block.super }}{% endblock %}
 
@@ -12,8 +14,20 @@
 
 {{ block.super }}
 
+<!-- Required to make select2 fields work for autocomplete -->
+<link href="{% static "vendor/select2/dist/css/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<link href="{% static "autocomplete_light/select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<script type="text/javascript" src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.init.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/select2.full.js" %}"></script>
+<script type="text/javascript" src="{% static "vendor/select2/dist/js/i18n/en.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/autocomplete.init.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/forward.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/select2.js" %}"></script>
+<script type="text/javascript" src="{% static "autocomplete_light/jquery.post-setup.js" %}"></script>
+
 <div class="page-header">
-  <a href="{% url "maps_browse" %}?limit={{ CLIENT_RESULTS_LIMIT }}" class="btn btn-primary pull-right">{% trans "Explore Maps" %}</a>
+  <a href="{% map_list_url %}" class="btn btn-primary pull-right">{% trans "Explore Maps" %}</a>
   <h2 class="page-title">{% trans "Edit Metadata" %}</h2>
 </div>
 <div class="row">
@@ -23,6 +37,7 @@
         Editing details for {{ map_title }}
       {% endblocktrans %}
     </p>
+
     <form id="metadata_update" class="form-horizontal" action="{{ map.get_absolute_url }}/metadata" method="POST">
       {% if map.metadata_uploaded %}
       <div style="background-color: orange;">{% blocktrans %}Note: this map's orginal metadata was populated by importing a metadata XML file.
@@ -46,13 +61,45 @@
       </div>
       {% endif %}
       <div class="form-actions">
+        <a href="{% map_detail_url map %}" class="btn btn-primary">{% trans "Return to Map" %}</a>
         <input type="submit" id="btn_upd_md_up" class="btn btn-primary" value="{% trans "Update" %}"/>
       </div>
       {% csrf_token %}
-      <div class="form-controls">
-        {{ map_form|as_bootstrap }}
-      </div>
+      <!-- Added in the thesuarus field here since saving the form without it causes the thesuarus keywords to be removed. 
+           Unfortunately this needs to appear at the top (or the bottom) of the form since tkeywords_form is a complete other django form. 
+           There might be a better way to solve this. -->
+        <div class="col-md-12 form-controls">
+          {% block map_fields %}
+          {% for field in map_form %}
+            {% if field.name != 'use_featureinfo_custom_template' and field.name != 'featureinfo_custom_template' and field.name not in ADVANCED_EDIT_EXCLUDE_FIELD %}
+            {% if field.name == 'featured' and not user.is_superuser %}
+            {% else %}
+            <div class="form_item_spacing">
+              <div {% if field.auto_id in UI_MANDATORY_FIELDS %} id='adv_req' {% else %}{% endif %} >
+              <span><label for="{{ field.auto_id }}">{{ field.label }}</label></span>
+              {{ field }}
+              </div>
+            </div>
+            {% endif %}
+            {% endif %}
+          {% endfor %}
+          {% endblock map_fields %}
 
+          {% block thesauri %}
+          {# dataset_form|as_bootstrap #}
+          {% if THESAURI_FILTERS %}
+            {% for field in tkeywords_form %}
+            <div class="form_item_spacing thesauri_keywords" id="tadv_req">
+              <p>
+              <label for="{{ field.thesaurus_id }}">{{ field.label }}</label>
+              {{ field }}
+              </p>
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          {% endblock thesauri %}
+        </div>
         <div class="row">
           <div class="col-md-12">
             <label class="control-label required-field">{% trans "Category" %}</label>
@@ -60,10 +107,10 @@
               {% autoescape off %}
               {% for choice in category_form.category_choice_field.field.choices %}
               <div class="col-md-6">
-                <label class="fancy-checkbox">
+                <label class="fancy-checkbox form_item_spacing">
                     <input type="radio" name="category_choice_field" value="{{ choice.0 }}"
                       {% ifequal category_form.initial choice.0 %} checked="checked" {% endifequal %} />
-                    {{ choice.1 }}
+                      {{ choice.1 }}
                 </label>
               </div>
               <!-- div class="radio col-md-6">
@@ -81,17 +128,21 @@
               <fieldset class="form-controls modal-forms modal hide fade" id="poc_form" >
                 <h2>{% trans "Point of Contact" %}</h2>
                 {{ poc_form|as_bootstrap }}
-                <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+                <button type='button' class="modal-cloose-btn btn btn-primary">{% trans "Done" %}</button>
               </fieldset>
               <fieldset class="form-controls modal-forms modal hide fade" id="metadata_form">
                 <h2>{% trans "Metadata Provider" %}</h2>
                 {{ author_form|as_bootstrap }}
-                <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+                <button type='button' class="modal-cloose-btn btn btn-primary">{% trans "Done" %}</button>
               </fieldset>
 
+              {% block form_actions %}
               <div class="form-actions">
+                <a href="{% map_detail_url map %}" class="btn btn-primary">{% trans "Return to Map" %}</a>
                 <input type="submit" id="btn_upd_md_dwn" class="btn btn-primary" value="{% trans "Update" %}"/>
               </div>
+              {% endblock form_actions %}
+
           </div>
         </div>
       </form>

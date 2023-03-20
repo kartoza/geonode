@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -22,36 +21,26 @@
 
 import logging
 
+
+from django.dispatch import receiver
 from django.db.models import signals
-
-from ..layers.models import Layer
-
+from geonode.harvesting.models import Harvester
 from .models import Service
-from .models import HarvestJob
 
 logger = logging.getLogger(__name__)
 
 
-def remove_harvest_job(sender, **kwargs):
-    """Remove a Layer's harvest job so that it may be re-imported later."""
-    layer = kwargs["instance"]
-    if layer.remote_service is not None:
-        if HarvestJob.objects.filter(resource_id=layer.alternate):
-            job = HarvestJob.objects.filter(resource_id=layer.name).get(
-                service=layer.remote_service)
-            logger.debug("job: {}".format(job.id))
-            job.delete()
-    else:
-        pass  # layer was not harvested from a service, we've nothing to do
+@receiver(signals.post_delete, sender=Service)
+def remove_harvesters(instance, **kwargs):
+    """Remove a Service's harvesters and related resources."""
+    try:
+        if instance.harvester:
+            instance.harvester.delete()
+    except Harvester.DoesNotExist as e:
+        logger.warn(e)
 
 
+@receiver(signals.post_save, sender=Service)
 def post_save_service(instance, sender, created, **kwargs):
     if created:
         instance.set_default_permissions()
-
-
-"""Connect relevant signals to their corresponding handlers"""
-signals.post_delete.connect(
-    remove_harvest_job, sender=Layer)
-signals.post_save.connect(
-    post_save_service, sender=Service)

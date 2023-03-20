@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -25,26 +24,18 @@ from geonode.base.admin import ResourceBaseAdminForm
 from . import models
 
 
-class HarvestJobAdminInline(admin.StackedInline):
-    model = models.HarvestJob
-    extra = 0
-
-
 class ServiceAdminForm(ResourceBaseAdminForm):
 
-    class Meta:
+    class Meta(ResourceBaseAdminForm.Meta):
         model = models.Service
         fields = '__all__'
 
 
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'type', 'method')
-    list_display_links = ('id', 'name', )
-    list_filter = ('type', 'method')
+    list_display = ('id', 'name', 'base_url', 'type', 'method')
+    list_display_links = ('id', 'name')
+    list_filter = ('id', 'name', 'type', 'method')
     form = ServiceAdminForm
-    inlines = (
-        HarvestJobAdminInline,
-    )
 
 
 admin.site.register(models.Service, ServiceAdmin)

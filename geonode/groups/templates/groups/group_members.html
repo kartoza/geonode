@@ -2,6 +2,15 @@
 {% load i18n %}
 {% load bootstrap_tags %}
 
+{% block head %}
+{{ block.super }}
+<style>
+.select2-container--default .select2-search--inline .select2-search__field {
+  width: 300px !important;
+}
+</style>
+{% endblock head %}
+
 {% block sidebar %}
 <div class="row">
   <div class="col-md-12">
@@ -32,6 +41,20 @@
                   {% csrf_token %}
                   <button type="submit" class="btn btn-danger btn-xs">{% trans 'Remove' %}</button>
                 </form>
+                {% if member.role == 'member' %}
+                  |
+                  <form style="display: inline;" method="POST" action="{% url "group_member_promote" group.slug member.user.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-xs">{% trans 'Promote' %}</button>
+                  </form>
+                {% endif %}
+                {% if member.role == 'manager' %}
+                  |
+                  <form style="display: inline;" method="POST" action="{% url "group_member_demote" group.slug member.user.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-xs">{% trans 'Demote' %}</button>
+                  </form>
+                {% endif %}
               <h4>
               <h5>
                   {% trans 'Role' %}: {{ member.role }}
@@ -57,6 +80,11 @@
                 <form style="display: inline;" method="POST" action="{% url "group_member_remove" group.slug member.user.username %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-danger btn-xs">{% trans 'Remove' %}</button>
+                </form>
+                |
+                <form style="display: inline;" method="POST" action="{% url "group_member_demote" group.slug member.user.username %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-warning btn-xs">{% trans 'Demote' %}</button>
                 </form>
               <h4>
               <h5>
@@ -85,6 +113,11 @@
                   {% csrf_token %}
                   <button type="submit" class="btn btn-danger btn-xs">{% trans 'Remove' %}</button>
                 </form>
+                |
+                <form style="display: inline;" method="POST" action="{% url "group_member_promote" group.slug member.user.username %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-xs">{% trans 'Promote' %}</button>
+                </form>
               <h4>
               <h5>
                   {% trans 'Role' %}: {{ member.role }}
@@ -105,7 +138,7 @@
             <div id="member_form_container">
                 {{ member_form|as_bootstrap }}<br/><br/>
             </div>
-            <input type="submit" value="Add Group Members" class="btn btn-primary"/>
+            <input type="submit" value="{% trans "Add Group Members" %}" class="btn btn-primary"/>
         </form>
     </div>
     {% endif %}
@@ -115,7 +148,4 @@
 
 {% block extra_script %}
 {{ block.super }}
-{% with "none" as layer %}
-{% include "_permissions_form_js.html" %}
-{% endwith %}
 {% endblock extra_script %}

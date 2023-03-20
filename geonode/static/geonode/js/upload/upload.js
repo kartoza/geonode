@@ -5,13 +5,11 @@
 
 var layers = {};
 
-var geogig_stores = {};
-
 define(['underscore',
-        'upload/LayerInfo',
-        'upload/FileTypes',
-        'upload/path',
-        'upload/common',
+        './LayerInfo',
+        './FileTypes',
+        './path',
+        './common',
         'text!templates/upload.html'], function (_, LayerInfo, fileTypes, path, common, uploadTemplate) {
 
     var templates = {},
@@ -22,15 +20,10 @@ define(['underscore',
         types,
         buildFileInfo,
         displayFiles,
-        init_geogig_stores,
+        doUpload,
         doUploads,
         doSrs,
-        doDelete,
-        doResume,
-        doSuccessfulUpload,
-        attach_events,
         checkFiles,
-        checkGeogig
         fileTypes = fileTypes;
 
     $('body').append(uploadTemplate);
@@ -91,24 +84,23 @@ define(['underscore',
                     $.merge(info.files, files[name]);
                     info.displayFiles();
                 } else {
-                    if (Object.keys(layers).length == 0) {
+                    // if (Object.keys(layers).length == 0) {
                         info = new LayerInfo({
                             name: name,
                             files: files[name]
                         });
                         info.collectErrors();
                         layers[name] = info;
-                    } else {
+                    /* } else {
                         log_error({
                             title: 'Wrong selection',
                             message: gettext('Only one File at a time can be uploaded!')
                         });
-                    }
+                    } */
                 }
             }
         }
     };
-
 
     /** Function to ...
      *
@@ -193,85 +185,12 @@ define(['underscore',
         return matched;
     }
 
-    /** Function to check that a geogig repo has been named, or that
-     *  "Import to Geogig" is not checked.
-     *
-     *  @params
-     *  @returns {boolean}
-     */
-    checkGeogig = function() {
-        if(geogig_enabled) {
-            var files = layers[Object.keys(layers)[0]]['files'];
-            for (var i = 0; i<files.length; i++){
-                var base_name = files[i].name.split('.')[0].replace(/\[|\]|\(|\)| /g, '_');
-                var geogig_store = $('#' + base_name + '\\:geogig_store').val();
-                var geogig = $('#' + base_name + '\\:geogig_toggle').is(':checked');
-                if (geogig) {
-                    if (geogig_store.length == 0) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    doDelete = function(event) {
-        var target = event.target || event.srcElement;
-        var id = target.id.split("-")[1];
-        var target = "/upload/delete/" + id;
-        $.ajaxQueue({
-            url: target,
-            async: false,
-            contentType: false,
-        }).done(function (resp) {
-            var div = "#incomplete-" + id;
-            $(div).remove();
-
-            if ($('#incomplete-download-list > div[id^=incomplete]').length == 0){
-                $('#incomplete-download-list').hide();
-            }
-
-        }).fail(function (resp) {
-            //
-        });
-    };
-
-    doResume = function(event) {
-        var target = event.target || event.srcElement;
-        var id = target.id.split("-")[1];
-        var target = "/upload/?id=" + id;
-        $.ajaxQueue({
-            url: target,
-            async: false,
-            contentType: false,
-        }).done(function (data) {
-          if('redirect_to' in data) {
-                common.make_request({
-                    url: data.redirect_to,
-                    async: false,
-                    failure: function (resp, status) {
-                        common.logError(resp, status);
-                    },
-                    success: function (resp, status) {
-                        window.location = resp.url;
-                    }
-                });
-            } else if ('url' in data) {
-                window.location = data.url;
-            } else {
-                common.logError("unexpected response");
-            }
-        }).fail(function (resp) {
-            common.logError(resp);
-        });
-    };
-
     doSrs = function (event) {
         var form = $("#srsForm")
-        $.ajaxQueue({
+        $.ajax({
            type: "POST",
-           url: '/upload/srs',
+           mode: "queue",
+           url: siteUrl + 'upload/srs',
            data: form.serialize(), // serializes the form's elements.
            success: function(data)
            {
@@ -297,6 +216,13 @@ define(['underscore',
         return false;
     };
 
+    /** Function to Upload the selected files to the server
+     */
+    doUpload = function (layers) {
+        if (layers.length > 0) {
+            layers[0].uploadFiles(doUpload, layers.slice(1, layers.length));
+        }
+    };
 
     /** Function to Upload the selected files to the server
      *
@@ -308,33 +234,22 @@ define(['underscore',
             return false;
         }
 
-        var checked = checkFiles() && checkGeogig();
+        var checked = checkFiles();
         if ($.isEmptyObject(layers) || !checked) {
             alert(gettext('You are trying to upload an incomplete set of files or not all mandatory options have been validated.\n\nPlease check for errors in the form!'));
         } else {
-            $.each(layers, function (name, layerinfo) {
+            /* $.each(layers, function (name, layerinfo) {
                 layerinfo.uploadFiles();
+            }); */
+
+            var layerInfos = [];
+            $.each(layers, function (name, layerinfo) {
+                layerInfos.push(layerinfo);
             });
+            doUpload(layerInfos);
         }
         return false;
     };
-
-    /** Function to ...
-     *
-     *  @returns false
-     */
-    init_geogig_stores = function() {
-        $.ajax({
-            url: '/gs/rest/stores/geogig/',
-            async: true,
-            contentType: false,
-        }).done(function (resp) {
-            geogig_stores = JSON.parse(resp);
-        }).fail(function (resp) {
-            //
-        });
-    };
-
 
     /** Initialization function. Called from main.js
      *
@@ -388,20 +303,12 @@ define(['underscore',
         });
         $(options.clear_button).on('click', doClearState);
         $(options.upload_button).on('click', doUploads);
-        $("[id^=delete]").on('click', doDelete);
-        $("[id^=resume]").on('click', doResume);
-        if (geogig_enabled) {
-            init_geogig_stores();
-        }
     };
 
     // public api
-
     return {
         initialize: initialize,
-        doSrs: doSrs,
-        doDelete: doDelete,
-        doResume: doResume
+        doSrs: doSrs
     };
 
 });

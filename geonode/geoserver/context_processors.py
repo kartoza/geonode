@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -19,7 +18,7 @@
 #########################################################################
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from geonode.geoserver.helpers import ogc_server_settings
 
 
@@ -27,33 +26,28 @@ def geoserver_urls(request):
     """Global values to pass to templates"""
     defaults = dict(
         GEOSERVER_LOCAL_URL=ogc_server_settings.LOCATION,
+        GEOSERVER_PUBLIC_LOCATION=ogc_server_settings.public_url,
         GEOSERVER_BASE_URL=ogc_server_settings.public_url,
-        UPLOADER_URL=reverse('data_upload') if getattr(
-            settings,
-            'UPLOADER',
-            dict()).get(
-            'BACKEND',
-            'geonode.rest') == 'geonode.importer' else reverse('layer_upload'),
-        LAYER_ANCILLARY_FILES_UPLOAD_URL=reverse('layer_upload'),
+        UPLOADER_URL=reverse('data_upload'),
+        LAYER_ANCILLARY_FILES_UPLOAD_URL=reverse('dataset_upload'),
         MAPFISH_PRINT_ENABLED=getattr(ogc_server_settings, 'MAPFISH_PRINT_ENABLED', False),
         PRINT_NG_ENABLED=getattr(ogc_server_settings, 'PRINT_NG_ENABLED', False),
         GEONODE_SECURITY_ENABLED=getattr(ogc_server_settings, 'GEONODE_SECURITY_ENABLED', False),
-        GEOGIG_ENABLED=getattr(ogc_server_settings, 'GEOGIG_ENABLED', False),
         TIME_ENABLED=getattr(
-                settings,
-                'UPLOADER',
-                dict()).get(
-                    'OPTIONS',
-                    dict()).get(
-                        'TIME_ENABLED',
-                        False),
+            settings,
+            'UPLOADER',
+            dict()).get(
+            'OPTIONS',
+            dict()).get(
+            'TIME_ENABLED',
+            False),
         MOSAIC_ENABLED=getattr(
-                settings,
-                'UPLOADER',
-                dict()).get(
-                    'OPTIONS',
-                    dict()).get(
-                        'MOSAIC_ENABLED',
-                        False),
+            settings,
+            'UPLOADER',
+            dict()).get(
+            'OPTIONS',
+            dict()).get(
+            'MOSAIC_ENABLED',
+            False),
     )
     return defaults

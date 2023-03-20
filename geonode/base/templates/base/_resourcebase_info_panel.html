@@ -1,5 +1,6 @@
 {% load i18n %}
 {% block content %}
+{% load thesaurus %}
 
 <dl class="dl-horizontal">
     {% if resource.title %}
@@ -21,17 +22,25 @@
         {{ bullet }}<br/><br/>
       {% endfor %}
       {% if resource.license.url %}
-        + For more info see <a href="{{ resource.license.url }}">{{ resource.license.url }}</a>.
+        + {% trans "For more info see" %} <a href="{{ resource.license.url }}">{{ resource.license.url }}</a>.
       {% endif %}
     </dd>
 
     {% if resource.abstract %}
     <dt>{% trans "Abstract" %}</dt>
-    <dd itemprop="description">{{ resource.abstract|escape|urlize|linebreaks|safe|truncatechars:500 }}</dd>
+    <dd itemprop="description">{{ resource.abstract|safe }}</dd>
     {% endif %}
 
     {% if resource.date %}
+    {% if resource.date_type == 'creation' %}
+    <dt>{% trans "Creation Date" %}</dt>
+    {% elif resource.date_type == 'publication' %}
+    <dt>{% trans "Publication Date" %}</dt>
+    {% elif resource.date_type == 'revision' %}
+    <dt>{% trans "Revision Date" %}</dt>
+    {% else %}
     <dt>{% trans resource.date_type|title %} {% trans "Date" %}</dt>
+    {% endif %}
       {% if resource.date_type == 'creation' %}
         <dd itemprop="dateCreated" datetime="{{ resource.date|date:"c"}}">{{ resource.date }}</dd>
       {% elif resource.date_type == 'publication' %}
@@ -46,24 +55,38 @@
     <dd>{{ resource.display_type }}</dd>
     {% endif %}
 
-    {% if resource.keywords.count > 0 %}
+  {% if resource.keywords.count > 0 or resource.tkeywords.count > 0 %}
     <dt>{% trans "Keywords" %}</dt>
-    <dd itemprop="keywords">
-      {% for keyword in resource.keywords.all %}
-  <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?keywords__slug__in={{ keyword.slug }}" >
-          {{ keyword.name }}
-        </a>
-        {% if not forloop.last %},{% endif %}
-      {% endfor %}
-    </dd>
+      <dd itemprop="keywords">
+        <ul>
+            {% for keyword in resource.keywords.all %}
+              <li>
+                <span itemscope itemtype="http://schema.org/Text">
+                  {{ keyword.name| safe}}
+                </span>
+              </li>
+            {% endfor %}
+            {% for tid in resource.tkeywords.all|get_unique_thesaurus_set %}
+              <li>{{ tid|get_thesaurus_translation_by_id }}
+                {% for tkeywords in resource.tkeywords.all %}
+                <ul>
+                  {% if tid == tkeywords.thesaurus.id %}
+                      <li><span itemscope itemtype="http://schema.org/Text">{{tkeywords|get_thesaurus_localized_label}}</span></li>
+                  {% endif %}
+                </ul>
+                {% endfor %}
+              </li>
+            {% endfor %}
+        </ul>
+      </dd>
     {% endif %}
 
     {% if resource.category %}
     <dt>{% trans "Category" %}</dt>
-    <dd><a href="{% url "search" %}?category__identifier__in={{ resource.category.identifier }}">{{ resource.category }}</a> {% if resource.category.description %}<a href="#category-more" data-toggle="collapse" data-target=".category-more"><i class="fa fa-info-circle"></i></a>{% endif %}</dd>
+    <dd><span>{% trans resource.category.gn_description %}</span> {% if resource.category.description %}<a href="#category-more" data-toggle="collapse" data-target=".category-more"><i class="fa fa-info-circle"></i></a>{% endif %}</dd>
       {% if resource.category.description %}
       <dd class="category-more collapse">
-        {{ resource.category.description }}
+        {% trans resource.category.description %}
       </dd>
       {% endif %}
     {% endif %}
@@ -72,16 +95,16 @@
     <dt>{% trans "Regions" %}</dt>
     <dd itemprop="keywords">
       {% for region in resource.regions.all %}
-        <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?regions__name__in={{ region.name }}">
+        <span itemscope itemtype="http://schema.org/Text">
           {{ region.name }}
-        </a>
+        </span>
         {% if not forloop.last %},{% endif %}
       {% endfor %}
     </dd>
     {% endif %}
 
     {% if resource.owner %}
-    <dt>{% trans "Owner" %}</dt>
+    <dt>{% trans "Responsible" %}</dt>
     <dd><a itemprop="author" href="{{ resource.owner.get_absolute_url }}">{{ resource.owner.username }}</a></dd>
     {% endif %}
 
@@ -92,7 +115,17 @@
 
     {% if resource.group %}
     <dt>{% trans "Group" %}</dt>
-    <dd><a href="/groups/group/{{ resource.group.name }}/activity/">{{ group }}</a> </dd>
+    <dd><a href="{% url 'group_activity' resource.group.name %}">{{ group }}</a> </dd>
+    {% endif %}
+
+    {% if resource.doi %}
+    <dt>{% trans "DOI" %}</dt>
+    <dd>{{ resource.doi }}</dd>
+    {% endif %}
+
+    {% if resource.attribution %}
+    <dt>{% trans "Attribution" %}</dt>
+    <dd>{{ resource.attribution }}</dd>
     {% endif %}
 
   </dl>
@@ -118,38 +151,38 @@
           {{ bullet }}<br/><br/>
         {% endfor %}
         {% if resource.license.url %}
-          + For more info see <a href="{{ resource.license.url }}">{{ resource.license.url }}</a>.
+          + {% trans "For more info see" %} <a href="{{ resource.license.url }}">{{ resource.license.url }}</a>.
         {% endif %}
       </dd>
     {% endif %}
 
     {% if resource.maintenance_frequency %}
     <dt>{% trans "Maintenance Frequency" %}</dt>
-    <dd>{{ resource.maintenance_frequency_title }}</dd>
+    <dd>{{ resource.maintenance_frequency_title|safe }}</dd>
     {% endif %}
 
     {% if resource.restriction_code_type or resource.constraints_other %}
     <dt>{% trans "Restrictions" %}</dt>
     <dd>{% if resource.constraints_other %}
-            {{ resource.constraints_other }}
+            {{ resource.constraints_other|safe }}
         {% else %}
-            {{ resource.restriction_code_type }}
+            {{ resource.restriction_code_type|safe }}
         {% endif %}</dd>
     {% endif %}
 
     {% if resource.edition %}
     <dt>{% trans "Edition" %}</dt>
-    <dd>{{ resource.edition}}</dd>
+    <dd>{{ resource.edition }}</dd>
     {% endif %}
 
     {% if resource.purpose %}
     <dt>{% trans "Purpose" %}</dt>
-    <dd>{{ resource.purpose|escape|urlize|linebreaks|safe|truncatechars:160 }}</dd>
+    <dd>{{ resource.purpose|safe }}</dd>
     {% endif %}
 
     {% if resource.language %}
     <dt>{% trans "Language" %}</dt>
-    <dd>{{ resource.language_title }}</dd>
+    <dd>{{ resource.language_title|safe }}</dd>
     {% endif %}
 
     {% if resource.temporal_extent_start and resource.temporal_extent_end %}
@@ -159,17 +192,17 @@
 
     {% if resource.data_quality_statement %}
     <dt>{% trans "Data Quality" %}</dt>
-    <dd>{{ resource.data_quality_statement }}</dd>
+    <dd>{{ resource.data_quality_statement|safe }}</dd>
     {% endif %}
 
     {% if resource.supplemental_information %}
     <dt>{% trans "Supplemental Information" %}</dt>
-    <dd>{{ resource.supplemental_information|truncatechars:160|escape|urlize|linebreaks|safe }}</dd>
+    <dd>{{ resource.supplemental_information|safe }}</dd>
     {% endif %}
 
     {% if resource.spatial_representation_type %}
     <dt>{% trans "Spatial Representation Type" %}</dt>
-    <dd>{{ resource.spatial_representation_type }}</dd>
+    <dd>{{ resource.spatial_representation_type|safe }}</dd>
     {% endif %}
 
   </div>

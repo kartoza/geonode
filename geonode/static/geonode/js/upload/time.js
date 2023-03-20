@@ -1,17 +1,31 @@
 /*globals define: true, requirejs: true */
+'use strict';
 
 requirejs.config({
-    baseUrl: '/static/lib/js',
-    shim: {
-        'underscore': { exports: '_'}
-    },
-    paths: {
-        'upload': '../../geonode/js/upload',
-        'templates': '../../geonode/js/templates'
-    }
+  config: {
+     text: {
+       useXhr: function (url, protocol, hostname, port) {
+          // allow cross-domain requests
+          // remote server allows CORS
+          return true;
+       }
+     },
+     waitSeconds: 5
+  },
+  baseUrl: staticUrl + 'lib/js',
+  shim: {
+    'underscore': { exports: '_'}
+  },
+  paths: {
+    'upload': '../../geonode/js/upload',
+    'templates': '../../geonode/js/templates',
+    'progress': 'jquery.ajax-progress'
+  }
 });
 
-define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, common, LayerInfo) {
+define(['upload/upload',
+        'upload/common',
+        'upload/LayerInfo'], function (upload, common, LayerInfo) {
     'use strict';
 
     function isTimeSeries() {
@@ -27,19 +41,19 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
 
     function getSelectedTimeAttribute() {
         var selected_attribute;
-        $('input[id="id_time_attribute"]').each(function(index) {
-            if($('input[id="id_time_attribute"]')[index].checked) {
-                selected_attribute = $('input[id="id_time_attribute"]')[index].value;
+        $('input[id^="id_time_attribute"]').each(function(index) {
+            if($('input[id^="id_time_attribute"]')[index].checked) {
+                selected_attribute = $('input[id^="id_time_attribute"]')[index].value;
             }
         });
-        $('input[id="id_text_attribute"]').each(function(index) {
-            if($('input[id="id_text_attribute"]')[index].checked) {
-                selected_attribute = $('input[id="id_text_attribute"]')[index].value;
+        $('input[id^="id_text_attribute"]').each(function(index) {
+            if($('input[id^="id_text_attribute"]')[index].checked) {
+                selected_attribute = $('input[id^="id_text_attribute"]')[index].value;
             }
         });
-        $('input[id="id_year_attribute"]').each(function(index) {
-            if($('input[id="id_year_attribute"]')[index].checked) {
-                selected_attribute = $('input[id="id_year_attribute"]')[index].value;
+        $('input[id^="id_year_attribute"]').each(function(index) {
+            if($('input[id^="id_year_attribute"]')[index].checked) {
+                selected_attribute = $('input[id^="id_year_attribute"]')[index].value;
             }
         });
         return selected_attribute;
@@ -68,34 +82,34 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
         var data_validation_toggled = data_validation;
         if(toggle) {
             data_validation = true;
-            $('input[id="id_time_attribute"]').each(function(index) {
-                if($($('input[id="id_time_attribute"]')[index]).attr('type') == 'hidden' ||
-                    $($('input[id="id_time_attribute"]')[index]).is(":hidden")) {
-                        $($('input[id="id_time_attribute"]')[index]).show();
+            $('input[id^="id_time_attribute"]').each(function(index) {
+                if($($('input[id^="id_time_attribute"]')[index]).attr('type') == 'hidden' ||
+                    $($('input[id^="id_time_attribute"]')[index]).is(":hidden")) {
+                        $($('input[id^="id_time_attribute"]')[index]).show();
                 }
             });
-            $('input[id="id_text_attribute"]').each(function(index) {
-                if($($('input[id="id_text_attribute"]')[index]).attr('type') == 'hidden' ||
-                    $($('input[id="id_text_attribute"]')[index]).is(":hidden")) {
-                        $($('input[id="id_text_attribute"]')[index]).show();
+            $('input[id^="id_text_attribute"]').each(function(index) {
+                if($($('input[id^="id_text_attribute"]')[index]).attr('type') == 'hidden' ||
+                    $($('input[id^="id_text_attribute"]')[index]).is(":hidden")) {
+                        $($('input[id^="id_text_attribute"]')[index]).show();
                 }
             });
-            $('input[id="id_year_attribute"]').each(function(index) {
-                if($($('input[id="id_year_attribute"]')[index]).attr('type') == 'hidden' ||
-                    $($('input[id="id_year_attribute"]')[index]).is(":hidden")) {
-                        $($('input[id="id_year_attribute"]')[index]).show();
+            $('input[id^="id_year_attribute"]').each(function(index) {
+                if($($('input[id^="id_year_attribute"]')[index]).attr('type') == 'hidden' ||
+                    $($('input[id^="id_year_attribute"]')[index]).is(":hidden")) {
+                        $($('input[id^="id_year_attribute"]')[index]).show();
                 }
             });
         } else {
             data_validation = false;
-            $('input[id="id_time_attribute"]').each(function(index) {
-                $($('input[id="id_time_attribute"]')[index]).hide();
+            $('input[id^="id_time_attribute"]').each(function(index) {
+                $($('input[id^="id_time_attribute"]')[index]).hide();
             });
-            $('input[id="id_text_attribute"]').each(function(index) {
-                $($('input[id="id_text_attribute"]')[index]).hide();
+            $('input[id^="id_text_attribute"]').each(function(index) {
+                $($('input[id^="id_text_attribute"]')[index]).hide();
             });
-            $('input[id="id_year_attribute"]').each(function(index) {
-                $($('input[id="id_year_attribute"]')[index]).hide();
+            $('input[id^="id_year_attribute"]').each(function(index) {
+                $($('input[id^="id_year_attribute"]')[index]).hide();
             });
         }
 
@@ -167,7 +181,7 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
         };
 
       var params = common.parseQueryString(document.location.search);
-      var url = '/upload/time'
+      var url = siteUrl + 'upload/time'
       if ('id' in params){
         url = updateUrl(url, 'id', params.id);
       }
@@ -221,6 +235,7 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
 
     $(function () {
         $("#next").on('click', doTime);
+        const settingsForm = document.getElementById("settings");
 
         $("#DISCRETE_INTERVAL,#CONTINUOUS_INTERVAL").on('change',function(ev) {
             $("#precision").show();
@@ -231,7 +246,15 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
         });
 
         $('#time-series-toggle-choice').on('change',function(ev) {
+            // show time form and advamced options
+            if (settingsForm.style.display !== "none"){
+                settingsForm.style.display = "none";
+            }
+            else{
+                settingsForm.style.display = "block";
+            }
             if(ev.target.value === 'on' && ev.target.checked) {
+
                 if($('#existing').val()) {
                     $('input:radio[id="existing"]').prop("checked", true);
                     $('#existing').trigger("click");
@@ -250,17 +273,17 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
 
         $('input:radio').click(function(event){
             var obj = event.currentTarget
-            if(obj.id === 'id_time_attribute') {
+            if(obj.id.includes('id_time_attribute')) {
                 toggleTimeDataTableValidation(true);
                 if($('#existing') && !$('#existing')[0].checked) {
                     $('#existing')[0].checked = true;
                 }
-            } else if(obj.id === 'id_text_attribute') {
+            } else if(obj.id.includes('id_text_attribute')) {
                 toggleTimeDataTableValidation(true);
                 if($('#textattribute') && !$('#textattribute')[0].checked) {
                     $('#textattribute')[0].checked = true;
                 }
-            } else if(obj.id === 'id_year_attribute') {
+            } else if(obj.id.includes('id_year_attribute')) {
                 toggleTimeDataTableValidation(true);
                 if($('#convertnumber') && !$('#convertnumber')[0].checked) {
                     $('#convertnumber')[0].checked = true;
@@ -270,19 +293,19 @@ define(['upload/upload','upload/common', 'upload/LayerInfo'], function (upload, 
             } else if(obj.id === 'notime') {
                 toggleTimeDataTableValidation(false);
 
-                $('input[id="id_time_attribute"]').each(function(index) {
-                    if($('input[id="id_time_attribute"]')[index].checked) {
-                        $('input[id="id_time_attribute"]')[index].checked = false;
+                $('input[id^="id_time_attribute"]').each(function(index) {
+                    if($('input[id^="id_time_attribute"]')[index].checked) {
+                        $('input[id^="id_time_attribute"]')[index].checked = false;
                     }
                 });
-                $('input[id="id_text_attribute"]').each(function(index) {
-                    if($('input[id="id_text_attribute"]')[index].checked) {
-                        $('input[id="id_text_attribute"]')[index].checked = false;
+                $('input[id^="id_text_attribute"]').each(function(index) {
+                    if($('input[id^="id_text_attribute"]')[index].checked) {
+                        $('input[id^="id_text_attribute"]')[index].checked = false;
                     }
                 });
-                $('input[id="id_year_attribute"]').each(function(index) {
-                    if($('input[id="id_year_attribute"]')[index].checked) {
-                        $('input[id="id_year_attribute"]')[index].checked = false;
+                $('input[id^="id_year_attribute"]').each(function(index) {
+                    if($('input[id^="id_year_attribute"]')[index].checked) {
+                        $('input[id^="id_year_attribute"]')[index].checked = false;
                     }
                 });
             }

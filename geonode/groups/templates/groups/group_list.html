@@ -1,6 +1,6 @@
 {% extends "groups/group_base.html" %}
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 
 {% block title %} {% trans "Explore Groups" %} - {{ block.super }} {% endblock %}
 
@@ -8,7 +8,7 @@
 
 {% block body %}
   <div class="page-header">
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and not READ_ONLY_MODE and user.is_superuser %}
     <a href="{% url "group_create" %}" class="btn btn-primary pull-right">{% trans "Create a New Group" %}</a>
     {% endif %}
     <h2>{% trans "Explore Groups" %}</h2>
@@ -19,13 +19,12 @@
   {% include "search/_search_user_content.html" %}
   {% endwith %}
   {% endwith %}
-  {% include "_bulk_permissions_form.html" %}
 {% endblock %}
 
 {% block extra_script %}
 {{ block.super }}
   <script type="text/javascript">
-  SEARCH_URL = '{% url 'api_dispatch_list' api_name='api' resource_name='groups' %}'
+  SEARCH_URL = '{% url 'api_dispatch_list' api_name='api' resource_name='group_profile' %}'
   </script>
   {% with include_spatial='false' %}
   {% include 'search/search_scripts.html' %}

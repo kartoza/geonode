@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -19,12 +18,11 @@
 #########################################################################
 
 from django.core.management.base import BaseCommand
-from django.conf import settings
 
 from geonode.messaging.queues import queue_email_events, queue_geoserver_events, \
-                   queue_notifications_events, queue_all_events, \
-                   queue_geoserver_catalog, queue_geoserver_data, \
-                   queue_geoserver, queue_layer_viewers
+    queue_notifications_events, queue_all_events, \
+    queue_geoserver_catalog, queue_geoserver_data, \
+    queue_geoserver, queue_dataset_viewers
 
 
 class Command(BaseCommand):
@@ -39,4 +37,4 @@ class Command(BaseCommand):
         queue_geoserver_catalog.purge()
         queue_geoserver_data.purge()
         queue_geoserver.purge()
-        queue_layer_viewers.purge()
+        queue_dataset_viewers.purge()

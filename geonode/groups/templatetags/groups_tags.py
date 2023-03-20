@@ -1,3 +1,21 @@
+#########################################################################
+#
+# Copyright (C) 2016 OSGeo
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#########################################################################
 from django import template
 from django.contrib.staticfiles.storage import staticfiles_storage
 
@@ -13,28 +31,21 @@ def group_profile_image(group_profile, css_classes="", size=None):
 
     """
 
-    if isinstance(css_classes, basestring):
-        class_attr = 'class="{}" '.format(css_classes)
+    if isinstance(css_classes, str):
+        class_attr = f'class="{css_classes}" '
     else:
         try:
-            class_attr = 'class="{}" '.format(
-                " ".join(str(i) for i in css_classes))
+            class_attr = f'class="{(" ".join(str(i) for i in css_classes))}" '
         except Exception:
             class_attr = ""
     if size is not None:
-        style_attr = 'style="width: {size}px; height: {size}px" '.format(
-            size=size)
+        style_attr = f'style="width: {size}px; height: {size}px" '
     else:
         style_attr = ""
 
     if group_profile.logo.name:
-        url = group_profile.logo.url
+        url = group_profile.logo_url
     else:
         url = staticfiles_storage.url("geonode/img/default-avatar.jpg")
-    img_tag = '<img {css}{style}src="{url}" alt="{alt}">'.format(
-        css=class_attr,
-        style=style_attr,
-        url=url,
-        alt=group_profile.title,
-    )
+    img_tag = f'<img {class_attr}{style_attr}src="{url}" alt="{group_profile.title}">'
     return img_tag

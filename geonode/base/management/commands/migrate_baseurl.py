@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -17,53 +16,54 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
+import json
 
-import helpers
+from . import helpers
 
-from optparse import make_option
-
+from django.db.models import Func, F, Value
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
 
-from geonode.base.models import ResourceBase
-from geonode.layers.models import Layer, Style
-from geonode.maps.models import Map
-from geonode.base.models import Link
+from oauth2_provider.models import Application
 
-from geonode.utils import designals, resignals
+from geonode import geoserver
+from geonode.base.models import Link
+from geonode.utils import check_ogc_backend
+from geonode.base.models import ResourceBase
+from geonode.maps.models import Map, MapLayer
+from geonode.layers.models import Dataset, Style
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
 
     help = 'Migrate GeoNode VM Base URL'
 
-    option_list = BaseCommand.option_list + (
-        make_option(
-            '-i',
-            '--ignore-errors',
-            action='store_true',
-            dest='ignore_errors',
-            default=False,
-            help='Stop after any errors are encountered.'),
-        make_option(
+    def add_arguments(self, parser):
+
+        # Named (optional) arguments
+        parser.add_argument(
             '-f',
             '--force',
             action='store_true',
             dest='force_exec',
             default=False,
-            help='Forces the execution without asking for confirmation.'),
-        make_option(
+            help='Forces the execution without asking for confirmation.')
+
+        parser.add_argument(
             '--source-address',
             dest='source_address',
-            type="string",
-            help='Source Address (the one currently on DB e.g. http://192.168.1.23)'),
-        make_option(
+            help='Source Address (the one currently on DB e.g. http://192.168.1.23)')
+
+        parser.add_argument(
             '--target-address',
             dest='target_address',
-            type="string",
-            help='Target Address (the one to be changed e.g. http://my-public.geonode.org)'))
+            help='Target Address (the one to be changed e.g. http://my-public.geonode.org)')
 
     def handle(self, **options):
-        # ignore_errors = options.get('ignore_errors')
         force_exec = options.get('force_exec')
         source_address = options.get('source_address')
         target_address = options.get('target_address')
@@ -74,79 +74,83 @@ class Command(BaseCommand):
         if not target_address or len(target_address) == 0:
             raise CommandError("Target Address '--target-address' is mandatory")
 
-        print "This will change all Maps, Layers, \
-Styles and Links Base URLs from [%s] to [%s]." % (source_address, target_address)
-        print "The operation may take some time, depending on the amount of Layer on GeoNode."
+        print(f"This will change all Maps, Layers, \
+Styles and Links Base URLs from [{source_address}] to [{target_address}].")
+        print("The operation may take some time, depending on the amount of Dataset on GeoNode.")
         message = 'You want to proceed?'
 
         if force_exec or helpers.confirm(prompt=message, resp=False):
             try:
-                # Deactivate GeoNode Signals
-                print "Deactivating GeoNode Signals..."
-                designals()
-                print "...done!"
+                _cnt = Map.objects.filter(thumbnail_url__icontains=source_address).update(
+                    thumbnail_url=Func(
+                        F('thumbnail_url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} Maps Thumbnail URLs")
+                logger.info(f"Updated {_cnt} Maps Thumbnail URLs")
 
-                maps = Map.objects.all()
+                _cnt = MapLayer.objects.filter(ows_url__icontains=source_address).update(
+                    ows_url=Func(
+                        F('ows_url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} MapLayers OWS URLs")
+                logger.info(f"Updated {_cnt} MapLayers OWS URLs")
 
-                for map in maps:
-                    print "Checking Map[%s]" % (map)
-                    if map.thumbnail_url:
-                        map.thumbnail_url = map.thumbnail_url.replace(source_address, target_address)
-                    map_layers = map.layers
-                    for layer in map_layers:
-                        if layer.ows_url:
-                            original = layer.ows_url
-                            layer.ows_url = layer.ows_url.replace(source_address, target_address)
-                            print "Updated OWS URL from [%s] to [%s]" % (original, layer.ows_url)
-                        if layer.layer_params:
-                            layer.layer_params = layer.layer_params.replace(source_address, target_address)
-                            print "Updated Layer Params also for Layer [%s]" % (layer)
-                        layer.save()
-                    map.save()
-                    print "Updated Map[%s]" % (map)
+                _cnt = Dataset.objects.filter(ows_url__icontains=source_address).update(
+                    ows_url=Func(
+                        F('ows_url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} Datasets OWS URLs")
+                logger.info(f"Updated {_cnt} Datasets OWS URLs")
+                _cnt = Dataset.objects.filter(thumbnail_url__icontains=source_address).update(
+                    thumbnail_url=Func(
+                        F('thumbnail_url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} Datasets Thumbnail URLs")
+                logger.info(f"Updated {_cnt} Datasets Thumbnail URLs")
 
-                layers = Layer.objects.all()
+                _cnt = Style.objects.filter(sld_url__icontains=source_address).update(
+                    sld_url=Func(
+                        F('sld_url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} Styles URLs")
+                logger.info(f"Updated {_cnt} Styles URLs")
 
-                for layer in layers:
-                    print "Checking Layer[%s]" % (layer)
-                    if layer.thumbnail_url:
-                        original = layer.thumbnail_url
-                        layer.thumbnail_url = layer.thumbnail_url.replace(source_address, target_address)
-                        layer.save()
-                        print "Updated Thumbnail URL from [%s] to [%s]" % (original, layer.thumbnail_url)
+                _cnt = Link.objects.filter(url__icontains=source_address).update(
+                    url=Func(
+                        F('url'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} Links URLs")
+                logger.info(f"Updated {_cnt} Links URLs")
 
-                styles = Style.objects.all()
+                _cnt = ResourceBase.objects.filter(thumbnail_url__icontains=source_address).update(
+                    thumbnail_url=Func(
+                        F('thumbnail_url'), Value(source_address), Value(target_address), function='replace'))
+                _cnt += ResourceBase.objects.filter(csw_anytext__icontains=source_address).update(
+                    csw_anytext=Func(
+                        F('csw_anytext'), Value(source_address), Value(target_address), function='replace'))
+                _cnt += ResourceBase.objects.filter(metadata_xml__icontains=source_address).update(
+                    metadata_xml=Func(
+                        F('metadata_xml'), Value(source_address), Value(target_address), function='replace'))
+                print(f"Updated {_cnt} ResourceBases")
+                logger.info(f"Updated {_cnt} ResourceBases")
+                # update blob context
+                _cnt = 0
+                for resource in ResourceBase.objects.filter(blob__icontains=source_address):
+                    current_blob = json.dumps(resource.blob)
+                    ResourceBase.objects.filter(id=resource.id).update(blob=json.loads(current_blob.replace(source_address, target_address)))
+                    _cnt += 1
+                print(f"Updated {_cnt} 'blob' contexts.")
+                logger.info(f"Updated {_cnt} 'blob' contexts.")
 
-                for style in styles:
-                    print "Checking Style[%s]" % (style)
-                    if style.sld_url:
-                        original = style.sld_url
-                        style.sld_url = style.sld_url.replace(source_address, target_address)
-                        style.save()
-                        print "Updated SLD URL from [%s] to [%s]" % (original, style.sld_url)
+                site = Site.objects.get_current()
+                if site:
+                    site.name = site.name.replace(source_address, target_address)
+                    site.domain = site.domain.replace(source_address, target_address)
+                    site.save()
+                    print("Updated 1 Site")
+                    logger.info("Updated 1 Site")
 
-                links = Link.objects.all()
-
-                for link in links:
-                    print "Checking Link[%s]" % (link)
-                    if link.url:
-                        original = link.url
-                        link.url = link.url.replace(source_address, target_address)
-                        link.save()
-                        print "Updated URL from [%s] to [%s]" % (original, link.url)
-
-                resources = ResourceBase.objects.all()
-
-                for res in resources:
-                    print "Checking Resource[%s]" % (res)
-                    if res.metadata_xml:
-                        original = res.metadata_xml
-                        res.metadata_xml = res.metadata_xml.replace(source_address, target_address)
-                        res.save()
-                        print "Updated URL in metadata XML for resource [%s]" % (res)
-
+                if check_ogc_backend(geoserver.BACKEND_PACKAGE):
+                    if Application.objects.filter(name='GeoServer').exists():
+                        _cnt = Application.objects.filter(name='GeoServer').update(
+                            redirect_uris=Func(
+                                F('redirect_uris'), Value(source_address), Value(target_address), function='replace'))
+                        print(f"Updated {_cnt} OAUth2 Redirect URIs")
+                        logger.info(f"Updated {_cnt} OAUth2 Redirect URIs")
             finally:
-                # Reactivate GeoNode Signals
-                print "Reactivating GeoNode Signals..."
-                resignals()
-                print "...done!"
+                print("...done!")
+                logger.info("...done!")

@@ -24,7 +24,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GeoNode\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 02:28-0500\n"
+"POT-Creation-Date: 2021-07-08 09:03+0300\n"
 "PO-Revision-Date: 2016-08-23 11:58+0000\n"
 "Last-Translator: Julien Collaer <julien.collaer@opengeode.be>\n"
 "Language-Team: Hungarian (http://www.transifex.com/geonode/geonode/language/"
@@ -35,165 +35,364 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: geonode/static/geonode/js/search/search.js:373
-msgid "Enter your text here ..."
+msgid "STORE_UPDATED"
 msgstr ""
 
-#: geonode/static/geonode/js/search/search.js:414
-msgid "Enter your region here ..."
-msgstr ""
-
-#: geonode/static/geonode/js/upload/FileType.js:33
 #, javascript-format
 msgid "Missing a %s file, which is required"
 msgstr "Hiányzik a %s fájlt, amely köteles"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:7
 msgid "ESRI Shapefile"
 msgstr "ESRI Shape"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:13
-#: geonode/static/geonode/js/upload/FileTypes.js:18
+msgid "ASCII Text File"
+msgstr ""
+
 msgid "GeoTIFF"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:24
 msgid "Comma Separated Value"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:29
 msgid "Google Earth KML"
 msgstr "Google Earth KML"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:34
+#, fuzzy
+#| msgid "Google Earth KML"
+msgid "Google Earth KML with a GroundOverlay"
+msgstr "Google Earth KML"
+
+#, fuzzy
+#| msgid "Google Earth KML"
+msgid "Google Earth KMZ"
+msgstr "Google Earth KML"
+
 msgid "GeoJSON"
 msgstr "GeoJSON"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:39
 msgid "Zip Archive"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:45
 msgid "ERDAS Imagine"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:50
-#: geonode/static/geonode/js/upload/FileTypes.js:55
 msgid "National Imagery Transmission Format"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:61
 msgid "Controlled Image Base-1 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:68
 msgid "Controlled Image Base-5 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:75
 msgid "Controlled Image Base-10 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:82
 msgid "CADRG-Global Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:89
 msgid "CADRG-Jet Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:96
 msgid "CADRG-Operational Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:103
 msgid "CADRG-Tactical Pilotage Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:110
 msgid "CADRG-Joint Operations Graphic"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:117
 msgid "CADRG-Topographic Line Map 100K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:124
 msgid "CADRG-Topographic Line Map 50K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:131
 msgid "JPEG2000"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:136
 msgid "MrSID-Multi-resolution Seamless Image Database"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:331
-msgid "Layer Info"
-msgstr "Réteg Info"
+#, fuzzy
+#| msgid "Metadata Links:"
+msgid "XML Metadata File"
+msgstr "Metaadatok Linkek:"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:332
-msgid "Edit Metadata"
-msgstr "Metaadatok szerkesztése"
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:333
-msgid "Manage Styles"
-msgstr "Stílusok kezelése"
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:336
-msgid "The column %1 was renamed to %2 <br/>"
+msgid "Style Layer Descriptor"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:342
-msgid "Your layer was successfully uploaded"
-msgstr "A fázist sikeresen feltöltve"
+msgid "JPEG"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:371
-msgid "Performing Final GeoServer Config Step"
-msgstr "Előadó Final GeoServer Config lépés"
+msgid "PNG"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:386
-#: geonode/static/geonode/js/upload/LayerInfo.js:412
-msgid "You need to specify more information in order to complete your upload"
-msgstr "Meg kell adnod több információt ahhoz, hogy a teljes feltöltés"
+msgid "GIF"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You need to specify more information in order to complete your upload."
-msgstr "Meg kell adnod több információt ahhoz, hogy befejezze a feltöltés."
+#, fuzzy
+#| msgid "Unexpected Error"
+msgid "Unexpected error!"
+msgstr "Váratlan hiba"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You can continue configuring your layer."
-msgstr "Folytathatja konfigurálni a réteg."
+msgid ""
+" - 400 Bad Request. Server cannot or will not process the request due to "
+"something that is perceived to be a client error (e.g., malformed request "
+"syntax, invalid request message framing, or deceptive request routing)."
+msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:422
-#: geonode/static/geonode/js/upload/LayerInfo.js:509
+msgid ""
+" - 401 Unauthorized. Request was not sent with the proper authentication "
+"credentials."
+msgstr ""
+
+msgid ""
+" - 403 Forbidden. This is generally related to permission rules on your "
+"server. Contact the system administrator for more information regarding this "
+"error message."
+msgstr ""
+
+msgid ""
+" - 404 Not Found. Origin server was unable or unwilling to find the resource "
+"requested."
+msgstr ""
+
+msgid ""
+" - 405 Method Not Allowed. Origin server is aware of the requested resource, "
+"but the request method used is not supported."
+msgstr ""
+
+msgid ""
+" - 406 Not Acceptable. Resource is not available at the origin that adheres "
+"to negotiation headers that were  set prior (e.g. via 'Accept-Charset' and "
+"'Accept-Language' headers)."
+msgstr ""
+
+msgid ""
+" - 407 Authentication Required. The client did not send the required "
+"authentication with the request."
+msgstr ""
+
+msgid ""
+" - 408 Request Timeout. The origin server did not receive the complete "
+"request in what it considers a reasonable time."
+msgstr ""
+
+msgid ""
+" - 409 Conflict. The request did not complete because of a conflict with the "
+"current state of the resource. Typically happens on a PUT request where "
+"multiple clients are attempting to edit the same resource."
+msgstr ""
+
+msgid ""
+" - 410 Gone. The resource requested is permanently missing at the origin."
+msgstr ""
+
+msgid ""
+" - 411 Length Required. Client did not define the 'Content-Length' of the "
+"request body in the headers and this is required to obtain the resource."
+msgstr ""
+
+msgid ""
+" - 412 Precondition Failed. Server denies the request because the resource "
+"failed to meet the conditions specified by the client."
+msgstr ""
+
+msgid ""
+" - 413 Payload Too Large. Refusal from the server to process the request "
+"because the payload sent from the client is larger than the server wished to "
+"accept. Server has the optional to close the connection."
+msgstr ""
+
+msgid ""
+" - 414 URI Too Long. Refusal from the server that the URI was too long to be "
+"processed. For example, if a client is attempting a GET request with an "
+"unusually long URI after a POST, this could be seen as a security risk and a "
+"414 gets generated."
+msgstr ""
+
+msgid ""
+" - 415 Unsupported Media Type. Refusal from the server to process the format "
+"of the current payload. One way to identify and fix this issue would be to "
+"look at the 'Content-Type' or 'Content-Encoding' headers sent in the "
+"client’s request."
+msgstr ""
+
+msgid ""
+" - 417 Expectation Failed. Failure of server to meet the requirements "
+"specified in the 'Expect' header of the client’s request."
+msgstr ""
+
+msgid ""
+" - 429 Too Many Requests. Client has sent too many requests in the specified "
+"amount of time according to the server."
+msgstr ""
+
+msgid ""
+" - 499 Client Close Request. Nginx specific response code to indicate when "
+"the connection has been closed by the client while the server is still "
+"processing its request, making server unable to send a status code back."
+msgstr ""
+
+msgid ""
+" - 500 Internal Server Error. This error indicates that the server has "
+"encountered an unexpected condition. This often occurs when an application "
+"request cannot be fulfilled due to the application being configured "
+"incorrectly on the server."
+msgstr ""
+
+msgid ""
+" - 501 Not Implemented. This error indicates that the HTTP method sent by "
+"the client is not supported by the server. This is most often caused by the "
+"server being out of date. It is a very rare error and generally requires "
+"that the web server be updated."
+msgstr ""
+
+msgid ""
+" - 502 Bad Gateway. This error is usually due to improperly configured proxy "
+"servers. The first step in resolving the issue is to clear the client's "
+"cache."
+msgstr ""
+
+msgid ""
+" - 503 Service Unavailable. This error occurs when the server is unable to "
+"handle requests due to a temporary overload or due to the server being "
+"temporarily closed for maintenance. The error indicates that the server will "
+"only temporarily be down."
+msgstr ""
+
+msgid ""
+" - 504 Gateway Timeout. GeoNode lost the connection with GeoServer or DB due "
+"to a connection timeout. Consider using the management commands to import "
+"data!"
+msgstr ""
+
+msgid ""
+" - 505 HTTP Version Not Supported. This error occurs when the server refuses "
+"to support the HTTP protocol that has been specified by the client computer. "
+"This can be caused by the protocol not being specified properly by the "
+"client computer; for example, if an invalid version number has been "
+"specified."
+msgstr ""
+
+msgid ""
+" - 506 Variant Also Negotiates. This error indicates that the server is not "
+"properly configured. Contact the system administrator to resolve this issue."
+msgstr ""
+
+msgid ""
+" - 507 Insufficient Storage. This error indicates that the server is out of "
+"free memory. This is most likely to occur when an application that is being "
+"requested cannot allocate the necessary system resources to run. To resolve "
+"the issue, the server's hard disk may need to be cleaned of any unnecessary "
+"documents to free up more hard disk space, its memory may need to be "
+"expanded, or it may simply need to be restarted. Contact the system "
+"administrator for more information regarding this error message."
+msgstr ""
+
+msgid ""
+" - 509 Bandwidth Limit Exceeded. This error occurs when the bandwidth limit "
+"imposed by the system administrator has been reached. The only fix for this "
+"issue is to wait until the limit is reset in the following cycle. Consult "
+"the system administrator for information about acquiring more bandwidth."
+msgstr ""
+
+msgid ""
+" - 510 Not Extended. This error occurs when an extension attached to the "
+"HTTP request is not supported by the web server. To resolve the issue, you "
+"may need to update the server."
+msgstr ""
+
+#, fuzzy
+#| msgid "Unknown Map"
+msgid "Unknwon"
+msgstr "Ismeretlen Térkép"
+
+msgid ""
+" Error Code. Contact the system administrator for more information regarding "
+"this error message."
+msgstr ""
+
+msgid "Additional info: "
+msgstr ""
+
+msgid "Finalizing"
+msgstr ""
+
 msgid "Unexpected Error"
 msgstr "Váratlan hiba"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:438
+msgid "Your "
+msgstr ""
+
+#, fuzzy
+#| msgid "Layer Info"
+msgid " Info"
+msgstr "Réteg Info"
+
+msgid "Edit Metadata"
+msgstr "Metaadatok szerkesztése"
+
+#, fuzzy
+#| msgid "Edit Metadata"
+msgid "Upload Metadata"
+msgstr "Metaadatok szerkesztése"
+
+msgid "Upload SLD"
+msgstr ""
+
+msgid "Manage Styles"
+msgstr "Stílusok kezelése"
+
+msgid "Please wait until GeoNode finished configuring it!"
+msgstr ""
+
+msgid "The column %1 was renamed to %2 <br/>"
+msgstr ""
+
+msgid "Performing Final GeoServer Config Step"
+msgstr "Előadó Final GeoServer Config lépés"
+
+msgid "You need to specify more information in order to complete your upload"
+msgstr "Meg kell adnod több információt ahhoz, hogy a teljes feltöltés"
+
+msgid "Files are ready to be ingested!"
+msgstr ""
+
+msgid "A temporal dimension may be added to this Layer."
+msgstr ""
+
 msgid "Performing GeoServer Config Step"
 msgstr "Előadó GeoServer Config lépés"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:516
+msgid ""
+"<br>Please check your network connection. In case of Layer Upload make sure "
+"GeoServer is running and accepting connections."
+msgstr ""
+
+msgid "<br>"
+msgstr ""
+
+msgid "<br>Bad request or URL not found."
+msgstr ""
+
+#, fuzzy
+#| msgid "Unknown Map"
+msgid "<br>Unknown."
+msgstr "Ismeretlen Térkép"
+
 msgid "Layer files uploaded, configuring in GeoServer"
 msgstr "Réteg feltöltött fájlok, konfigurálása a GeoServer"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:532
-msgid "Select or create a Geogig repository."
-msgstr ""
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:695
 msgid "Remove"
 msgstr "Eltávolít"
 
-#: geonode/static/geonode/js/upload/upload.js:125
 #, javascript-format
 msgid "The file %s is an unsupported file type, please select another file."
 msgstr "A fájl %s nem támogatott fájltípus, válasszon egy másik fájlt."
 
-#: geonode/static/geonode/js/upload/upload.js:285
 msgid ""
 "You are trying to upload an incomplete set of files or not all mandatory "
 "options have been validated.\n"
@@ -201,555 +400,560 @@ msgid ""
 "Please check for errors in the form!"
 msgstr ""
 
-#: geonode/static/lib/js/assets.min.js:2
-msgid "<iframe frameborder='0' width='0' height='0'/>"
-msgstr ""
+#, javascript-format
+msgid "Available %s"
+msgstr "Available %s"
 
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<script>"
-msgstr ""
-
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<div>"
-msgstr ""
-
-#: geonode/templates/lang.js:9 geonode/templates/lang.js:236
-msgid "Cancel"
-msgstr "Mégsem"
-
-#: geonode/templates/lang.js:10
-msgid "Save as Copy"
-msgstr "Mentés Copy"
-
-#: geonode/templates/lang.js:11
-msgid "About this Map"
-msgstr "Erről Térkép"
-
-#: geonode/templates/lang.js:12 geonode/templates/lang.js:96
-#: geonode/templates/lang.js:165
-msgid "Abstract"
-msgstr "Kivonat"
-
-#: geonode/templates/lang.js:13
-msgid "Save"
-msgstr "Mentés"
-
-#: geonode/templates/lang.js:14 geonode/templates/lang.js:100
-#: geonode/templates/lang.js:109 geonode/templates/lang.js:162
-#: geonode/templates/lang.js:184 geonode/templates/lang.js:219
-msgid "Title"
-msgstr "Fejléc"
-
-#: geonode/templates/lang.js:20
-msgid "Connection Error"
-msgstr "Csatlakozási hiba"
-
-#: geonode/templates/lang.js:21
-msgid "The server returned an error"
-msgstr "A szerver hibát jelzett"
-
-#: geonode/templates/lang.js:22
-msgid "Details..."
-msgstr "Részletek ..."
-
-#: geonode/templates/lang.js:28 geonode/templates/lang.js:31
-msgid "Add Layers"
-msgstr "Rétegek hozzáadása"
-
-#: geonode/templates/lang.js:29
-msgid "Area"
-msgstr "Terület"
-
-#: geonode/templates/lang.js:30
-msgid "Background"
-msgstr "Háttér"
-
-#: geonode/templates/lang.js:32
-msgid "Done"
-msgstr "Csinált"
-
-#: geonode/templates/lang.js:33
-msgid "Available Layers"
-msgstr "Rendelkezésre álló rétegek"
-
-#: geonode/templates/lang.js:35 geonode/templates/lang.js:121
-msgid "Height"
-msgstr "Magasság"
-
-#: geonode/templates/lang.js:36
-msgid "Get Feature Info"
-msgstr "Get Info Szolgáltatás"
-
-#: geonode/templates/lang.js:37 geonode/templates/lang.js:122
-msgid "Large"
-msgstr "Nagy"
-
-#: geonode/templates/lang.js:38
-msgid "or add a new server."
-msgstr "vagy egy új szerver."
-
-#: geonode/templates/lang.js:39
-msgid "Map Layers"
-msgstr "Térkép Rétegek"
-
-#: geonode/templates/lang.js:40
-msgid "View available data from:"
-msgstr "Az elérhető adatok:"
-
-#: geonode/templates/lang.js:41
-msgid "Data"
-msgstr "Adat"
-
-#: geonode/templates/lang.js:42
-msgid "Layers"
-msgstr "Rétegek"
-
-#: geonode/templates/lang.js:43
-msgid "Legend"
-msgstr "Legenda"
-
-#: geonode/templates/lang.js:44
-msgid "Length"
-msgstr "Hossz"
-
-#: geonode/templates/lang.js:45
-msgid "Loading Map..."
-msgstr "Loading Map ..."
-
-#: geonode/templates/lang.js:46 geonode/templates/lang.js:123
-msgid "Map Size"
-msgstr "Map méret"
-
-#: geonode/templates/lang.js:47
-msgid "Measure"
-msgstr "Intézkedés"
-
-#: geonode/templates/lang.js:48 geonode/templates/lang.js:97
-#: geonode/templates/lang.js:163
-msgid "Contact"
-msgstr "Kapcsolat"
-
-#: geonode/templates/lang.js:49 geonode/templates/lang.js:55
-msgid "Permalink"
-msgstr "Permalink"
-
-#: geonode/templates/lang.js:50 geonode/templates/lang.js:124
-msgid "Mini"
-msgstr "Mini"
-
-#: geonode/templates/lang.js:51
-msgid "Pan Map"
-msgstr "Pan Térkép"
-
-#: geonode/templates/lang.js:52
-msgid "Zoom to Next Extent"
-msgstr "Nagyítás Next terjedelme"
-
-#: geonode/templates/lang.js:53
-msgid "Zoom to Previous Extent"
-msgstr "Nagyítás az előző terjedelme"
-
-#: geonode/templates/lang.js:54
-msgid "This map has not yet been saved."
-msgstr "Ez a térkép még nincs elmentve."
-
-#: geonode/templates/lang.js:56 geonode/templates/lang.js:125
-msgid "Premium"
-msgstr "Prémium"
-
-#: geonode/templates/lang.js:57
-msgid "Print Map"
-msgstr "Print Map"
-
-#: geonode/templates/lang.js:58
-msgid "Print Preview"
-msgstr "Nyomtatási előnézet"
-
-#: geonode/templates/lang.js:59
-msgid "Properties"
-msgstr "Tulajdonságok"
-
-#: geonode/templates/lang.js:60 geonode/templates/lang.js:126
-msgid "Publish Map"
-msgstr "Közzététele Térkép"
-
-#: geonode/templates/lang.js:61 geonode/templates/lang.js:62
-msgid "Remove Layer"
-msgstr "Távolítsuk réteg"
-
-#: geonode/templates/lang.js:63
-msgid "Sorry, your map could not be saved."
-msgstr "Sajnos a térkép nem lehetett menteni."
-
-#: geonode/templates/lang.js:64
-msgid "Error While Saving"
-msgstr "Hiba történt a mentése"
-
-#: geonode/templates/lang.js:65
-msgid "Save Map"
-msgstr "Mentés Térkép"
-
-#: geonode/templates/lang.js:66
-msgid "You must be logged in to save this map."
-msgstr "Be kell jelentkezned, hogy megmentse ezt a térképet."
-
-#: geonode/templates/lang.js:67 geonode/templates/lang.js:128
-msgid "Small"
-msgstr "Kicsi"
-
-#: geonode/templates/lang.js:68
+#, javascript-format
 msgid ""
-"Error contacting server.\n"
-" Please check the url and try again."
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
 msgstr ""
-"Hiba kapcsolatba szerver. Kérjük, ellenőrizze az URL-t, és próbálja újra."
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
 
-#: geonode/templates/lang.js:69
-msgid "Layer Properties"
-msgstr "Fóliatulajdonság"
+#, javascript-format
+msgid "Type into this box to filter down the list of available %s."
+msgstr "Type into this box to filter down the list of available %s."
 
-#: geonode/templates/lang.js:70
-msgid "Change layer format and style"
-msgstr "Változás réteg formátum és stílus"
+msgid "Filter"
+msgstr "Filter"
 
-#: geonode/templates/lang.js:71
-msgid "Edit Styles"
-msgstr "Stílusok szerkesztése"
+msgid "Choose all"
+msgstr "Choose all"
 
-#: geonode/templates/lang.js:72
-msgid "Edit layer styles"
-msgstr "Szerkesztés rétegstílusok"
+#, javascript-format
+msgid "Click to choose all %s at once."
+msgstr "Click to choose all %s at once."
 
-#: geonode/templates/lang.js:73
-msgid "Switch to Google Earth 3D Viewer"
-msgstr "Váltás a Google Earth 3D Viewer"
+msgid "Choose"
+msgstr "Choose"
 
-#: geonode/templates/lang.js:74
+#, javascript-format
+msgid "Chosen %s"
+msgstr "Chosen %s"
+
+#, javascript-format
 msgid ""
-"The map that you are trying to load does not exist.  Creating a new map "
-"instead."
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
 msgstr ""
-"A térkép, amit próbál betölteni nem létezik. Létrehozása egy új térképet "
-"helyette."
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
 
-#: geonode/templates/lang.js:75
-msgid "Unknown Map"
-msgstr "Ismeretlen Térkép"
+msgid "Remove all"
+msgstr "Remove all"
 
-#: geonode/templates/lang.js:76 geonode/templates/lang.js:129
-msgid "Width"
-msgstr "Szélesség"
+#, javascript-format
+msgid "Click to remove all chosen %s at once."
+msgstr "Click to remove all chosen %s at once."
 
-#: geonode/templates/lang.js:77
-msgid "Zoom In"
-msgstr "Nagyítás"
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
+msgstr[1] "94d7ef36d54e81afde607d8fd121772b_pl_1"
 
-#: geonode/templates/lang.js:78
-msgid "Zoom Out"
-msgstr "Kicsinyítés"
-
-#: geonode/templates/lang.js:79
-msgid "Zoom level"
-msgstr "Nagyítási szint"
-
-#: geonode/templates/lang.js:80
-msgid "Zoom Level"
-msgstr "Nagyítási szint"
-
-#: geonode/templates/lang.js:81
-msgid "Zoom to Layer Extent"
-msgstr "Nagyítás réteg kiterjedése"
-
-#: geonode/templates/lang.js:82
-msgid "Zoom to Visible Extent"
-msgstr "Nagyítás Látható terjedelme"
-
-#: geonode/templates/lang.js:88
-msgid "Zoom Level {zoom}"
-msgstr "Nagyítási szint {} zoom"
-
-#: geonode/templates/lang.js:94
-msgid "Create Map"
-msgstr "Create Map"
-
-#: geonode/templates/lang.js:95
-msgid "Export Map"
-msgstr "Export Térkép"
-
-#: geonode/templates/lang.js:98
-msgid "Map"
-msgstr "Térkép"
-
-#: geonode/templates/lang.js:99 geonode/templates/lang.js:166
-msgid "View this Map"
-msgstr "Nézd meg ezt a Map"
-
-#: geonode/templates/lang.js:101
-msgid "Open Map"
-msgstr "Nyílt Térkép"
-
-#: geonode/templates/lang.js:107 geonode/templates/lang.js:183
-msgid "Name"
-msgstr "Név"
-
-#: geonode/templates/lang.js:108
-msgid "Queryable"
-msgstr "Lekérdezhető"
-
-#: geonode/templates/lang.js:115
-msgid "No background"
-msgstr "Nincs háttér"
-
-#: geonode/templates/lang.js:127
 msgid ""
-"Your map is ready to be published to the web!  Simply copy the following "
-"HTML to embed the map in your website:"
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
 msgstr ""
-"A térkép készen kell közzétenni az interneten! Egyszerűen másolja az alábbi "
-"HTML beágyazni a térkép a honlapon:"
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
 
-#: geonode/templates/lang.js:136 geonode/templates/lang.js:202
-msgid "Abstract:"
-msgstr "Absztrakt:"
+msgid ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
+msgstr ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
 
-#: geonode/templates/lang.js:137 geonode/templates/lang.js:204
-msgid "No attribution information is provided for this layer."
-msgstr "Nincs Nevezd információ áll rendelkezésre erre a rétegre."
+msgid ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
 
-#: geonode/templates/lang.js:138 geonode/templates/lang.js:205
-msgid "Provided by:"
-msgstr "Szolgáltató:"
+msgid "'"
+msgstr ""
 
-#: geonode/templates/lang.js:139 geonode/templates/lang.js:206
-msgid "Download:"
-msgstr "Letöltés:"
+msgid "-1"
+msgstr ""
 
-#: geonode/templates/lang.js:140 geonode/templates/lang.js:208
-msgid "No keywords are listed for this layer."
-msgstr "Nincs kulcsszavak szerepel ezen réteg."
+msgid "trailingComments"
+msgstr ""
 
-#: geonode/templates/lang.js:141 geonode/templates/lang.js:209
-msgid "Keywords:"
-msgstr "Kulcsszavak:"
+msgid "leadingComments"
+msgstr ""
 
-#: geonode/templates/lang.js:142 geonode/templates/lang.js:210
-msgid "No metadata URLs are defined for this layer."
-msgstr "Nem metaadat URL meghatározása ezen rétegben."
-
-#: geonode/templates/lang.js:143 geonode/templates/lang.js:211
-msgid "Metadata Links:"
-msgstr "Metaadatok Linkek:"
-
-#: geonode/templates/lang.js:149
-msgid "Paper size:"
-msgstr "Papírméret:"
-
-#: geonode/templates/lang.js:150
-msgid "Resolution:"
-msgstr "Felbontás:"
-
-#: geonode/templates/lang.js:151
-msgid "Print"
-msgstr "Nyomtatás"
-
-#: geonode/templates/lang.js:152
-msgid "Enter map title here."
-msgstr "Adja meg a térkép címet itt."
-
-#: geonode/templates/lang.js:153
-msgid "Include legend?"
-msgstr "Beleértve legenda?"
-
-#: geonode/templates/lang.js:154
-msgid "Enter comments here."
+#, fuzzy
+#| msgid "Enter comments here."
+msgid "innerComments"
 msgstr "Adja meg a megjegyzések itt."
 
-#: geonode/templates/lang.js:155
-msgid "Creating PDF..."
-msgstr "PDF létrehozása ..."
+msgid "Multiselect"
+msgstr ""
 
-#: geonode/templates/lang.js:164
-msgid "Last Modified"
-msgstr "Utoljára módosítva"
-
-#: geonode/templates/lang.js:167 geonode/templates/lang.js:188
-msgid "Prev"
-msgstr "Előző"
-
-#: geonode/templates/lang.js:168 geonode/templates/lang.js:189
-msgid "Next"
-msgstr "Következő"
-
-#: geonode/templates/lang.js:169 geonode/templates/lang.js:190
-msgid "of"
-msgstr "Az"
-
-#: geonode/templates/lang.js:170 geonode/templates/lang.js:191
-msgid "Your search did not match any items."
-msgstr "A keresés nem hozott eredményt terméket."
-
-#: geonode/templates/lang.js:171
-msgid "Search Maps"
-msgstr "Keresés Térképek"
-
-#: geonode/templates/lang.js:172 geonode/templates/lang.js:192
-msgid "Search"
-msgstr "Keresés"
-
-#: geonode/templates/lang.js:173 geonode/templates/lang.js:193
-msgid "Showing"
-msgstr "Kiállítás"
-
-#: geonode/templates/lang.js:174
-msgid "Loading"
-msgstr "Terhelés"
-
-#: geonode/templates/lang.js:175 geonode/templates/lang.js:195
-msgid "permalink"
-msgstr "permalink"
-
-#: geonode/templates/lang.js:182
-msgid "Select"
+#, fuzzy
+#| msgid "Select"
+msgid "SelectList"
 msgstr "Választ"
 
-#: geonode/templates/lang.js:185
-msgid "Select:"
-msgstr "Kiválasztás:"
+msgid "show:"
+msgstr ""
 
-#: geonode/templates/lang.js:186
-msgid "All"
-msgstr "Minden"
+msgid "DraftEditor/root"
+msgstr ""
 
-#: geonode/templates/lang.js:187
-msgid "None"
-msgstr "Egyik sem"
+msgid "DraftEditor/editorContainer"
+msgstr ""
 
-#: geonode/templates/lang.js:194
-msgid "Loading..."
-msgstr "Loading ..."
+msgid "-"
+msgstr ""
 
-#: geonode/templates/lang.js:196
-msgid "You do not have permission to view this data"
-msgstr "Önnek nincs jogosultsága ahhoz, hogy az adatok"
+msgid "uirevision"
+msgstr ""
 
-#: geonode/templates/lang.js:197
-msgid "This data is stored on a remote server"
-msgstr "Ezek az adatok a távoli szerveren"
+msgid "bgcolor"
+msgstr ""
 
-#: geonode/templates/lang.js:203
-msgid "No abstract is provided for this layer."
-msgstr "Nem elvont biztosítanak e réteg."
+msgid "bordercolor"
+msgstr ""
 
-#: geonode/templates/lang.js:207
-msgid "No download URLs are definied for this layer."
-msgstr "Nincs letöltés URL definiálni ezt réteg."
+msgid "borderwidth"
+msgstr ""
 
-#: geonode/templates/lang.js:217
-msgid "Selected Layers"
-msgstr "Kiválasztott rétegek"
+msgid "orientation"
+msgstr ""
 
-#: geonode/templates/lang.js:218
-msgid "No Layers Selected"
-msgstr "No Rétegek kiválasztott"
+msgid "traceorder"
+msgstr ""
 
-#: geonode/templates/lang.js:220
-msgid "Clear Selected"
-msgstr "Kiválasztottak törlése"
+msgid "tracegroupgap"
+msgstr ""
 
-#: geonode/templates/lang.js:221
-msgid "Clear All"
-msgstr "Összes törlése"
+msgid "itemsizing"
+msgstr ""
 
-#: geonode/templates/lang.js:227
-msgid "Operation Failed"
-msgstr "Művelet nem sikerült"
+msgid "itemclick"
+msgstr ""
 
-#: geonode/templates/lang.js:228
-msgid "No layers are currently selected."
-msgstr "Nem rétegeket kiválasztva."
+msgid "itemdoubleclick"
+msgstr ""
 
-#: geonode/templates/lang.js:235
-msgid "Downloading..."
-msgstr "Letöltés ..."
+msgid "x"
+msgstr ""
 
-#: geonode/templates/lang.js:237
-msgid "Please wait"
-msgstr "Kérem, várjon"
+msgid "xanchor"
+msgstr ""
 
-#~ msgid "Available %s"
-#~ msgstr "Available %s"
+msgid "y"
+msgstr ""
 
-#~ msgid ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
-#~ msgstr ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
+msgid "yanchor"
+msgstr ""
 
-#~ msgid "Type into this box to filter down the list of available %s."
-#~ msgstr "Type into this box to filter down the list of available %s."
+msgid "valign"
+msgstr ""
 
-#~ msgid "Filter"
-#~ msgstr "Filter"
+msgid "title.text"
+msgstr ""
 
-#~ msgid "Choose all"
-#~ msgstr "Choose all"
+msgid "title.side"
+msgstr ""
 
-#~ msgid "Click to choose all %s at once."
-#~ msgstr "Click to choose all %s at once."
+msgid "visible"
+msgstr ""
 
-#~ msgid "Choose"
-#~ msgstr "Choose"
+msgid "thickness"
+msgstr ""
 
-#~ msgid "Chosen %s"
-#~ msgstr "Chosen %s"
+msgid "autorange"
+msgstr ""
 
-#~ msgid ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
-#~ msgstr ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
+msgid "range"
+msgstr ""
 
-#~ msgid "Remove all"
-#~ msgstr "Remove all"
+msgid "bingroup"
+msgstr ""
 
-#~ msgid "Click to remove all chosen %s at once."
-#~ msgstr "Click to remove all chosen %s at once."
+msgid "Print configuration broken ("
+msgstr ""
 
-#~ msgid "%(sel)s of %(cnt)s selected"
-#~ msgid_plural "%(sel)s of %(cnt)s selected"
-#~ msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
-#~ msgstr[1] "94d7ef36d54e81afde607d8fd121772b_pl_1"
+msgid "Print configuration not available ("
+msgstr ""
+
+msgid "go"
+msgstr ""
+
+msgid "goBack"
+msgstr ""
+
+msgid "goForward"
+msgstr ""
+
+msgid "Abort"
+msgstr ""
+
+msgid "As Sibling"
+msgstr ""
+
+msgid "As child"
+msgstr ""
+
+#, fuzzy
+#~| msgid "Now"
+#~ msgid "No"
+#~ msgstr "Now"
+
+#~ msgid "Your layer was successfully uploaded"
+#~ msgstr "A fázist sikeresen feltöltve"
 
 #~ msgid ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
-#~ msgstr ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
+#~ "You need to specify more information in order to complete your upload."
+#~ msgstr "Meg kell adnod több információt ahhoz, hogy befejezze a feltöltés."
+
+#~ msgid "You can continue configuring your layer."
+#~ msgstr "Folytathatja konfigurálni a réteg."
+
+#~ msgid "Cancel"
+#~ msgstr "Mégsem"
+
+#~ msgid "Save as Copy"
+#~ msgstr "Mentés Copy"
+
+#~ msgid "About this Map"
+#~ msgstr "Erről Térkép"
+
+#~ msgid "Abstract"
+#~ msgstr "Kivonat"
+
+#~ msgid "Save"
+#~ msgstr "Mentés"
+
+#~ msgid "Title"
+#~ msgstr "Fejléc"
+
+#~ msgid "Connection Error"
+#~ msgstr "Csatlakozási hiba"
+
+#~ msgid "The server returned an error"
+#~ msgstr "A szerver hibát jelzett"
+
+#~ msgid "Details..."
+#~ msgstr "Részletek ..."
+
+#~ msgid "Add Layers"
+#~ msgstr "Rétegek hozzáadása"
+
+#~ msgid "Area"
+#~ msgstr "Terület"
+
+#~ msgid "Background"
+#~ msgstr "Háttér"
+
+#~ msgid "Done"
+#~ msgstr "Csinált"
+
+#~ msgid "Available Layers"
+#~ msgstr "Rendelkezésre álló rétegek"
+
+#~ msgid "Height"
+#~ msgstr "Magasság"
+
+#~ msgid "Get Feature Info"
+#~ msgstr "Get Info Szolgáltatás"
+
+#~ msgid "Large"
+#~ msgstr "Nagy"
+
+#~ msgid "or add a new server."
+#~ msgstr "vagy egy új szerver."
+
+#~ msgid "Map Layers"
+#~ msgstr "Térkép Rétegek"
+
+#~ msgid "View available data from:"
+#~ msgstr "Az elérhető adatok:"
+
+#~ msgid "Data"
+#~ msgstr "Adat"
+
+#~ msgid "Layers"
+#~ msgstr "Rétegek"
+
+#~ msgid "Legend"
+#~ msgstr "Legenda"
+
+#~ msgid "Length"
+#~ msgstr "Hossz"
+
+#~ msgid "Loading Map..."
+#~ msgstr "Loading Map ..."
+
+#~ msgid "Map Size"
+#~ msgstr "Map méret"
+
+#~ msgid "Measure"
+#~ msgstr "Intézkedés"
+
+#~ msgid "Contact"
+#~ msgstr "Kapcsolat"
+
+#~ msgid "Permalink"
+#~ msgstr "Permalink"
+
+#~ msgid "Mini"
+#~ msgstr "Mini"
+
+#~ msgid "Pan Map"
+#~ msgstr "Pan Térkép"
+
+#~ msgid "Zoom to Next Extent"
+#~ msgstr "Nagyítás Next terjedelme"
+
+#~ msgid "Zoom to Previous Extent"
+#~ msgstr "Nagyítás az előző terjedelme"
+
+#~ msgid "This map has not yet been saved."
+#~ msgstr "Ez a térkép még nincs elmentve."
+
+#~ msgid "Premium"
+#~ msgstr "Prémium"
+
+#~ msgid "Print Map"
+#~ msgstr "Print Map"
+
+#~ msgid "Print Preview"
+#~ msgstr "Nyomtatási előnézet"
+
+#~ msgid "Properties"
+#~ msgstr "Tulajdonságok"
+
+#~ msgid "Publish Map"
+#~ msgstr "Közzététele Térkép"
+
+#~ msgid "Remove Layer"
+#~ msgstr "Távolítsuk réteg"
+
+#~ msgid "Sorry, your map could not be saved."
+#~ msgstr "Sajnos a térkép nem lehetett menteni."
+
+#~ msgid "Error While Saving"
+#~ msgstr "Hiba történt a mentése"
+
+#~ msgid "Save Map"
+#~ msgstr "Mentés Térkép"
+
+#~ msgid "You must be logged in to save this map."
+#~ msgstr "Be kell jelentkezned, hogy megmentse ezt a térképet."
+
+#~ msgid "Small"
+#~ msgstr "Kicsi"
 
 #~ msgid ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "Error contacting server.\n"
+#~ " Please check the url and try again."
 #~ msgstr ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "Hiba kapcsolatba szerver. Kérjük, ellenőrizze az URL-t, és próbálja újra."
+
+#~ msgid "Layer Properties"
+#~ msgstr "Fóliatulajdonság"
+
+#~ msgid "Change layer format and style"
+#~ msgstr "Változás réteg formátum és stílus"
+
+#~ msgid "Edit Styles"
+#~ msgstr "Stílusok szerkesztése"
+
+#~ msgid "Edit layer styles"
+#~ msgstr "Szerkesztés rétegstílusok"
+
+#~ msgid "Switch to Google Earth 3D Viewer"
+#~ msgstr "Váltás a Google Earth 3D Viewer"
 
 #~ msgid ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
+#~ "The map that you are trying to load does not exist.  Creating a new map "
+#~ "instead."
 #~ msgstr ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
+#~ "A térkép, amit próbál betölteni nem létezik. Létrehozása egy új térképet "
+#~ "helyette."
+
+#~ msgid "Width"
+#~ msgstr "Szélesség"
+
+#~ msgid "Zoom In"
+#~ msgstr "Nagyítás"
+
+#~ msgid "Zoom Out"
+#~ msgstr "Kicsinyítés"
+
+#~ msgid "Zoom level"
+#~ msgstr "Nagyítási szint"
+
+#~ msgid "Zoom Level"
+#~ msgstr "Nagyítási szint"
+
+#~ msgid "Zoom to Layer Extent"
+#~ msgstr "Nagyítás réteg kiterjedése"
+
+#~ msgid "Zoom to Visible Extent"
+#~ msgstr "Nagyítás Látható terjedelme"
+
+#~ msgid "Zoom Level {zoom}"
+#~ msgstr "Nagyítási szint {} zoom"
+
+#~ msgid "Create Map"
+#~ msgstr "Create Map"
+
+#~ msgid "Export Map"
+#~ msgstr "Export Térkép"
+
+#~ msgid "Map"
+#~ msgstr "Térkép"
+
+#~ msgid "View this Map"
+#~ msgstr "Nézd meg ezt a Map"
+
+#~ msgid "Open Map"
+#~ msgstr "Nyílt Térkép"
+
+#~ msgid "Name"
+#~ msgstr "Név"
+
+#~ msgid "Queryable"
+#~ msgstr "Lekérdezhető"
+
+#~ msgid "No background"
+#~ msgstr "Nincs háttér"
+
+#~ msgid ""
+#~ "Your map is ready to be published to the web!  Simply copy the following "
+#~ "HTML to embed the map in your website:"
+#~ msgstr ""
+#~ "A térkép készen kell közzétenni az interneten! Egyszerűen másolja az "
+#~ "alábbi HTML beágyazni a térkép a honlapon:"
+
+#~ msgid "Abstract:"
+#~ msgstr "Absztrakt:"
+
+#~ msgid "No attribution information is provided for this layer."
+#~ msgstr "Nincs Nevezd információ áll rendelkezésre erre a rétegre."
+
+#~ msgid "Provided by:"
+#~ msgstr "Szolgáltató:"
+
+#~ msgid "Download:"
+#~ msgstr "Letöltés:"
+
+#~ msgid "No keywords are listed for this layer."
+#~ msgstr "Nincs kulcsszavak szerepel ezen réteg."
+
+#~ msgid "Keywords:"
+#~ msgstr "Kulcsszavak:"
+
+#~ msgid "No metadata URLs are defined for this layer."
+#~ msgstr "Nem metaadat URL meghatározása ezen rétegben."
+
+#~ msgid "Paper size:"
+#~ msgstr "Papírméret:"
+
+#~ msgid "Resolution:"
+#~ msgstr "Felbontás:"
+
+#~ msgid "Print"
+#~ msgstr "Nyomtatás"
+
+#~ msgid "Enter map title here."
+#~ msgstr "Adja meg a térkép címet itt."
+
+#~ msgid "Include legend?"
+#~ msgstr "Beleértve legenda?"
+
+#~ msgid "Creating PDF..."
+#~ msgstr "PDF létrehozása ..."
+
+#~ msgid "Last Modified"
+#~ msgstr "Utoljára módosítva"
+
+#~ msgid "Prev"
+#~ msgstr "Előző"
+
+#~ msgid "Next"
+#~ msgstr "Következő"
+
+#~ msgid "of"
+#~ msgstr "Az"
+
+#~ msgid "Your search did not match any items."
+#~ msgstr "A keresés nem hozott eredményt terméket."
+
+#~ msgid "Search Maps"
+#~ msgstr "Keresés Térképek"
+
+#~ msgid "Search"
+#~ msgstr "Keresés"
+
+#~ msgid "Showing"
+#~ msgstr "Kiállítás"
+
+#~ msgid "Loading"
+#~ msgstr "Terhelés"
+
+#~ msgid "permalink"
+#~ msgstr "permalink"
+
+#~ msgid "Select:"
+#~ msgstr "Kiválasztás:"
+
+#~ msgid "All"
+#~ msgstr "Minden"
+
+#~ msgid "None"
+#~ msgstr "Egyik sem"
+
+#~ msgid "Loading..."
+#~ msgstr "Loading ..."
+
+#~ msgid "You do not have permission to view this data"
+#~ msgstr "Önnek nincs jogosultsága ahhoz, hogy az adatok"
+
+#~ msgid "This data is stored on a remote server"
+#~ msgstr "Ezek az adatok a távoli szerveren"
+
+#~ msgid "No abstract is provided for this layer."
+#~ msgstr "Nem elvont biztosítanak e réteg."
+
+#~ msgid "No download URLs are definied for this layer."
+#~ msgstr "Nincs letöltés URL definiálni ezt réteg."
+
+#~ msgid "Selected Layers"
+#~ msgstr "Kiválasztott rétegek"
+
+#~ msgid "No Layers Selected"
+#~ msgstr "No Rétegek kiválasztott"
+
+#~ msgid "Clear Selected"
+#~ msgstr "Kiválasztottak törlése"
+
+#~ msgid "Clear All"
+#~ msgstr "Összes törlése"
+
+#~ msgid "Operation Failed"
+#~ msgstr "Művelet nem sikerült"
+
+#~ msgid "No layers are currently selected."
+#~ msgstr "Nem rétegeket kiválasztva."
+
+#~ msgid "Downloading..."
+#~ msgstr "Letöltés ..."
+
+#~ msgid "Please wait"
+#~ msgstr "Kérem, várjon"
 
 #~ msgid ""
 #~ "January February March April May June July August September October "
@@ -766,9 +970,6 @@ msgstr "Kérem, várjon"
 
 #~ msgid "Hide"
 #~ msgstr "Hide"
-
-#~ msgid "Now"
-#~ msgstr "Now"
 
 #~ msgid "Clock"
 #~ msgstr "Clock"

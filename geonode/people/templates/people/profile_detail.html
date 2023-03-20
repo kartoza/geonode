@@ -34,8 +34,8 @@
 {% if user.is_authenticated %}
 {% if user == profile %}
   {% for group in profile.group_list_all %}
-  <div ng-if="group.logo != ''" class="col-xs-1 pull-right group-logo">
-    <a href="{{ group.get_absolute_url }}" ><img src="/uploaded/{{ group.logo }}" alt="{{ group.title }}" /></a>
+  <div ng-if="group.logo_url != ''" class="col-xs-1 pull-right group-logo">
+    <a href="{{ group.get_absolute_url }}" ><img src="{{ group.logo_url }}" alt="{{ group.title }}" /></a>
   </div>
   <!-- <div class="col-xs-6 col-md-8">
     <h5>
@@ -46,8 +46,8 @@
   {% endfor %}
 {% else %}
   {% for group in profile.group_list_public %}
-  <div ng-if="group.logo != ''" class="col-xs-1 pull-right group-logo">
-    <a href="{{ group.get_absolute_url }}" ><img src="/uploaded/{{ group.logo }}" alt="{{ group.title }}" /></a>
+  <div ng-if="group.logo_url != ''" class="col-xs-1 pull-right group-logo">
+    <a href="{{ group.get_absolute_url }}" ><img src="{{ group.logo_url }}" alt="{{ group.title }}" /></a>
   </div>
   <!-- <div class="col-xs-6 col-md-8">
     <h5>
@@ -62,6 +62,7 @@
   <h3>{{ profile.first_name|default:profile.name_long }}</h3>
   <table class="table table-user-profile">
     <tbody>
+      {% if user.is_authenticated and user == profile or user.is_superuser or user.is_staff %}
       {% if SHOW_PROFILE_EMAIL %}
       <tr>
         <td class="table-user-profile-attribute">{% trans 'Email' %}</td>
@@ -80,7 +81,6 @@
         <td class="table-user-profile-attribute">{% trans 'Organization'  %}</td>
         <td>{{ profile.organization | default:_('Not provided.') }}</td>
       </tr>
-      {% if user.is_authenticated %}
       <tr>
         <td class="table-user-profile-attribute">{% trans 'Location' %}</td>
         <td>{{ profile.location | default:_('Not provided.') }}</td>
@@ -90,7 +90,7 @@
         {% if profile.voice %}
             <td><a href="tel:{{ profile.voice }}">{{ profile.voice }}</a></td>
         {% else %}
-            <td>Not provided.</td>
+            <td>{% trans "Not provided" %}.</td>
         {% endif %}
       </tr>
       <tr>
@@ -101,7 +101,6 @@
         <td class="table-user-profile-attribute">{% trans 'Description' %}</td>
         <td>{{ profile.profile | default:_('Not provided.') }}</td>
       </tr>
-      {% endif %}
       <tr>
         <td class="table-user-profile-attribute">{% trans 'Keywords' %}</td>
         <td>
@@ -114,12 +113,19 @@
             {% endif %}
         </td>
       </tr>
+      {% else %}
+      <tr>
+        <td class="table-user-profile-attribute">{% trans 'Organization'  %}</td>
+        <td>{{ profile.organization | default:_('Not provided.') }}</td>
+      </tr>
+
+      {% endif %}
     </tbody>
   </table>
   {% if USE_GEOSERVER and DISPLAY_WMS_LINKS %}
   <p>
-      {% if request.user.is_authenticated and 'access_token' in request.session %}
-        <a href="{% url 'capabilities_user' profile.username %}?access_token={{ request.session.access_token }}">
+      {% if request.user.is_authenticated and access_token %}
+        <a href="{% url 'capabilities_user' profile.username %}?access_token={{access_token}}">
       {% else %}
         <a href="{% url 'capabilities_user' profile.username %}">
       {% endif %}
@@ -133,39 +139,39 @@
     </ul>
   {% if user == profile %}
     <ul class="list-group">
-      <li class="list-group-item"><a href="{% url "profile_edit" user.username %}"><i class="fa fa-edit"></i> {% trans "Edit profile" %}</a></li>
-      <li class="list-group-item"><a href="{% url "socialaccount_connections" %}"><i class="fa fa-sign-in"></i> {% trans "Connected social accounts" %}</a></li>
-      <li class="list-group-item"><a href="{% url "account_email" %}"><i class="fa fa-envelope-o"></i> {% trans "Associated e-mails" %}</a></li>
-      <li class="list-group-item"><a href="{% url "account_change_password" %}"><i class="fa fa-lock"></i> {% trans "Set/Change password" %}</a></li>
+      {% if not READ_ONLY_MODE %}
+        <li class="list-group-item"><a href="{% url "profile_edit" user.username %}"><i class="fa fa-edit"></i> {% trans "Edit profile" %}</a></li>
+      {% endif %}
+      {% if not AVAILABLE_SOCIAL_APPS_COUNT == 0 %}
+        <li class="list-group-item"><a href="{% url "socialaccount_connections" %}"><i class="fa fa-sign-in"></i> {% trans "Connected social accounts" %}</a></li>
+      {% endif %}
+        <li class="list-group-item"><a href="{% url "account_email" %}"><i class="fa fa-envelope-o"></i> {% trans "Associated e-mails" %}</a></li>
+      {% if not READ_ONLY_MODE %}
+        <li class="list-group-item"><a href="{% url "account_change_password" %}"><i class="fa fa-lock"></i> {% trans "Set/Change password" %}</a></li>
+      {% endif %}
     </ul>
     <ul class="list-group">
-      <li class="list-group-item"><a href="{% url "layer_upload" %}"><i class="fa fa-cloud-upload"></i> {% trans "Upload new layers" %}</a></li>
-      {% if 'geonode.contrib.createlayer' in INSTALLED_APPS %}
-        <li class="list-group-item"><a href="{% url "layer_create" %}"><i class="fa fa-map-o"></i> {% trans "Create a new layer" %}</a></li>
-      {% endif %}
-      <li class="list-group-item"><a href="{% url "new_map" %}"><i class="fa fa-map-marker"></i> {% trans "Create a new map" %}</a></li>
       <li class="list-group-item"><a href="{% url "user-activity" profile.username %}"><i class="fa fa-fire"></i> {% trans "My Activities" %}</a></li>
     </ul>
     <ul class="list-group">
       {% if USE_NOTIFICATIONS %}
-      <li class="list-group-item"><a href="{% url "notice_settings" %}"><i class="fa fa-bell"></i> {% trans "Notifications" %}</a></li>
+      <li class="list-group-item"><a href="{% url "pinax_notifications:notice_settings" %}"><i class="fa fa-bell"></i> {% trans "Notifications" %}</a></li>
       {% endif %}
       {% if perms.announcements.can_manage %}
       <li class="list-group-item"><a href="{% url "announcements_list" %}"><i class="fa fa-bullhorn"></i> {% trans "Announcements" %}</a></li>
       {% endif %}
     </ul>
     <ul class="list-group">
-      <li class="list-group-item"><a href="{% url "geonode.invitations:geonode-send-invite" %}"><i class="fa fa-edit"></i> {% trans "Invite Users" %}</a></li>
-      {% if user.is_superuser %}
-      <li class="list-group-item"><a href="{% url "services" %}?limit={{ CLIENT_RESULTS_LIMIT }}"><i class="fa fa-globe"></i> {% trans "Remote Services" %}</a></li>
-      <li class="list-group-item"><a href="{% url "proxy" %}?url={{ GEOSERVER_LOCAL_URL }}web"><i class="fa fa-gears"></i> {% trans "GeoServer" %}</a></li>
+      {% if not READ_ONLY_MODE %}
+        <li class="list-group-item"><a href="{% url "geonode.invitations:geonode-send-invite" %}"><i class="fa fa-edit"></i> {% trans "Invite Users" %}</a></li>
       {% endif %}
-      {% if user.is_staff %}
-      <li class="list-group-item"><a href="{% url "admin:index" %}"><i class="fa fa-cog"></i> {% trans "Admin" %}</a></li>
+      {% if user.is_superuser or user.is_staff %}
+          <li class="list-group-item"><a href="{{ OGC_SERVER.default.WEB_UI_LOCATION }}"><i class="fa fa-gears"></i> {% trans "GeoServer" %}</a></li>
+          <li class="list-group-item"><a href="{% url "admin:index" %}"><i class="fa fa-cog"></i> {% trans "Admin" %}</a></li>
       {% endif %}
     </ul>
   {% else %}
-    {% if user.is_superuser %}
+    {% if user.is_superuser and not READ_ONLY_MODE %}
     <ul class="list-group">
       <li class="list-group-item"><a href="{% url "profile_edit" profile.username %}"><i class="fa fa-edit"></i> {% trans "Edit profile" %}</a></li>
     </ul>
@@ -176,7 +182,7 @@
   {% endif %}
 </div>
 
-<div class="col-md-9">
+<div class="col-xs-12 col-md-9">
   <h4>{% trans "Resources" %}</h4>
   <div class="col-md-12">
     {% include "people/_profile_filters.html" %}
@@ -184,7 +190,7 @@
   <!-- <div class="col-md-12">
     {% include "search/_sort_filters.html" %}
   </div> -->
-  <div class="col-md-12">
+  <div class=" col-xs-12 col-md-12">
     {% include 'base/_resourcebase_snippet.html' %}
   </div>
   <div class="col-md-12">
@@ -196,9 +202,6 @@
 
 {% block extra_script %}
 {{ block.super }}
-  {% if GEONODE_SECURITY_ENABLED %}
-    {% include "_permissions_form_js.html" %}
-  {% endif %}
   <script type="text/javascript">
       {% if HAYSTACK_SEARCH %}
           SEARCH_URL = '{% url 'api_get_search' api_name='api' resource_name='base' %}?owner__username={{profile.username}}'

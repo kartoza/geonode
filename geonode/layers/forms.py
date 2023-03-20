@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -17,57 +16,62 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-
 import os
-import tempfile
 import zipfile
-from autocomplete_light.registry import autodiscover
 
 from django import forms
 
-from geonode import geoserver, qgis_server
+from geonode import geoserver
 from geonode.utils import check_ogc_backend
 
-try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
-from geonode.utils import unzip_file
-from geonode.layers.models import Layer, Attribute
-
-autodiscover() # flake8: noqa
-
-from geonode.base.forms import ResourceBaseForm
+import json
+from geonode.utils import unzip_file, mkdtemp
+from geonode.base.forms import ResourceBaseForm, get_tree_data
+from geonode.layers.models import Dataset, Attribute
 
 
 class JSONField(forms.CharField):
 
     def clean(self, text):
-        text = super(JSONField, self).clean(text)
+        text = super().clean(text)
+
+        if not self.required and (text is None or text == ''):
+            return None
+
         try:
             return json.loads(text)
         except ValueError:
             raise forms.ValidationError("this field must be valid JSON")
 
 
-class LayerForm(ResourceBaseForm):
+class DatasetForm(ResourceBaseForm):
+
     class Meta(ResourceBaseForm.Meta):
-        model = Layer
+        model = Dataset
         exclude = ResourceBaseForm.Meta.exclude + (
-            'workspace',
             'store',
-            'storeType',
-            'alternate',
-            'default_style',
             'styles',
+            'subtype',
+            'alternate',
+            'workspace',
+            'default_style',
             'upload_session',
-            'remote_service',)
+            'resource_type',
+            'remote_service',
+            'remote_typename',
+            'users_geolimits',
+            'groups_geolimits',
+            'blob',
+            'files',
+            'ows_url'
+        )
         # widgets = {
         #     'title': forms.TextInput({'placeholder': title_help_text})
         # }
 
     def __init__(self, *args, **kwargs):
-        super(ResourceBaseForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.fields['regions'].choices = get_tree_data()
         for field in self.fields:
             help_text = self.fields[field].help_text
             self.fields[field].help_text = None
@@ -92,8 +96,6 @@ class LayerUploadForm(forms.Form):
     xml_file = forms.FileField(required=False)
     if check_ogc_backend(geoserver.BACKEND_PACKAGE):
         sld_file = forms.FileField(required=False)
-    if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
-        qml_file = forms.FileField(required=False)
 
     charset = forms.CharField(required=False)
     metadata_uploaded_preserve = forms.BooleanField(required=False)
@@ -109,17 +111,15 @@ class LayerUploadForm(forms.Form):
     # Adding style file based on the backend
     if check_ogc_backend(geoserver.BACKEND_PACKAGE):
         spatial_files.append('sld_file')
-    if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
-        spatial_files.append('qml_file')
 
     spatial_files = tuple(spatial_files)
 
     def clean(self):
-        cleaned = super(LayerUploadForm, self).clean()
+        cleaned = super().clean()
         dbf_file = shx_file = prj_file = xml_file = sld_file = None
         base_name = base_ext = None
         if zipfile.is_zipfile(cleaned["base_file"]):
-            filenames = zipfile.ZipFile(cleaned["base_file"]).namelist()
+            filenames = zipfile.ZipFile(cleaned["base_file"], allowZip64=True).namelist()
             for filename in filenames:
                 name, ext = os.path.splitext(filename)
                 if ext.lower() == '.shp':
@@ -157,18 +157,15 @@ class LayerUploadForm(forms.Form):
                     sld_file = cleaned["sld_file"].name
 
         if not cleaned["metadata_upload_form"] and not cleaned["style_upload_form"] and base_ext.lower() not in (
-                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld"):
+                ".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".asc", ".sld", ".kml", ".kmz", ".csv"):
             raise forms.ValidationError(
-                "Only Shapefiles, GeoTiffs, and ASCIIs are supported. You "
-                "uploaded a %s file" % base_ext)
+                f"Only Shapefiles, GeoTiffs, and ASCIIs are supported. You uploaded a {base_ext} file")
         elif cleaned["metadata_upload_form"] and base_ext.lower() not in (".xml"):
             raise forms.ValidationError(
-                "Only XML files are supported. You uploaded a %s file" %
-                base_ext)
+                f"Only XML files are supported. You uploaded a {base_ext} file")
         elif cleaned["style_upload_form"] and base_ext.lower() not in (".sld"):
             raise forms.ValidationError(
-                "Only SLD files are supported. You uploaded a %s file" %
-                base_ext)
+                f"Only SLD files are supported. You uploaded a {base_ext} file")
 
         if base_ext.lower() == ".shp":
             if dbf_file is None or shx_file is None:
@@ -193,22 +190,19 @@ class LayerUploadForm(forms.Form):
                         # force rename of file so that file.shp.xml doesn't
                         # overwrite as file.shp
                         if cleaned.get("xml_file"):
-                            cleaned["xml_file"].name = '%s.xml' % base_name
+                            cleaned["xml_file"].name = f'{base_name}.xml'
             if sld_file is not None:
                 if os.path.splitext(sld_file)[0] != base_name:
                     if sld_file.find('.shp') != -1:
                         # force rename of file so that file.shp.xml doesn't
                         # overwrite as file.shp
                         if cleaned.get("sld_file"):
-                            cleaned["sld_file"].name = '%s.sld' % base_name
-
+                            cleaned["sld_file"].name = f'{base_name}.sld'
         return cleaned
 
     def write_files(self):
-
         absolute_base_file = None
-        tempdir = tempfile.mkdtemp()
-
+        tempdir = mkdtemp()
         if zipfile.is_zipfile(self.cleaned_data['base_file']):
             absolute_base_file = unzip_file(self.cleaned_data['base_file'],
                                             '.shp', tempdir=tempdir)
@@ -228,12 +222,10 @@ class LayerUploadForm(forms.Form):
 class NewLayerUploadForm(LayerUploadForm):
     if check_ogc_backend(geoserver.BACKEND_PACKAGE):
         sld_file = forms.FileField(required=False)
-    if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
-        qml_file = forms.FileField(required=False)
     xml_file = forms.FileField(required=False)
 
     abstract = forms.CharField(required=False)
-    layer_title = forms.CharField(required=False)
+    dataset_title = forms.CharField(required=False)
     permissions = JSONField()
     charset = forms.CharField(required=False)
     metadata_uploaded_preserve = forms.BooleanField(required=False)
@@ -248,25 +240,23 @@ class NewLayerUploadForm(LayerUploadForm):
     # Adding style file based on the backend
     if check_ogc_backend(geoserver.BACKEND_PACKAGE):
         spatial_files.append('sld_file')
-    if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
-        spatial_files.append('qml_file')
 
     spatial_files = tuple(spatial_files)
 
 
 class LayerDescriptionForm(forms.Form):
-    title = forms.CharField(300)
-    abstract = forms.CharField(2000, widget=forms.Textarea, required=False)
-    supplemental_information = forms.CharField(2000, widget=forms.Textarea, required=False)
-    data_quality_statement = forms.CharField(2000, widget=forms.Textarea, required=False)
-    purpose = forms.CharField(500, required=False)
-    keywords = forms.CharField(500, required=False)
+    title = forms.CharField(max_length=300, required=True)
+    abstract = forms.CharField(max_length=2000, widget=forms.Textarea, required=False)
+    supplemental_information = forms.CharField(max_length=2000, widget=forms.Textarea, required=False)
+    data_quality_statement = forms.CharField(max_length=2000, widget=forms.Textarea, required=False)
+    purpose = forms.CharField(max_length=500, required=False)
+    keywords = forms.CharField(max_length=500, required=False)
 
 
 class LayerAttributeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
-        super(LayerAttributeForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['attribute'].widget.attrs['readonly'] = True
         self.fields['display_order'].widget.attrs['size'] = 3
 
@@ -291,3 +281,40 @@ class LayerStyleUploadForm(forms.Form):
     name = forms.CharField(required=False)
     update = forms.BooleanField(required=False)
     sld = forms.FileField()
+
+
+class DatasetTimeSerieForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        _choises = [(None, '-----')] + [(_a.pk, _a.attribute) for _a in kwargs.get('instance').attributes if _a.attribute_type in ['xsd:dateTime']]
+        self.base_fields.get('attribute').choices = _choises
+        self.base_fields.get('end_attribute').choices = _choises
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = Attribute
+        fields = ('attribute',)
+
+    attribute = forms.ChoiceField(
+        required=False,
+    )
+    end_attribute = forms.ChoiceField(
+        required=False,
+    )
+    presentation = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('LIST', 'List of all the distinct time values'),
+            ('DISCRETE_INTERVAL', 'Intervals defined by the resolution'),
+            ('CONTINUOUS_INTERVAL', 'Continuous Intervals for data that is frequently updated, resolution describes the frequency of updates')
+        ]
+    )
+    precision_value = forms.IntegerField(required=False)
+    precision_step = forms.ChoiceField(required=False, choices=[
+        ('years',) * 2,
+        ('months',) * 2,
+        ('days',) * 2,
+        ('hours',) * 2,
+        ('minutes',) * 2,
+        ('seconds',) * 2
+    ])

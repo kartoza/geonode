@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -19,11 +18,8 @@
 #########################################################################
 
 import logging
-import sys
-from optparse import make_option
 
 from django.core.management.base import BaseCommand
-from django.conf import settings
 
 from geonode.messaging import connection
 from geonode.messaging.consumer import Consumer
@@ -34,16 +30,19 @@ logger = logging.getLogger(__package__)
 
 
 class Command(BaseCommand):
+
     help = 'Start the MQ consumer to perform non blocking tasks'
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+
+        # Named (optional) arguments
+        parser.add_argument(
             '-i',
             '--ignore-errors',
             action='store_true',
             dest='ignore_errors',
             default=False,
-            help='Stop after any errors are encountered.'),
-        )
+            help='Stop after any errors are encountered.')
 
     def handle(self, **options):
         with connection:

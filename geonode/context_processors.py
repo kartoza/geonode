@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,17 +17,29 @@
 #
 #########################################################################
 
+import warnings
+
 from django.conf import settings
-from geonode import get_version
-from geonode.catalogue import default_catalogue_backend
 from django.contrib.sites.models import Site
 
+from geonode import get_version
+from geonode.catalogue import default_catalogue_backend
 from geonode.notifications_helper import has_notifications
+from geonode.base.models import Configuration, Thesaurus
+from geonode.utils import get_geonode_app_types
+
+from allauth.socialaccount.models import SocialApp
 
 
 def resource_urls(request):
     """Global values to pass to templates"""
     site = Site.objects.get_current()
+    thesaurus = Thesaurus.objects.filter(facet=True).all().order_by('order', 'id')
+    if hasattr(settings, 'THESAURUS'):
+        warnings.warn(
+            'Thesaurus settings is going to be'
+            'deprecated in the future versions, please move the settings to '
+            'the new configuration ', FutureWarning)
     defaults = dict(
         STATIC_URL=settings.STATIC_URL,
         CATALOGUE_BASE_URL=default_catalogue_backend()['URL'],
@@ -40,6 +51,7 @@ def resource_urls(request):
         SITEURL=settings.SITEURL,
         INSTALLED_APPS=settings.INSTALLED_APPS,
         THEME_ACCOUNT_CONTACT_EMAIL=settings.THEME_ACCOUNT_CONTACT_EMAIL,
+        TINYMCE_DEFAULT_CONFIG=settings.TINYMCE_DEFAULT_CONFIG,
         DEBUG_STATIC=getattr(
             settings,
             "DEBUG_STATIC",
@@ -52,10 +64,6 @@ def resource_urls(request):
             settings,
             'DISPLAY_SOCIAL',
             False),
-        DISPLAY_COMMENTS=getattr(
-            settings,
-            'DISPLAY_COMMENTS',
-            False),
         DISPLAY_RATINGS=getattr(
             settings,
             'DISPLAY_RATINGS',
@@ -63,7 +71,11 @@ def resource_urls(request):
         DISPLAY_WMS_LINKS=getattr(
             settings,
             'DISPLAY_WMS_LINKS',
-            False),
+            True),
+        CREATE_LAYER=getattr(
+            settings,
+            'CREATE_LAYER',
+            True),
         TWITTER_CARD=getattr(
             settings,
             'TWITTER_CARD',
@@ -83,6 +95,10 @@ def resource_urls(request):
         ADMIN_MODERATE_UPLOADS=getattr(
             settings,
             'ADMIN_MODERATE_UPLOADS',
+            False),
+        TOPICCATEGORY_MANDATORY=getattr(
+            settings,
+            'TOPICCATEGORY_MANDATORY',
             False),
         GROUP_MANDATORY_RESOURCES=getattr(
             settings,
@@ -140,25 +156,26 @@ def resource_urls(request):
             dict()).get(
             'METADATA',
             'never'),
-        USE_GEOSERVER=settings.USE_GEOSERVER,
+        USE_GEOSERVER=getattr(settings, 'USE_GEOSERVER', False),
         USE_NOTIFICATIONS=has_notifications,
-        USE_MONITORING='geonode.contrib.monitoring' in settings.INSTALLED_APPS and settings.MONITORING_ENABLED,
+        USE_MONITORING=settings.MONITORING_ENABLED,
         DEFAULT_ANONYMOUS_VIEW_PERMISSION=getattr(settings, 'DEFAULT_ANONYMOUS_VIEW_PERMISSION', False),
         DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION=getattr(settings, 'DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION', False),
         EXIF_ENABLED=getattr(
             settings,
             "EXIF_ENABLED",
             False),
-        NLP_ENABLED=getattr(
+        FAVORITE_ENABLED=getattr(
             settings,
-            "NLP_ENABLED",
+            "FAVORITE_ENABLED",
             False),
         SEARCH_FILTERS=getattr(
             settings,
             'SEARCH_FILTERS',
             False
         ),
-        THESAURI_FILTERS=[t['name'] for t in settings.THESAURI if t.get('filter')],
+        THESAURI_FILTERS=[t['name'] for t in [settings.THESAURUS, ] if
+                          t.get('filter')] if hasattr(settings, 'THESAURUS') else [t.identifier for t in thesaurus],
         MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS=getattr(
             settings, 'MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS', False
         ),
@@ -168,5 +185,22 @@ def resource_urls(request):
             False
         ),
         OGC_SERVER=getattr(settings, 'OGC_SERVER', None),
+        DELAYED_SECURITY_SIGNALS=getattr(settings, 'DELAYED_SECURITY_SIGNALS', False),
+        READ_ONLY_MODE=getattr(Configuration.load(), 'read_only', False),
+        # GeoNode Apps
+        GEONODE_APPS_ENABLE=getattr(settings, 'GEONODE_APPS_ENABLE', False),
+        GEONODE_APPS_NAME=getattr(settings, 'GEONODE_APPS_NAME', 'Apps'),
+        GEONODE_APPS_NAV_MENU_ENABLE=getattr(settings, 'GEONODE_APPS_NAV_MENU_ENABLE', False),
+        CATALOG_METADATA_TEMPLATE=getattr(settings, "CATALOG_METADATA_TEMPLATE", "catalogue/full_metadata.xml"),
+        UI_REQUIRED_FIELDS=getattr(settings, "UI_REQUIRED_FIELDS", []),
+        REQ_THESAURI=[
+            f"tkeywords-{x.id}"
+            for x in Thesaurus.objects.all()
+            if (x.card_max == -1 and x.card_min == 1) or (x.card_max == 1 and x.card_min == 1)
+        ],
+        ADVANCED_EDIT_EXCLUDE_FIELD=getattr(settings, "ADVANCED_EDIT_EXCLUDE_FIELD", []),
+        PROFILE_EDIT_EXCLUDE_FIELD=getattr(settings, "PROFILE_EDIT_EXCLUDE_FIELD", []),
+        AVAILABLE_SOCIAL_APPS_COUNT=SocialApp.objects.count(),
+        GEONODE_APPS_TYPES=get_geonode_app_types(),
     )
     return defaults

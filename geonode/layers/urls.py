@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ##############################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,10 +17,9 @@
 #
 # ##############################################################################
 
-from geonode import geoserver, qgis_server  # noqa
+from geonode import geoserver  # noqa
 from geonode.utils import check_ogc_backend
-from django.conf.urls import url
-from django.views.generic import TemplateView
+from django.conf.urls import url, include
 
 from . import views
 
@@ -31,53 +29,44 @@ js_info_dict = {
 
 urlpatterns = [
     # 'geonode.layers.views',
-    url(r'^$',
-        TemplateView.as_view(template_name='layers/layer_list.html'),
-        {'facet_type': 'layers', 'is_layer': True},
-        name='layer_browse'),
-    url(r'^upload$', views.layer_upload, name='layer_upload'),
-    url(r'^upload_metadata$', views.layer_metadata_upload,
-        name='layer_metadata_upload'),
-    url(r'^upload_style$', views.layer_sld_upload, name='layer_sld_upload'),
-    url(r'^load_layer_data$', views.load_layer_data, name='load_layer_data'),
-    url(r'^(?P<layername>[^/]*)$', views.layer_detail, name="layer_detail"),
+    url(r'^upload$', views.dataset_upload, name='dataset_upload'),
+    url(r'^upload_metadata$', views.dataset_metadata_upload,
+        name='dataset_metadata_upload'),
+    url(r'^load_dataset_data$', views.load_dataset_data, name='load_dataset_data'),
     url(r'^(?P<layername>[^/]*)/metadata$',
-        views.layer_metadata, name="layer_metadata"),
+        views.dataset_metadata, name="dataset_metadata"),
     url(r'^(?P<layername>[^/]*)/metadata_advanced$',
-        views.layer_metadata_advanced, name="layer_metadata_advanced"),
-    url(r'^(?P<layername>[^/]*)/remove$',
-        views.layer_remove, name="layer_remove"),
-    url(r'^(?P<granule_id>[^/]*)/(?P<layername>[^/]*)/granule_remove$', views.layer_granule_remove,
-        name="layer_granule_remove"),
+        views.dataset_metadata_advanced, name="dataset_metadata_advanced"),
+    url(r'^(?P<granule_id>[^/]*)/(?P<layername>[^/]*)/granule_remove$', views.dataset_granule_remove,
+        name="dataset_granule_remove"),
     url(r'^(?P<layername>[^/]*)/replace$',
-        views.layer_replace, name="layer_replace"),
-    url(r'^(?P<layername>[^/]*)/thumbnail$',
-        views.layer_thumbnail, name='layer_thumbnail'),
-    url(r'^(?P<layername>[^/]*)/get$', views.get_layer, name='get_layer'),
+        views.dataset_replace, name="dataset_replace"),
+    url(r'^(?P<layername>[^/]*)/append$',
+        views.dataset_append, name="dataset_append"),
+    url(r'^(?P<layername>[^/]*)/get$', views.get_dataset, name='get_dataset'),
     url(r'^(?P<layername>[^/]*)/metadata_detail$',
-        views.layer_metadata_detail, name='layer_metadata_detail'),
+        views.dataset_metadata_detail, name='dataset_metadata_detail'),
     url(r'^(?P<layername>[^/]*)/metadata_upload$',
-        views.layer_metadata_upload, name='layer_metadata_upload'),
+        views.dataset_metadata_upload, name='dataset_metadata_upload'),
+    url(r'^(?P<layername>[^/]+)/embed$',
+        views.dataset_embed, name='dataset_embed'),
     url(r'^(?P<layername>[^/]*)/style_upload$',
-        views.layer_sld_upload, name='layer_sld_upload'),
+        views.dataset_sld_upload, name='dataset_sld_upload'),
     url(r'^(?P<layername>[^/]*)/feature_catalogue$',
-        views.layer_feature_catalogue, name='layer_feature_catalogue'),
-    url(r'^metadata/batch/(?P<ids>[^/]*)/$',
-        views.layer_batch_metadata, name='layer_batch_metadata'),
-
-    # url(r'^api/batch_permissions/?$', 'batch_permissions',
-    #    name='batch_permssions'),
-    # url(r'^api/batch_delete/?$', 'batch_delete', name='batch_delete'),
+        views.dataset_feature_catalogue, name='dataset_feature_catalogue'),
+    url(r'^metadata/batch/$',
+        views.dataset_batch_metadata, name='dataset_batch_metadata'),
+    url(r'^(?P<layername>[^/]*)/dataset_download$',
+        views.dataset_download, name="dataset_download"),
+    url(r'^', include('geonode.layers.api.urls')),
 ]
 
 # -- Deprecated url routes for Geoserver authentication -- remove after GeoNode 2.1
 # -- Use /gs/acls, gs/resolve_user/, gs/download instead
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
-    from geonode.geoserver.views import layer_acls, resolve_user, layer_batch_download
+    from geonode.geoserver.views import dataset_acls, resolve_user
     urlpatterns = [  # 'geonode.geoserver.views',
-        url(r'^acls/?$', layer_acls, name='layer_acls_dep'),
+        url(r'^acls/?$', dataset_acls, name='dataset_acls_dep'),
         url(r'^resolve_user/?$', resolve_user,
-            name='layer_resolve_user_dep'),
-        url(r'^download$', layer_batch_download,
-            name='layer_batch_download_dep'),
+            name='dataset_resolve_user_dep'),
     ] + urlpatterns

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,12 +17,11 @@
 #
 #########################################################################
 
-from agon_ratings.models import OverallRating
-from dialogos.models import Comment
+from pinax.ratings.models import OverallRating
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Avg
 from haystack import indexes
-from geonode.maps.models import Layer
+from geonode.maps.models import Dataset
 
 
 class LayerIndex(indexes.SearchIndex, indexes.Indexable):
@@ -34,12 +32,8 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
     csw_wkt_geometry = indexes.CharField(model_attr="csw_wkt_geometry")
     detail_url = indexes.CharField(model_attr="get_absolute_url")
     owner__username = indexes.CharField(model_attr="owner", faceted=True, null=True)
-    popular_count = indexes.IntegerField(
-        model_attr="popular_count",
-        default=0,
-        boost=20)
-    share_count = indexes.IntegerField(model_attr="share_count", default=0)
-    rating = indexes.IntegerField(null=True)
+    is_published = indexes.BooleanField(model_attr="is_published")
+    featured = indexes.BooleanField(model_attr="featured")
     srid = indexes.CharField(model_attr="srid")
     supplemental_information = indexes.CharField(model_attr="supplemental_information", null=True)
     thumbnail_url = indexes.CharField(model_attr="thumbnail_url", null=True)
@@ -86,23 +80,22 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
     share_count = indexes.IntegerField(model_attr="share_count", default=0)
     rating = indexes.IntegerField(null=True)
     num_ratings = indexes.IntegerField(stored=False)
-    num_comments = indexes.IntegerField(stored=False)
 
     def get_model(self):
-        return Layer
+        return Dataset
 
     def prepare_type(self, obj):
         return "layer"
 
     def prepare_subtype(self, obj):
-        if obj.storeType == "dataStore":
+        if obj.subtype == "vector":
             if obj.has_time:
-                return "vectorTimeSeries"
+                return "vector_time"
             else:
                 return "vector"
-        elif obj.storeType == "coverageStore":
+        elif obj.subtype == "raster":
             return "raster"
-        elif obj.storeType == "remoteStore":
+        elif obj.subtype in ['tileStore', 'remote']:
             return "remote"
 
     def prepare_rating(self, obj):
@@ -124,15 +117,6 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
                 content_type=ct
             ).all().count()
         except OverallRating.DoesNotExist:
-            return 0
-
-    def prepare_num_comments(self, obj):
-        try:
-            return Comment.objects.filter(
-                object_id=obj.pk,
-                content_type=ContentType.objects.get_for_model(obj)
-            ).all().count()
-        except:
             return 0
 
     def prepare_title_sortable(self, obj):

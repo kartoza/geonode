@@ -18,7 +18,19 @@
 #
 #########################################################################
 
+""" There are 3 ways to override GeoNode settings:
+   1. Using environment variables, if your changes to GeoNode are minimal.
+   2. Creating a downstream project, if you are doing a lot of customization.
+   3. Override settings in a local_settings.py file, legacy.
+"""
+
+import ast
 import os
+try:  # python2
+    from urlparse import urlparse, urlunparse, urlsplit, urljoin
+except ImportError:
+    # Python 3 fallback
+    from urllib.parse import urlparse, urlunparse, urlsplit, urljoin
 from geonode.settings import *
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -29,23 +41,31 @@ STATIC_ROOT = os.getenv('STATIC_ROOT',
                         os.path.join(PROJECT_ROOT, "static_root")
                         )
 
-# SECRET_KEY = '************************'
+TIME_ZONE = 'UTC'
 
-SITEURL = "http://localhost:8000"
+# Login and logout urls override
+LOGIN_URL = os.getenv('LOGIN_URL', '{}account/login/'.format(SITEURL))
+LOGOUT_URL = os.getenv('LOGOUT_URL', '{}account/logout/'.format(SITEURL))
 
-ALLOWED_HOSTS = ['localhost', 'geonode.example.com']
+ACCOUNT_LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', SITEURL)
+ACCOUNT_LOGOUT_REDIRECT_URL =  os.getenv('LOGOUT_REDIRECT_URL', SITEURL)
 
-# TIME_ZONE = 'Europe/Paris'
+AVATAR_GRAVATAR_SSL = ast.literal_eval(os.getenv('AVATAR_GRAVATAR_SSL', 'True'))
 
+# Backend
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'geonode',
         'USER': 'geonode',
         'PASSWORD': 'geonode',
         'HOST': 'localhost',
         'PORT': '5432',
-        'CONN_TOUT': 900,
+        'CONN_MAX_AGE': 0,
+        'CONN_TOUT': 5,
+        'OPTIONS': {
+            'connect_timeout': 5,
+        }
     },
     # vector datastore for uploads
     'datastore': {
@@ -56,7 +76,11 @@ DATABASES = {
         'PASSWORD': 'geonode',
         'HOST': 'localhost',
         'PORT': '5432',
-        'CONN_TOUT': 900,
+        'CONN_MAX_AGE': 0,
+        'CONN_TOUT': 5,
+        'OPTIONS': {
+            'connect_timeout': 5,
+        }
     }
 }
 
@@ -64,9 +88,22 @@ GEOSERVER_LOCATION = os.getenv(
     'GEOSERVER_LOCATION', 'http://localhost:8080/geoserver/'
 )
 
+GEOSERVER_PUBLIC_HOST = os.getenv(
+    'GEOSERVER_PUBLIC_HOST', SITE_HOST_NAME
+)
+
+GEOSERVER_PUBLIC_PORT = os.getenv(
+    'GEOSERVER_PUBLIC_PORT', 8080
+)
+
+_default_public_location = 'http://{}:{}/geoserver/'.format(GEOSERVER_PUBLIC_HOST, GEOSERVER_PUBLIC_PORT) if GEOSERVER_PUBLIC_PORT else 'http://{}/geoserver/'.format(GEOSERVER_PUBLIC_HOST)
+
+GEOSERVER_WEB_UI_LOCATION = os.getenv(
+    'GEOSERVER_WEB_UI_LOCATION', GEOSERVER_LOCATION
+)
+
 GEOSERVER_PUBLIC_LOCATION = os.getenv(
-    #    'GEOSERVER_PUBLIC_LOCATION', '{}/geoserver/'.format(SITEURL)
-    'GEOSERVER_LOCATION', 'http://localhost:8080/geoserver/'
+    'GEOSERVER_PUBLIC_LOCATION', _default_public_location
 )
 
 OGC_SERVER_DEFAULT_USER = os.getenv(
@@ -82,6 +119,7 @@ OGC_SERVER = {
     'default': {
         'BACKEND': 'geonode.geoserver',
         'LOCATION': GEOSERVER_LOCATION,
+        'WEB_UI_LOCATION': GEOSERVER_WEB_UI_LOCATION,
         'LOGIN_ENDPOINT': 'j_spring_oauth2_geonode_login',
         'LOGOUT_ENDPOINT': 'j_spring_oauth2_geonode_logout',
         # PUBLIC_LOCATION needs to be kept like this because in dev mode
@@ -94,40 +132,31 @@ OGC_SERVER = {
         'PRINT_NG_ENABLED': True,
         'GEONODE_SECURITY_ENABLED': True,
         'GEOFENCE_SECURITY_ENABLED': True,
-        'GEOGIG_ENABLED': False,
         'WMST_ENABLED': False,
         'BACKEND_WRITE_ENABLED': True,
         'WPS_ENABLED': False,
         'LOG_FILE': '%s/geoserver/data/logs/geoserver.log' % os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir)),
         # Set to dictionary identifier of database containing spatial data in DATABASES dictionary to enable
         'DATASTORE': 'datastore',
-        'PG_GEOGIG': False,
-        'TIMEOUT': 10  # number of seconds to allow for HTTP requests
+        'TIMEOUT': int(os.getenv('OGC_REQUEST_TIMEOUT', '60')),
+        'MAX_RETRIES': int(os.getenv('OGC_REQUEST_MAX_RETRIES', '5')),
+        'BACKOFF_FACTOR': float(os.getenv('OGC_REQUEST_BACKOFF_FACTOR', '0.3')),
+        'POOL_MAXSIZE': int(os.getenv('OGC_REQUEST_POOL_MAXSIZE', '10')),
+        'POOL_CONNECTIONS': int(os.getenv('OGC_REQUEST_POOL_CONNECTIONS', '10')),
     }
 }
 
-# WARNING: Map Editing is affected by this. GeoExt Configuration is cached for 5 minutes
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-#         'LOCATION': '/var/tmp/django_cache',
-#     }
-# }
-
 # If you want to enable Mosaics use the following configuration
 UPLOADER = {
-    # 'BACKEND': 'geonode.rest',
     'BACKEND': 'geonode.importer',
     'OPTIONS': {
         'TIME_ENABLED': True,
         'MOSAIC_ENABLED': False,
-        'GEOGIG_ENABLED': False,
     },
     'SUPPORTED_CRS': [
         'EPSG:4326',
         'EPSG:3785',
         'EPSG:3857',
-        'EPSG:900913',
         'EPSG:32647',
         'EPSG:32736'
     ],
@@ -146,6 +175,7 @@ UPLOADER = {
     ]
 }
 
+# CSW settings
 CATALOGUE = {
     'default': {
         # The underlying CSW implementation
@@ -153,20 +183,12 @@ CATALOGUE = {
         'ENGINE': 'geonode.catalogue.backends.pycsw_local',
         # pycsw in non-local mode
         # 'ENGINE': 'geonode.catalogue.backends.pycsw_http',
-        # GeoNetwork opensource
-        # 'ENGINE': 'geonode.catalogue.backends.geonetwork',
         # deegree and others
         # 'ENGINE': 'geonode.catalogue.backends.generic',
-
         # The FULLY QUALIFIED base url to the CSW instance for this GeoNode
-        'URL': '%s/catalogue/csw' % SITEURL,
-        # 'URL': 'http://localhost:8080/geonetwork/srv/en/csw',
+        'URL': urljoin(SITEURL, '/catalogue/csw'),
         # 'URL': 'http://localhost:8080/deegree-csw-demo-3.0.4/services',
-
-        # login credentials (for GeoNetwork)
-        'USER': 'admin',
-        'PASSWORD': 'admin',
-        'ALTERNATES_ONLY': True,
+        # 'ALTERNATES_ONLY': True,
     }
 }
 
@@ -180,6 +202,23 @@ PYCSW = {
         #    'pretty_print': 'true',
         #    'federatedcatalogues': 'http://catalog.data.gov/csw'
         # },
+        'server': {
+            'home': '.',
+            'url': CATALOGUE['default']['URL'],
+            'encoding': 'UTF-8',
+            'language': LANGUAGE_CODE,
+            'maxrecords': '20',
+            'pretty_print': 'true',
+            # 'domainquerytype': 'range',
+            'domaincounts': 'true',
+            'profiles': 'apiso,ebrim',
+        },
+        'manager': {
+            # authentication/authorization is handled by Django
+            'transactions': 'false',
+            'allowed_ips': '*',
+            # 'csw_harvest_pagesize': '10',
+        },
         'metadata:main': {
             'identification_title': 'GeoNode Catalogue',
             'identification_abstract': 'GeoNode is an open source platform' \
@@ -222,165 +261,212 @@ PYCSW = {
     }
 }
 
+# -- START Client Hooksets Setup
+
 # GeoNode javascript client configuration
 
 # default map projection
 # Note: If set to EPSG:4326, then only EPSG:4326 basemaps will work.
-DEFAULT_MAP_CRS = "EPSG:3857"
+DEFAULT_MAP_CRS = os.environ.get('DEFAULT_MAP_CRS', "EPSG:3857")
+
+DEFAULT_LAYER_FORMAT = os.environ.get('DEFAULT_LAYER_FORMAT', "image/png")
 
 # Where should newly created maps be focused?
-DEFAULT_MAP_CENTER = (0, 0)
+DEFAULT_MAP_CENTER = (os.environ.get('DEFAULT_MAP_CENTER_X', 0), os.environ.get('DEFAULT_MAP_CENTER_Y', 0))
 
 # How tightly zoomed should newly created maps be?
 # 0 = entire world;
 # maximum zoom is between 12 and 15 (for Google Maps, coverage varies by area)
-DEFAULT_MAP_ZOOM = 0
+DEFAULT_MAP_ZOOM = int(os.environ.get('DEFAULT_MAP_ZOOM', 3))
 
-# Default preview library
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'geoext'  # DEPRECATED use HOOKSET instead
-GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.GeoExtHookSet"
-
-# To enable the REACT based Client enable those
-# INSTALLED_APPS += ('geonode-client', )
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'react'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.ReactHookSet"
-
-# To enable the Leaflet based Client enable those
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'leaflet'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode.client.hooksets.LeafletHookSet"
-
-# To enable the MapStore2 based Client enable those
-# INSTALLED_APPS += ('geonode_mapstore_client', )
-# GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = 'mapstore'  # DEPRECATED use HOOKSET instead
-# GEONODE_CLIENT_HOOKSET = "geonode_mapstore_client.hooksets.MapStoreHookSet"
-
-# LEAFLET_CONFIG = {
-#    'TILES': [
-#        # Find tiles at:
-#        # http://leaflet-extras.github.io/leaflet-providers/preview/
-#
-#        # Map Quest
-#        ('Map Quest',
-#         'http://otile4.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-#         'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> '
-#         '&mdash; Map data &copy; '
-#         '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'),
-#        # Stamen toner lite.
-#        # ('Watercolor',
-#        #  'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.png',
-#        #  'Map tiles by <a href="http://stamen.com">Stamen Design</a>, \
-#        #  <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; \
-#        #  <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, \
-#        #  <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
-#        # ('Toner Lite',
-#        #  'http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png',
-#        #  'Map tiles by <a href="http://stamen.com">Stamen Design</a>, \
-#        #  <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; \
-#        #  <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, \
-#        #  <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
-#    ],
-#    'PLUGINS': {
-#        'esri-leaflet': {
-#            'js': 'lib/js/esri-leaflet.js',
-#            'auto-include': True,
-#        },
-#        'leaflet-fullscreen': {
-#            'css': 'lib/css/leaflet.fullscreen.css',
-#            'js': 'lib/js/Leaflet.fullscreen.min.js',
-#            'auto-include': True,
-#        },
-#    },
-#    'SRID': 3857,
-#    'RESET_VIEW': False
-#}
-
-ALT_OSM_BASEMAPS = os.environ.get('ALT_OSM_BASEMAPS', False)
-CARTODB_BASEMAPS = os.environ.get('CARTODB_BASEMAPS', False)
-STAMEN_BASEMAPS = os.environ.get('STAMEN_BASEMAPS', False)
-THUNDERFOREST_BASEMAPS = os.environ.get('THUNDERFOREST_BASEMAPS', False)
 MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', None)
 BING_API_KEY = os.environ.get('BING_API_KEY', None)
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', None)
 
-MAP_BASELAYERS = [{
-    "source": {"ptype": "gxp_olsource"},
-    "type": "OpenLayers.Layer",
-    "args": ["No background"],
-    "name": "background",
-    "visibility": False,
-    "fixed": True,
-    "group":"background"
-},
-    # {
-    #     "source": {"ptype": "gxp_olsource"},
-    #     "type": "OpenLayers.Layer.XYZ",
-    #     "title": "TEST TILE",
-    #     "args": ["TEST_TILE", "http://test_tiles/tiles/${z}/${x}/${y}.png"],
-    #     "name": "background",
-    #     "attribution": "&copy; TEST TILE",
-    #     "visibility": False,
-    #     "fixed": True,
-    #     "group":"background"
-    # },
-    {
-    "source": {"ptype": "gxp_osmsource"},
-    "type": "OpenLayers.Layer.OSM",
-    "name": "mapnik",
-    "visibility": True,
-    "fixed": True,
-    "group": "background"
-}]
+GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY = os.getenv('GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY', 'mapstore')
 
-if 'geonode.geoserver' in INSTALLED_APPS:
-    LOCAL_GEOSERVER = {
-        "source": {
-            "ptype": "gxp_wmscsource",
-            "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
-            "restUrl": "/gs/rest"
+MAP_BASELAYERS = [{}]
+
+"""
+MapStore2 REACT based Client parameters
+"""
+if GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY == 'mapstore':
+    GEONODE_CLIENT_HOOKSET = os.getenv('GEONODE_CLIENT_HOOKSET', 'geonode_mapstore_client.hooksets.MapStoreHookSet')
+
+    if 'geonode_mapstore_client' not in INSTALLED_APPS:
+        INSTALLED_APPS += (
+            'mapstore2_adapter',
+            'geonode_mapstore_client',)
+
+    def get_geonode_catalogue_service():
+        if PYCSW:
+            pycsw_config = PYCSW["CONFIGURATION"]
+            if pycsw_config:
+                    pycsw_catalogue = {
+                        ("%s" % pycsw_config['metadata:main']['identification_title']): {
+                            "url": CATALOGUE['default']['URL'],
+                            "type": "csw",
+                            "title": pycsw_config['metadata:main']['identification_title'],
+                            "autoload": True
+                         }
+                    }
+                    return pycsw_catalogue
+        return None
+
+    GEONODE_CATALOGUE_SERVICE = get_geonode_catalogue_service()
+
+    MAPSTORE_CATALOGUE_SERVICES = {}
+
+    MAPSTORE_CATALOGUE_SELECTED_SERVICE = ""
+
+    if GEONODE_CATALOGUE_SERVICE:
+        MAPSTORE_CATALOGUE_SERVICES[list(GEONODE_CATALOGUE_SERVICE.keys())[0]] = GEONODE_CATALOGUE_SERVICE[list(GEONODE_CATALOGUE_SERVICE.keys())[0]]
+        MAPSTORE_CATALOGUE_SELECTED_SERVICE = list(GEONODE_CATALOGUE_SERVICE.keys())[0]
+
+    DEFAULT_MS2_BACKGROUNDS = [
+        {
+            "type": "tileprovider",
+            "title": "Stamen Watercolor",
+            "provider": "Stamen.Watercolor",
+            "name": "Stamen.Watercolor",
+            "source": "Stamen",
+            "group": "background",
+            "thumbURL": "https://stamen-tiles-c.a.ssl.fastly.net/watercolor/0/0/0.jpg",
+            "visibility": False
+        },
+        {
+            "type": "tileprovider",
+            "title": "Stamen Terrain",
+            "provider": "Stamen.Terrain",
+            "name": "Stamen.Terrain",
+            "source": "Stamen",
+            "group": "background",
+            "thumbURL": "https://stamen-tiles-d.a.ssl.fastly.net/terrain/0/0/0.png",
+            "visibility": False
+        },
+        {
+            "type": "tileprovider",
+            "title": "Stamen Toner",
+            "provider": "Stamen.Toner",
+            "name": "Stamen.Toner",
+            "source": "Stamen",
+            "group": "background",
+            "thumbURL": "https://stamen-tiles-d.a.ssl.fastly.net/toner/0/0/0.png",
+            "visibility": False
+        },
+        {
+            "type": "osm",
+            "title": "Open Street Map",
+            "name": "mapnik",
+            "source": "osm",
+            "group": "background",
+            "visibility": True
+        },
+        {
+            "type": "tileprovider",
+            "title": "OpenTopoMap",
+            "provider": "OpenTopoMap",
+            "name": "OpenTopoMap",
+            "source": "OpenTopoMap",
+            "group": "background",
+            "visibility": False
+        },
+        {
+            "type": "wms",
+            "title": "Sentinel-2 cloudless - https://s2maps.eu",
+            "format": "image/jpeg",
+            "id": "s2cloudless",
+            "name": "s2cloudless:s2cloudless",
+            "url": [
+                "https://maps1.geosolutionsgroup.com/geoserver/wms",
+                "https://maps2.geosolutionsgroup.com/geoserver/wms",
+                "https://maps3.geosolutionsgroup.com/geoserver/wms",
+                "https://maps4.geosolutionsgroup.com/geoserver/wms",
+                "https://maps5.geosolutionsgroup.com/geoserver/wms",
+                "https://maps6.geosolutionsgroup.com/geoserver/wms"
+            ],
+            "group": "background",
+            "thumbURL": f"{SITEURL}static/mapstorestyle/img/s2cloudless-s2cloudless.png",
+            "visibility": False,
+            "credits": {
+            "title": "<a class=\"a-light\" xmlns:dct=\"http://purl.org/dc/terms/\" href=\"https://s2maps.eu\" property=\"dct:title\">Sentinel-2 cloudless 2016</a> by <a class=\"a-light\" xmlns:cc=\"http://creativecommons.org/ns#\" href=\"https://eox.at\" property=\"cc:attributionName\" rel=\"cc:attributionURL\">EOX IT Services GmbH</a>"
+            }
+        },
+        {
+            "source": "ol",
+            "group": "background",
+            "id": "none",
+            "name": "empty",
+            "title": "Empty Background",
+            "type": "empty",
+            "visibility": False,
+            "args": ["Empty Background", {"visibility": False}]
         }
-    }
-    baselayers = MAP_BASELAYERS
-    MAP_BASELAYERS = [LOCAL_GEOSERVER]
-    MAP_BASELAYERS.extend(baselayers)
+    ]
 
-# Use kombu broker by default
-# REDIS_URL = 'redis://localhost:6379/1'
-# BROKER_URL = REDIS_URL
-# CELERY_RESULT_BACKEND = REDIS_URL
-CELERYD_HIJACK_ROOT_LOGGER = True
-CELERYD_CONCURENCY = 1
-# Set this to False to run real async tasks
-CELERY_ALWAYS_EAGER = True
-CELERYD_LOG_FILE = None
-CELERY_REDIRECT_STDOUTS = True
-CELERYD_LOG_LEVEL = 1
+    if MAPBOX_ACCESS_TOKEN:
+        MAPBOX_BASEMAPS = {
+            "type": "tileprovider",
+            "title": "MapBox streets-v11",
+            "provider": "MapBoxStyle",
+            "name": "MapBox streets-v11",
+            "accessToken": "%s" % MAPBOX_ACCESS_TOKEN,
+            "source": "streets-v11",
+            "thumbURL": "https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/256/6/33/23?access_token=%s" % MAPBOX_ACCESS_TOKEN,
+            "group": "background",
+            "visibility": True
+        }
+        DEFAULT_MS2_BACKGROUNDS = [MAPBOX_BASEMAPS,] + DEFAULT_MS2_BACKGROUNDS
 
-# Haystack Search Backend Configuration. To enable,
-# first install the following:
-# - pip install django-haystack
-# - pip install elasticsearch==2.4.0
-# - pip install woosh
-# - pip install pyelasticsearch
-# Set HAYSTACK_SEARCH to True
-# Run "python manage.py rebuild_index"
-# HAYSTACK_SEARCH = False
-# Avoid permissions prefiltering
-SKIP_PERMS_FILTER = False
-# Update facet counts from Haystack
-HAYSTACK_FACET_COUNTS = True
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
-        'URL': 'http://127.0.0.1:9200/',
-        'INDEX_NAME': 'haystack',
-    },
-    #    'db': {
-    #        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
-    #        'EXCLUDED_INDEXES': ['thirdpartyapp.search_indexes.BarIndex'],
-    #        }
-}
-HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-# HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
+    if BING_API_KEY:
+        BING_BASEMAPS = [
+            {
+                "type": "bing",
+                "title": "Bing Aerial",
+                "name": "AerialWithLabels",
+                "source": "bing",
+                "group": "background",
+                "apiKey": "{{apiKey}}",
+                "visibility": True
+            },
+            {
+                "type": "bing",
+                "title": "Bing RoadOnDemand",
+                "name": "RoadOnDemand",
+                "source": "bing",
+                "group": "background",
+                "apiKey": "{{apiKey}}",
+                "thumbURL": "%sstatic/mapstorestyle/img/bing_road_on_demand.png" % SITEURL,
+                "visibility": False
+            },
+            {
+                "type": "bing",
+                "title": "Bing AerialWithLabelsOnDemand",
+                "name": "AerialWithLabelsOnDemand",
+                "source": "bing",
+                "group": "background",
+                "apiKey": "{{apiKey}}",
+                "thumbURL": "%sstatic/mapstorestyle/img/bing_aerial_w_labels.png" % SITEURL,
+                "visibility": False
+            },
+            {
+                "type": "bing",
+                "title": "Bing CanvasDark",
+                "name": "CanvasDark",
+                "source": "bing",
+                "group": "background",
+                "apiKey": "{{apiKey}}",
+                "thumbURL": "%sstatic/mapstorestyle/img/bing_canvas_dark.png" % SITEURL,
+                "visibility": False
+            }
+        ]
+        DEFAULT_MS2_BACKGROUNDS = [BING_BASEMAPS, ] + DEFAULT_MS2_BACKGROUNDS
+
+    MAPSTORE_BASELAYERS = DEFAULT_MS2_BACKGROUNDS
+    # MAPSTORE_BASELAYERS_SOURCES allow to configure tilematrix sets for wmts layers
+    MAPSTORE_BASELAYERS_SOURCES = os.environ.get('MAPSTORE_BASELAYERS_SOURCES', {})
+
+# -- END Client Hooksets Setup
 
 LOGGING = {
     'version': 1,
@@ -401,12 +487,13 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
         'mail_admins': {
-            'level': 'ERROR', 'filters': ['require_debug_false'],
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
         }
     },
@@ -414,63 +501,20 @@ LOGGING = {
         "django": {
             "handlers": ["console"], "level": "ERROR", },
         "geonode": {
-            "handlers": ["console"], "level": "DEBUG", },
-        "gsconfig.catalog": {
-            "handlers": ["console"], "level": "DEBUG", },
-        "owslib": {
-            "handlers": ["console"], "level": "DEBUG", },
-        "pycsw": {
+            "handlers": ["console"], "level": "INFO", },
+        "geoserver-restconfig.catalog": {
             "handlers": ["console"], "level": "ERROR", },
+        "owslib": {
+            "handlers": ["console"], "level": "ERROR", },
+        "pycsw": {
+            "handlers": ["console"], "level": "INFO", },
+        "celery": {
+            'handlers': ["console"], 'level': 'ERROR', },
     },
 }
 
 # Additional settings
-CORS_ORIGIN_ALLOW_ALL = True
+X_FRAME_OPTIONS = 'ALLOW-FROM %s' % SITEURL
+CORS_ALLOW_ALL_ORIGINS = True
 
 GEOIP_PATH = "/usr/local/share/GeoIP"
-
-# add following lines to your local settings to enable monitoring
-MONITORING_ENABLED = True
-
-if MONITORING_ENABLED:
-    if 'geonode.contrib.monitoring' not in INSTALLED_APPS:
-        INSTALLED_APPS += ('geonode.contrib.monitoring',)
-    if 'geonode.contrib.monitoring.middleware.MonitoringMiddleware' not in MIDDLEWARE_CLASSES:
-        MIDDLEWARE_CLASSES += \
-            ('geonode.contrib.monitoring.middleware.MonitoringMiddleware',)
-    MONITORING_CONFIG = None
-    MONITORING_SERVICE_NAME = 'local-geonode'
-
-#Define email service on GeoNode
-EMAIL_ENABLE = True
-
-if EMAIL_ENABLE:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'localhost'
-    EMAIL_PORT = 25
-    EMAIL_HOST_USER = ''
-    EMAIL_HOST_PASSWORD = ''
-    EMAIL_USE_TLS = False
-    DEFAULT_FROM_EMAIL = 'Example.com <no-reply@localhost>'
-
-# Documents Thumbnails
-UNOCONV_ENABLE = True
-
-if UNOCONV_ENABLE:
-    UNOCONV_EXECUTABLE = os.getenv('UNOCONV_EXECUTABLE', '/usr/bin/unoconv')
-    UNOCONV_TIMEOUT = os.getenv('UNOCONV_TIMEOUT', 30)  # seconds
-
-# Advanced Security Workflow Settings
-CLIENT_RESULTS_LIMIT = 20
-API_LIMIT_PER_PAGE = 1000
-FREETEXT_KEYWORDS_READONLY = False
-RESOURCE_PUBLISHING = False
-ADMIN_MODERATE_UPLOADS = False
-GROUP_PRIVATE_RESOURCES = False
-GROUP_MANDATORY_RESOURCES = False
-MODIFY_TOPICCATEGORY = True
-USER_MESSAGES_ALLOW_MULTIPLE_RECIPIENTS = True
-DISPLAY_WMS_LINKS = True
-
-# For more information on available settings please consult the Django docs at
-# https://docs.djangoproject.com/en/dev/ref/settings

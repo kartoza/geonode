@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -20,11 +19,11 @@
 
 """Utilities for managing GeoNode resource metadata
 """
-
 # Standard Modules
 import logging
 import datetime
-from lxml import etree
+from owslib.etree import etree as dlxml
+from django.conf import settings
 
 # Geonode functionality
 from geonode import GeoNodeException
@@ -32,26 +31,27 @@ from geonode import GeoNodeException
 from owslib.csw import CswRecord
 from owslib.iso import MD_Metadata
 from owslib.fgdc import Metadata
+from django.utils import timezone
 
 LOGGER = logging.getLogger(__name__)
 
 
-def set_metadata(xml):
+def set_metadata(xml, identifier="", vals={}, regions=[], keywords=[], custom={}):
     """Generate dict of model properties based on XML metadata"""
 
     # check if document is XML
     try:
-        exml = etree.fromstring(xml)
+        exml = dlxml.fromstring(xml.encode())
     except Exception as err:
         raise GeoNodeException(
-            'Uploaded XML document is not XML: %s' % str(err))
+            f'Uploaded XML document is not XML: {str(err)}')
 
     # check if document is an accepted XML metadata format
     tagname = get_tagname(exml)
 
     if tagname == 'GetRecordByIdResponse':  # strip CSW element
-        LOGGER.info('stripping CSW root element')
-        exml = exml.getchildren()[0]
+        LOGGER.debug('stripping CSW root element')
+        exml = list(exml)[0]
         tagname = get_tagname(exml)
 
     if tagname == 'MD_Metadata':  # ISO
@@ -62,10 +62,11 @@ def set_metadata(xml):
         identifier, vals, regions, keywords = dc2dict(exml)
     else:
         raise RuntimeError('Unsupported metadata format')
-    if not vals.get("date"):
-        vals["date"] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-    return [identifier, vals, regions, keywords]
+    if not vals.get("date"):
+        vals["date"] = datetime.datetime.now(timezone.get_current_timezone()).strftime("%Y-%m-%dT%H:%M:%S")
+
+    return [identifier, vals, regions, keywords, custom]
 
 
 def iso2dict(exml):
@@ -85,6 +86,7 @@ def iso2dict(exml):
         vals['title'] = mdata.identification.title
         vals['abstract'] = mdata.identification.abstract
         vals['purpose'] = mdata.identification.purpose
+
         if mdata.identification.supplementalinformation is not None:
             vals['supplemental_information'] = \
                 mdata.identification.supplementalinformation
@@ -104,6 +106,9 @@ def iso2dict(exml):
                     regions.extend(kw['keywords'])
                 else:
                     keywords.extend(kw['keywords'])
+
+            keywords = convert_keyword(mdata.identification.keywords, iso2dict=True)
+
         if len(mdata.identification.otherconstraints) > 0:
             vals['constraints_other'] = \
                 mdata.identification.otherconstraints[0]
@@ -175,6 +180,8 @@ def fgdc2dict(exml):
     if raw_date is not None:
         vals['date'] = sniff_date(raw_date)
 
+    keywords = convert_keyword(keywords)
+
     return [identifier, vals, regions, keywords]
 
 
@@ -197,6 +204,8 @@ def dc2dict(exml):
     vals['date'] = sniff_date(mdata.modified)
     vals['title'] = mdata.title
     vals['abstract'] = mdata.abstract
+
+    keywords = convert_keyword(keywords)
 
     return [identifier, vals, regions, keywords]
 
@@ -231,3 +240,29 @@ def get_tagname(element):
     except IndexError:
         tagname = element.tag
     return tagname
+
+
+def parse_metadata(exml, uuid="", vals={}, regions=[], keywords=[], custom={}):
+    from django.utils.module_loading import import_string
+    available_parsers = (
+        settings.METADATA_PARSERS
+        if hasattr(settings, "METADATA_PARSERS")
+        else []
+    )
+    available_parsers = ['__DEFAULT__'] if len(available_parsers) == 0 else available_parsers
+    for parser_path in available_parsers:
+        if parser_path == '__DEFAULT__':
+            parser_path = "geonode.layers.metadata.set_metadata"
+        parser = import_string(parser_path)
+        uuid, vals, regions, keywords, custom = parser(exml, uuid, vals, regions, keywords, custom)
+    return uuid, vals, regions, keywords, custom
+
+
+def convert_keyword(keyword, iso2dict=False, theme='theme'):
+    if not iso2dict and keyword:
+        return [{
+            "keywords": keyword,
+            "thesaurus": {"date": None, "datetype": None, "title": None},
+            "type": theme,
+        }]
+    return keyword

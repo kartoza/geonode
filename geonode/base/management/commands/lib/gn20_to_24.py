@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -20,10 +19,8 @@
 
 import re
 import datetime
-try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
+import json
+from django.utils import timezone
 
 
 class DefaultMangler(json.JSONDecoder):
@@ -35,7 +32,7 @@ class DefaultMangler(json.JSONDecoder):
         self.datastore = kwargs.get('datastore', '')
         self.siteurl = kwargs.get('siteurl', '')
 
-        super(DefaultMangler, self).__init__(*args)
+        super().__init__(*args)
 
     def default(self, obj):
         # Let the base class default method raise the TypeError
@@ -45,7 +42,7 @@ class DefaultMangler(json.JSONDecoder):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(DefaultMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -63,7 +60,7 @@ class ResourceBaseMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(ResourceBaseMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -90,7 +87,7 @@ class ResourceBaseMangler(DefaultMangler):
                             obj['fields']['detail_url'] = self.siteurl + m.group('details_url')
                         else:
                             obj['fields']['detail_url'] = self.siteurl + obj['fields']['distribution_url']
-                    except:
+                    except Exception:
                         obj['fields']['detail_url'] = obj['fields']['distribution_url']
 
                 else:
@@ -98,17 +95,17 @@ class ResourceBaseMangler(DefaultMangler):
 
             try:
                 obj['fields'].pop("distribution_description", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("distribution_url", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("thumbnail", None)
-            except:
+            except Exception:
                 pass
 
             upload_sessions.append(self.add_upload_session(obj['pk'], obj['fields']['owner']))
@@ -121,7 +118,7 @@ class ResourceBaseMangler(DefaultMangler):
         obj = dict()
 
         obj['pk'] = pk
-        obj['model'] = 'layers.uploadsession'
+        obj['model'] = 'datasets.uploadsession'
 
         obj['fields'] = dict()
         obj['fields']['user'] = owner
@@ -129,7 +126,7 @@ class ResourceBaseMangler(DefaultMangler):
         obj['fields']['context'] = None
         obj['fields']['error'] = None
         obj['fields']['processed'] = True
-        obj['fields']['date'] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        obj['fields']['date'] = datetime.datetime.now(timezone.get_current_timezone()).strftime("%Y-%m-%dT%H:%M:%S")
 
         return obj
 
@@ -144,14 +141,14 @@ class LayerMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(LayerMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
         for obj in default_obj:
             obj['pk'] = obj['pk'] + self.basepk
 
-            # Retrieve the ResourceBase associated to this Layer
+            # Retrieve the ResourceBase associated to this Dataset
             from geonode.base.models import ResourceBase
 
             resource = ResourceBase.objects.get(pk=obj['pk'])
@@ -175,17 +172,17 @@ class LayerMangler(DefaultMangler):
 
             try:
                 obj['fields'].pop("popular_count", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("share_count", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("title", None)
-            except:
+            except Exception:
                 pass
 
         return default_obj
@@ -201,7 +198,7 @@ class LayerAttributesMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(LayerAttributesMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -223,14 +220,14 @@ class MapMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(MapMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
         for obj in default_obj:
             obj['pk'] = obj['pk'] + self.basepk
 
-            # Retrieve the ResourceBase associated to this Layer
+            # Retrieve the ResourceBase associated to this Dataset
             from geonode.base.models import ResourceBase
 
             resource = ResourceBase.objects.get(pk=obj['pk'])
@@ -246,17 +243,17 @@ class MapMangler(DefaultMangler):
 
             try:
                 obj['fields'].pop("popular_count", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("share_count", None)
-            except:
+            except Exception:
                 pass
 
             try:
                 obj['fields'].pop("title", None)
-            except:
+            except Exception:
                 pass
 
         return default_obj
@@ -272,7 +269,7 @@ class MapLayersMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(MapLayersMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....

@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
+# Copyright (C) 2022 King's College London
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,37 +18,42 @@
 #
 #########################################################################
 
-import xml.etree.ElementTree as etree
+from typing import List
 
-from optparse import make_option
-
+from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 from django.core.management.base import BaseCommand, CommandError
+from rdflib import Graph, Literal
+from rdflib.namespace import RDF, SKOS, DC, DCTERMS
+from rdflib.util import guess_format
 
-from geonode.base.models import Thesaurus, ThesaurusKeyword, ThesaurusKeywordLabel
+from geonode.base.models import Thesaurus, ThesaurusKeyword, ThesaurusKeywordLabel, ThesaurusLabel
 
 
 class Command(BaseCommand):
 
     help = 'Load a thesaurus in RDF format into DB'
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+
+        # Named (optional) arguments
+        parser.add_argument(
             '-d',
             '--dry-run',
             action="store_true",
             dest='dryrun',
             default=False,
-            help='Only parse and print the thesaurus file, without perform insertion in the DB.'),
-        make_option(
+            help='Only parse and print the thesaurus file, without perform insertion in the DB.')
+
+        parser.add_argument(
             '--name',
             dest='name',
-            type="string",
-            help='Identifier name for the thesaurus in this GeoNode instance.'),
-        make_option(
+            help='Identifier name for the thesaurus in this GeoNode instance.')
+
+        parser.add_argument(
             '--file',
             dest='file',
-            type="string",
-            help='Full path to a thesaurus in RDF format.'))
+            help='Full path to a thesaurus in RDF format.')
 
     def handle(self, **options):
 
@@ -68,49 +73,63 @@ class Command(BaseCommand):
             self.load_thesaurus(input_file, name, not dryrun)
 
     def load_thesaurus(self, input_file, name, store):
+        g = Graph()
 
-        RDF_URI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-        XML_URI = 'http://www.w3.org/XML/1998/namespace'
+        # if the input_file is an UploadedFile object rather than a file path the Graph.parse()
+        # method may not have enough info to correctly guess the type; in this case supply the
+        # name, which should include the extension, to guess_format manually...
+        rdf_format = None
+        if isinstance(input_file, UploadedFile):
+            self.stderr.write(self.style.WARNING(f"Guessing RDF format from {input_file.name}..."))
+            rdf_format = guess_format(input_file.name)
 
-        ABOUT_ATTRIB = '{' + RDF_URI + '}about'
-        LANG_ATTRIB = '{' + XML_URI + '}lang'
+        g.parse(input_file, format=rdf_format)
 
-        ns = {
-            'rdf': RDF_URI,
-            'foaf': 'http://xmlns.com/foaf/0.1/',
-            'dc': 'http://purl.org/dc/elements/1.1/',
-            'dcterms': 'http://purl.org/dc/terms/',
-            'skos': 'http://www.w3.org/2004/02/skos/core#'
-        }
-
-        tfile = etree.parse(input_file)
-        root = tfile.getroot()
-
-        scheme = root.find('skos:ConceptScheme', ns)
-        if not scheme:
+        # An error will be thrown here there is more than one scheme in the file
+        scheme = g.value(None, RDF.type, SKOS.ConceptScheme, any=False)
+        if scheme is None:
             raise CommandError("ConceptScheme not found in file")
 
-        title = scheme.find('dc:title', ns).text
-        descr = scheme.find('dc:description', ns).text
-        date_issued = scheme.find('dcterms:issued', ns).text
+        default_lang = getattr(settings, 'THESAURUS_DEFAULT_LANG', None)
 
-        print 'Thesaurus "{}" issued on {}'.format(title, date_issued)
+        available_titles = [t for t in g.objects(scheme, DC.title) if isinstance(t, Literal)]
+        thesaurus_title = value_for_language(available_titles, default_lang)
+        description = g.value(scheme, DC.description, None, default=thesaurus_title)
+        date_issued = g.value(scheme, DCTERMS.issued, None, default="")
+
+        self.stderr.write(self.style.SUCCESS(f'Thesaurus "{thesaurus_title}", desc: {description} issued at {date_issued}'))
 
         thesaurus = Thesaurus()
         thesaurus.identifier = name
-
-        thesaurus.title = title
-        thesaurus.description = descr
+        thesaurus.description = description
+        thesaurus.title = thesaurus_title
+        thesaurus.about = str(scheme)
         thesaurus.date = date_issued
 
         if store:
             thesaurus.save()
 
-        for concept in root.findall('skos:Concept', ns):
-            about = concept.attrib.get(ABOUT_ATTRIB)
-            alt_label = concept.find('skos:altLabel', ns).text
+        for lang in available_titles:
+            if lang.language is not None:
+                thesaurus_label = ThesaurusLabel()
+                thesaurus_label.lang = lang.language
+                thesaurus_label.label = lang.value
+                thesaurus_label.thesaurus = thesaurus
 
-            print 'Concept {} ({})'.format(alt_label, about)
+                if store:
+                    thesaurus_label.save()
+
+        for concept in g.subjects(RDF.type, SKOS.Concept):
+            pref = g.preferredLabel(concept, default_lang)[0][1]
+            about = str(concept)
+            alt_label = g.value(concept, SKOS.altLabel, object=None, default=None)
+            if alt_label is not None:
+                alt_label = str(alt_label)
+            else:
+                available_labels = [t for t in g.objects(concept, SKOS.prefLabel) if isinstance(t, Literal)]
+                alt_label = value_for_language(available_labels, default_lang)
+
+            self.stderr.write(self.style.SUCCESS(f'Concept {str(pref)}: {alt_label} ({about})'))
 
             tk = ThesaurusKeyword()
             tk.thesaurus = thesaurus
@@ -120,11 +139,10 @@ class Command(BaseCommand):
             if store:
                 tk.save()
 
-            for pref_label in concept.findall('skos:prefLabel', ns):
-                lang = pref_label.attrib.get(LANG_ATTRIB)
-                label = pref_label.text
-
-                print u'    Label {}: {}'.format(lang, label)
+            for _, pref_label in g.preferredLabel(concept):
+                lang = pref_label.language
+                label = str(pref_label)
+                self.stderr.write(self.style.SUCCESS(f'    Label {lang}: {label}'))
 
                 tkl = ThesaurusKeywordLabel()
                 tkl.keyword = tk
@@ -138,7 +156,7 @@ class Command(BaseCommand):
         thesaurus = Thesaurus()
         thesaurus.identifier = name
 
-        thesaurus.title = "Title: " + name
+        thesaurus.title = f"Title: {name}"
         thesaurus.description = "SAMPLE FAKE THESAURUS USED FOR TESTING"
         thesaurus.date = "2016-10-01"
 
@@ -147,13 +165,23 @@ class Command(BaseCommand):
         for keyword in ['aaa', 'bbb', 'ccc']:
             tk = ThesaurusKeyword()
             tk.thesaurus = thesaurus
-            tk.about = keyword + '_about'
-            tk.alt_label = keyword + '_alt'
+            tk.about = f"{keyword}_about"
+            tk.alt_label = f"{keyword}_alt"
             tk.save()
 
-            for l in ['it', 'en', 'es']:
+            for _l in ['it', 'en', 'es']:
                 tkl = ThesaurusKeywordLabel()
                 tkl.keyword = tk
-                tkl.lang = l
-                tkl.label = keyword + "_l_" + l + "_t_" + name
+                tkl.lang = _l
+                tkl.label = f"{keyword}_l_{_l}_t_{name}"
                 tkl.save()
+
+
+def value_for_language(available: List[Literal], default_lang: str) -> str:
+    sorted_lang = sorted(available, key=lambda literal: '' if literal.language is None else literal.language)
+    for item in sorted_lang:
+        if item.language is None:
+            return str(item)
+        elif item.language.split("-")[0] == default_lang:
+            return str(item)
+    return str(available[0])

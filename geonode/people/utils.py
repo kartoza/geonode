@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,9 +17,13 @@
 #
 #########################################################################
 
+from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from geonode import GeoNodeException
+from geonode.groups.models import GroupProfile, GroupMember
+from geonode.groups.conf import settings as groups_settings
 
 
 def get_default_user():
@@ -28,7 +31,7 @@ def get_default_user():
     """
     superusers = get_user_model().objects.filter(
         is_superuser=True).order_by('id')
-    if superusers.count() > 0:
+    if superusers.exists():
         # Return the first created superuser
         return superusers[0]
     else:
@@ -42,7 +45,7 @@ def get_valid_user(user=None):
     """
     if user is None:
         theuser = get_default_user()
-    elif isinstance(user, basestring):
+    elif isinstance(user, str):
         theuser = get_user_model().objects.get(username=user)
     elif user == user.get_anonymous():
         raise GeoNodeException('The user uploading files must not '
@@ -62,27 +65,27 @@ def format_address(street=None, zipcode=None, city=None, area=None, country=None
         address = ""
         if city and area:
             if street:
-                address += street+", "
-            address += city+", "+area
+                address += f"{street}, "
+            address += f"{city}, {area}"
             if zipcode:
-                address += " "+zipcode
+                address += f" {zipcode}"
         elif (not city) and area:
             if street:
-                address += street+", "
+                address += f"{street}, "
             address += area
             if zipcode:
-                address += " "+zipcode
+                address += f" {zipcode}"
         elif city and (not area):
             if street:
-                address += street+", "
+                address += f"{street}, "
             address += city
             if zipcode:
-                address += " "+zipcode
+                address += f" {zipcode}"
         else:
             if street:
-                address += ", "+street
+                address += f", {street}"
             if zipcode:
-                address += " "+zipcode
+                address += f" {zipcode}"
 
         if address:
             address += ", United States"
@@ -103,3 +106,35 @@ def format_address(street=None, zipcode=None, city=None, area=None, country=None
         if country:
             address.append(country)
         return " ".join(address)
+
+
+def get_available_users(user):
+    """Filters users a given user can see.
+    eg all users from public groups and all users in private groups as a given user.
+
+    Args:
+        user (settings.AUTH_USER_MODEL): User object
+
+    Returns:
+        Queryset: Queryset of users a given user can see
+    """
+    if user.is_superuser:
+        return get_user_model().objects.exclude(Q(username='AnonymousUser') | Q(is_active=False))
+
+    member_ids = []
+    if not user.is_anonymous:
+        # Append current user profile in the list of users to be returned
+        member_ids.extend([user.id])
+
+    # Only return user that are members of any group profile the current user is member of
+    member_ids.extend(list(GroupMember.objects.filter(
+        group__in=GroupProfile.objects.filter(
+            Q(access='public') | Q(group__in=user.groups.all()))
+    ).select_related('user').values_list('user__id', flat=True)))
+    if Group.objects.filter(name=groups_settings.REGISTERED_MEMBERS_GROUP_NAME).exists():
+        # Retrieve all members in Registered member's group
+        rm_group = Group.objects.get(name=groups_settings.REGISTERED_MEMBERS_GROUP_NAME)
+        users_ids = list(rm_group.user_set.values_list('id', flat=True))
+        member_ids.extend(users_ids)
+
+    return get_user_model().objects.filter(id__in=member_ids)

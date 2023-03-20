@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -29,7 +28,7 @@ from invitations.utils import get_invitation_model
 Invitation = get_invitation_model()
 
 
-class CleanEmailMixin(object):
+class CleanEmailMixin:
 
     def validate_invitation(self, email):
         if Invitation.objects.all_valid().filter(
@@ -50,20 +49,17 @@ class CleanEmailMixin(object):
             email = get_invitations_adapter().clean_email(em.strip())
 
             errors = {
-                "already_invited": _("The e-mail address '%(email)s' has already been"
-                                     " invited." % {"email": email}),
-                "already_accepted": _("The e-mail address '%(email)s' has already"
-                                      " accepted an invite." % {"email": email}),
-                "email_in_use": _("An active user is already using the"
-                                  " e-mail address '%(email)s'" % {"email": email}),
+                "already_invited": _(f"The e-mail address '{email}' has already been invited."),
+                "already_accepted": _(f"The e-mail address '{email}' has already accepted an invite."),
+                "email_in_use": _(f"An active user is already using the e-mail address '{email}'"),
             }
             try:
                 self.validate_invitation(email)
-            except(AlreadyInvited):
+            except AlreadyInvited:
                 raise forms.ValidationError(errors["already_invited"])
-            except(AlreadyAccepted):
+            except AlreadyAccepted:
                 raise forms.ValidationError(errors["already_accepted"])
-            except(UserRegisteredEmail):
+            except UserRegisteredEmail:
                 raise forms.ValidationError(errors["email_in_use"])
 
         return emails

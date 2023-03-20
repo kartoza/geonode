@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -37,7 +36,7 @@ from invitations.adapters import BaseInvitationsAdapter
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.utils.module_loading import import_string
 # from django.contrib.auth.models import Group
@@ -70,6 +69,8 @@ def update_profile(sociallogin):
     extractor = get_data_extractor(sociallogin.account.provider)
     if extractor is not None:
         profile_fields = (
+            "username",
+            "email",
             "area",
             "city",
             "country",
@@ -81,14 +82,15 @@ def update_profile(sociallogin):
             "position",
             "profile",
             "voice",
-            "zipcode",
+            "zipcode"
         )
         for field in profile_fields:
             try:
                 extractor_method = getattr(
-                    extractor, "extract_{}".format(field))
+                    extractor, f"extract_{field}")
                 value = extractor_method(sociallogin.account.extra_data)
-                user_field(user, field, value)
+                if not user_field(user, field):
+                    user_field(user, field, value)
             except (AttributeError, NotImplementedError):
                 pass  # extractor doesn't define a method for extracting field
     return user
@@ -128,15 +130,22 @@ class LocalAccountAdapter(DefaultAccountAdapter, BaseInvitationsAdapter):
             ])
         user_username(user, safe_username)
 
-    def render_mail(self, template_prefix, email, context):
+    def send_invitation_email(self, email_template, email, context):
+        self.send_mail(email_template, email, context)
+
+    def send_mail(self, template_prefix, email, context):
+        enh_context = self.enhanced_invitation_context(context)
+        msg = self.render_mail(template_prefix, email, enh_context)
+        msg.send()
+
+    def enhanced_invitation_context(self, context):
         user = context.get("inviter") if context.get("inviter") else context.get("user")
         full_name = " ".join((user.first_name, user.last_name)) if user.first_name or user.last_name else None
-        # manager_groups = Group.objects.filter(
-        #     name__in=user.groupmember_set.filter(role="manager").values_list("group__slug", flat=True))
         user_groups = GroupProfile.objects.filter(
-            slug__in=user.groupmember_set.filter().values_list("group__slug", flat=True))
+            slug__in=user.groupmember_set.values_list("group__slug", flat=True))
         enhanced_context = context.copy()
         enhanced_context.update({
+            "username": user.username,
             "inviter_name": full_name or str(user),
             "inviter_first_name": user.first_name or str(user),
             "inviter_id": user.id,
@@ -145,15 +154,10 @@ class LocalAccountAdapter(DefaultAccountAdapter, BaseInvitationsAdapter):
             "SITEURL": settings.SITEURL,
             "STATIC_URL": settings.STATIC_URL
         })
-        return super(LocalAccountAdapter, self).render_mail(
-            template_prefix, email, enhanced_context)
-
-    def send_mail(self, template_prefix, email, context):
-        msg = self.render_mail(template_prefix, email, context)
-        msg.send()
+        return enhanced_context
 
     def save_user(self, request, user, form, commit=True):
-        user = super(LocalAccountAdapter, self).save_user(
+        user = super().save_user(
             request, user, form, commit=commit)
         if settings.ACCOUNT_APPROVAL_REQUIRED:
             user.is_active = False
@@ -179,14 +183,21 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def populate_user(self, request, sociallogin, data):
         """This method is called when a new sociallogin is created"""
-        user = super(SocialAccountAdapter, self).populate_user(
+        user = super().populate_user(
             request, sociallogin, data)
         update_profile(sociallogin)
         return user
 
     def save_user(self, request, sociallogin, form=None):
-        user = super(SocialAccountAdapter, self).save_user(
+        user = super().save_user(
             request, sociallogin, form=form)
+        extractor = get_data_extractor(sociallogin.account.provider)
+        try:
+            keywords = extractor.extract_keywords(sociallogin.account.extra_data)
+            for _kw in keywords:
+                user.keywords.add(_kw)
+        except (AttributeError, NotImplementedError):
+            pass  # extractor doesn't define a method for extracting field
         if settings.ACCOUNT_APPROVAL_REQUIRED:
             user.is_active = False
             user.save()

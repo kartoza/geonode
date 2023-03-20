@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -24,110 +23,119 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
+import json
+
+from rest_framework import status
 
 from actstream import registry
-from actstream.models import Action, actor_stream
-from dialogos.models import Comment
+from actstream.models import Action
+
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
 from django.utils.translation import ugettext as _
-from geonode.layers.populate_layers_data import create_layer_data
-from geonode.base.populate_test_data import create_models
+from django.urls import reverse
+
+from geonode.tests.base import GeoNodeBaseTestSupport
+from geonode.layers.populate_datasets_data import create_dataset_data
 from geonode.social.templatetags.social_tags import activity_item
-from geonode.layers.models import Layer
-from geonode.people.models import Profile
+from geonode.layers.models import Dataset
+from geonode.base.populate_test_data import (
+    all_public,
+    create_models,
+    remove_models)
 
 
-class SimpleTest(TestCase):
+class RecentActivityTest(GeoNodeBaseTestSupport):
 
-    fixtures = ['initial_data.json']
+    integration = True
+
+    fixtures = [
+        'initial_data.json',
+        'group_test_data.json',
+        'default_oauth_apps.json'
+    ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        create_models(type=cls.get_type, integration=cls.get_integration)
+        all_public()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        remove_models(cls.get_obj_ids, type=cls.get_type, integration=cls.get_integration)
 
     def setUp(self):
-        registry.register(Layer)
-        registry.register(Comment)
-        registry.register(Profile)
-        create_models(type='layer')
-        create_layer_data()
+        super(RecentActivityTest, self).setUp()
+
+        registry.register(Dataset)
+        registry.register(get_user_model())
+        create_dataset_data()
         self.user = get_user_model().objects.filter(username='admin')[0]
 
-    def test_layer_activity(self):
+    def test_dataset_activity(self):
         """
         Tests the activity functionality when a layer is saved.
         """
 
-        # A new activity should be created for each Layer.
-        self.assertEqual(Action.objects.all().count(), Layer.objects.all().count())
+        # A new activity should be created for each Dataset.
+        self.assertNotEqual(Action.objects.all().count(), Dataset.objects.all().count())
 
-        action = Action.objects.all()[0]
-        layer = action.action_object
+        action = Action.objects.first()
+        dataset = action.action_object
 
         # The activity should read:
         # layer.owner (actor) 'uploaded' (verb) layer (object)
         self.assertEqual(action.actor, action.action_object.owner)
-        self.assertEqual(action.data.get('raw_action'), 'created')
-        self.assertEqual(action.data.get('object_name'), layer.name)
-        self.assertTrue(isinstance(action.action_object, Layer))
+        data = action.data
+        if isinstance(data, (str, bytes)):
+            data = json.loads(data)
+        self.assertEqual(data.get('raw_action'), 'created')
+        self.assertEqual(data.get('object_name'), dataset.name)
+        self.assertTrue(isinstance(action.action_object, Dataset))
         self.assertIsNone(action.target)
 
         # Test the  activity_item template tag
-        template_tag = activity_item(Action.objects.all()[0])
+        template_tag = activity_item(Action.objects.first())
 
         self.assertEqual(template_tag.get('username'), action.actor.username)
-        self.assertEqual(template_tag.get('object_name'), layer.name)
+        self.assertEqual(template_tag.get('object_name'), dataset.name)
         self.assertEqual(template_tag.get('actor'), action.actor)
         self.assertEqual(template_tag.get('verb'), _('uploaded'))
         self.assertEqual(template_tag.get('action'), action)
         self.assertEqual(template_tag.get('activity_class'), 'upload')
 
-        layer_name = layer.name
-        layer.delete()
+        dataset_name = dataset.name
+        dataset.delete()
 
         # <user> deleted <object_name>
-        action = Action.objects.all()[0]
-
-        self.assertEqual(action.data.get('raw_action'), 'deleted')
-        self.assertEqual(action.data.get('object_name'), layer_name)
+        action = Action.objects.first()
+        data = action.data
+        if isinstance(data, (str, bytes)):
+            data = json.loads(data)
+        self.assertEqual(data.get('raw_action'), 'deleted')
+        self.assertEqual(data.get('object_name'), dataset_name)
 
         # objects are literally deleted so no action object or target should be related to a delete action.
         self.assertIsNone(action.action_object)
         self.assertIsNone(action.target)
 
         # Test the activity_item template tag
-        action = Action.objects.all()[0]
+        action = Action.objects.first()
         template_tag = activity_item(action)
 
         # Make sure the 'delete' class is returned
         self.assertEqual(template_tag.get('activity_class'), 'delete')
 
         # The layer's name should be returned
-        self.assertEqual(template_tag.get('object_name'), layer_name)
+        self.assertEqual(template_tag.get('object_name'), dataset_name)
         self.assertEqual(template_tag.get('verb'), _('deleted'))
 
-        content_type = ContentType.objects.get_for_model(Layer)
-        layer = Layer.objects.all()[0]
-        comment = Comment(author=self.user,
-                          content_type=content_type,
-                          object_id=layer.id,
-                          comment="This is a cool layer.")
-        comment.save()
-
-        action = Action.objects.all()[0]
-
-        self.assertEqual(action.actor, self.user)
-        self.assertEqual(action.data.get('raw_action'), 'created')
-        self.assertEqual(action.action_object, comment)
-        self.assertEqual(action.target, layer)
-
-        template_tag = activity_item(action)
-
-        # <user> added a comment on <target>
-        self.assertEqual(template_tag.get('verb'), _('added a comment'))
-        self.assertEqual(template_tag.get('activity_class'), 'comment')
-        self.assertEqual(template_tag.get('target'), action.target)
-        self.assertEqual(template_tag.get('preposition'), _('on'))
-        self.assertIsNone(template_tag.get('object'))
-        self.assertEqual(template_tag.get('target'), layer)
-
-        # Pre-fecthing actstream breaks the actor stream
-        self.assertIn(action, actor_stream(self.user))
+    def test_get_recent_activities(self):
+        url = reverse('recent-activity')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.context_data['action_list_geoapps'])
+        self.assertIsNotNone(response.context_data['action_list_datasets'])
+        self.assertIsNotNone(response.context_data['action_list_maps'])
+        self.assertIsNotNone(response.context_data['action_list_documents'])

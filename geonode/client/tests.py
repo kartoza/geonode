@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -17,14 +16,5 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-from django.test import TestCase
 
-
-class ClientLibraryTest(TestCase):
-    """
-    Tests geonode.client app/module
-    """
-    def setUp(self):
-        self.adm_un = "admin"
-        self.adm_pw = "admin"
-        # create_models(type="layer")
+# this file is a placeholder as paver tasks expect a tests.py module for each app

@@ -3,7 +3,10 @@
 from unittest import TestCase
 
 from geonode.people import adapters
-import mock
+try:
+    import unittest.mock as mock
+except ImportError:
+    from unittest import mock
 
 
 class GetDataExtractorTestCase(TestCase):

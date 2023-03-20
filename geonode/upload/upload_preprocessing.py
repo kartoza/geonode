@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -95,8 +94,10 @@ def preprocess_files(spatial_files):
     result = []
     for spatial_file in spatial_files:
         if spatial_file.file_type == get_type("KML Ground Overlay"):
+            auxillary_file = spatial_file.auxillary_files[0] if\
+                len(spatial_file.auxillary_files) > 0 else None
             preprocessed = convert_kml_ground_overlay_to_geotiff(
-                spatial_file.base_file, spatial_file.auxillary_files[0])
+                spatial_file.base_file, auxillary_file)
             result.append(preprocessed)
         else:
             result.extend(spatial_file.all_files())
@@ -108,6 +109,6 @@ def preprocess_files(spatial_files):
 def _extract_bbox_param(kml_doc, namespaces, param):
     return kml_doc.xpath(
         "kml:Document/kml:GroundOverlay/kml:LatLonBox/"
-        "kml:{}/text()".format(param),
+        f"kml:{param}/text()",
         namespaces=namespaces
     )[0]

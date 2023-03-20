@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,10 +17,13 @@
 #
 #########################################################################
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from oauth2_provider.models import Application
 from oauth2_provider.generators import generate_client_id, generate_client_secret
-from geonode.people.models import Profile
+
+from geonode import geoserver  # noqa
+from geonode.utils import check_ogc_backend
 
 
 class Command(BaseCommand):
@@ -29,14 +31,40 @@ class Command(BaseCommand):
     """
     can_import_settings = True
 
+    def add_arguments(self, parser):
+
+        # Named (optional) arguments
+        parser.add_argument(
+            '-f',
+            '--force',
+            action='store_true',
+            dest='force_exec',
+            default=False,
+            help='Forces the regeneration of OAUth keys.')
+
+        parser.add_argument(
+            '--target-address',
+            dest='target_address',
+            help='Target Address (the one to be changed e.g. http://my-public.geonode.org)')
+
     def handle(self, *args, **options):
-        from django.conf import settings
+
+        force_exec = options.get('force_exec')
+        target_address = options.get('target_address')
+
         client_id = None
         client_secret = None
-        if 'geonode.geoserver' in settings.INSTALLED_APPS:
+
+        if check_ogc_backend(geoserver.BACKEND_PACKAGE):
             from geonode.geoserver.helpers import ogc_server_settings
+            redirect_uris = f'{ogc_server_settings.LOCATION}\n{ogc_server_settings.public_url}\n{target_address}/geoserver/'  # noqa
             if Application.objects.filter(name='GeoServer').exists():
-                Application.objects.filter(name='GeoServer').update(redirect_uris=ogc_server_settings.public_url)
+                Application.objects.filter(name='GeoServer').update(redirect_uris=redirect_uris)
+                if force_exec:
+                    Application.objects.filter(name='GeoServer').update(
+                        client_id=generate_client_id(),
+                        client_secret=generate_client_secret()
+                    )
                 app = Application.objects.filter(name='GeoServer')[0]
                 client_id = app.client_id
                 client_secret = app.client_secret
@@ -45,12 +73,12 @@ class Command(BaseCommand):
                 client_secret = generate_client_secret()
                 Application.objects.create(
                     skip_authorization=True,
-                    redirect_uris=ogc_server_settings.public_url,
+                    redirect_uris=redirect_uris,
                     name='GeoServer',
                     authorization_grant_type='authorization-code',
                     client_type='confidential',
                     client_id=client_id,
                     client_secret=client_secret,
-                    user=Profile.objects.filter(is_superuser=True)[0]
+                    user=get_user_model().objects.filter(is_superuser=True)[0]
                 )
-        return '%s,%s' % (client_id, client_secret)
+        return f'{client_id},{client_secret}'

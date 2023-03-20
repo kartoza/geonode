@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -20,10 +19,8 @@
 
 import re
 import datetime
-try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
+import json
+from django.utils import timezone
 
 
 class DefaultMangler(json.JSONDecoder):
@@ -35,7 +32,7 @@ class DefaultMangler(json.JSONDecoder):
         self.datastore = kwargs.get('datastore', '')
         self.siteurl = kwargs.get('siteurl', '')
 
-        super(DefaultMangler, self).__init__(*args)
+        super().__init__(*args)
 
     def default(self, obj):
         # Let the base class default method raise the TypeError
@@ -45,7 +42,7 @@ class DefaultMangler(json.JSONDecoder):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(DefaultMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -65,7 +62,7 @@ class ResourceBaseMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(ResourceBaseMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -84,7 +81,7 @@ class ResourceBaseMangler(DefaultMangler):
                             obj['fields']['detail_url'] = self.siteurl + m.group('details_url')
                         else:
                             obj['fields']['detail_url'] = self.siteurl + obj['fields']['distribution_url']
-                    except:
+                    except Exception:
                         obj['fields']['detail_url'] = obj['fields']['distribution_url']
 
             upload_sessions.append(self.add_upload_session(obj['pk'], obj['fields']['owner']))
@@ -97,7 +94,7 @@ class ResourceBaseMangler(DefaultMangler):
         obj = dict()
 
         obj['pk'] = pk
-        obj['model'] = 'layers.uploadsession'
+        obj['model'] = 'datasets.uploadsession'
 
         obj['fields'] = dict()
         obj['fields']['user'] = owner
@@ -105,7 +102,7 @@ class ResourceBaseMangler(DefaultMangler):
         obj['fields']['context'] = None
         obj['fields']['error'] = None
         obj['fields']['processed'] = True
-        obj['fields']['date'] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        obj['fields']['date'] = datetime.datetime.now(timezone.get_current_timezone()).strftime("%Y-%m-%dT%H:%M:%S")
 
         return obj
 
@@ -120,7 +117,7 @@ class LayerMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(LayerMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -148,7 +145,7 @@ class LayerAttributesMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(LayerAttributesMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....
@@ -170,7 +167,7 @@ class MapLayersMangler(DefaultMangler):
         """
         json_string is basicly string that you give to json.loads method
         """
-        default_obj = super(MapLayersMangler, self).decode(json_string)
+        default_obj = super().decode(json_string)
 
         # manipulate your object any way you want
         # ....

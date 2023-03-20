@@ -1,8 +1,6 @@
 {% load i18n %}
-
-{% trans "The user" %} {{ instance.user.username }} 
-{% trans "rated" %} {{ instance.rating }} 
-{% trans "the following map" %}:
-{{ instance.content_object.title }}, {% trans "owned by" %} {{ instance.content_object.owner.username }}
-
-{% trans "You can visit the map's detail page here" %}: http://{{ current_site }}{% url "map_detail" instance.content_object.id %}
+{% trans "The user" %} {{ user.username }} <br/>
+{% trans "rated" %} {{ rating }} <br/>
+{% trans "the following map" %}:<br/>
+{{ resource.title }}, {% trans "owned by" %} {{ resource.owner.username }}<br/>
+{% trans "You can visit the map's detail page here" %}: http://{{ current_site }}{{ resource.get_absolute_url }}

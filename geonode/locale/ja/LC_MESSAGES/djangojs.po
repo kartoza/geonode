@@ -23,12 +23,13 @@
 # Toshikazu SETO <tosseto@gmail.com>, 2013
 # Toshikazu SETO <tosseto@gmail.com>, 2013
 # Toshikazu SETO <tosseto@gmail.com>, 2013
+# MIERUNE Inc. <info@mierune.co.jp>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: GeoNode\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-25 02:28-0500\n"
-"PO-Revision-Date: 2016-08-23 11:58+0000\n"
+"POT-Creation-Date: 2021-07-08 09:03+0300\n"
+"PO-Revision-Date: 2021-10-08 15:35+0900\n"
 "Last-Translator: Julien Collaer <julien.collaer@opengeode.be>\n"
 "Language-Team: Japanese (http://www.transifex.com/geonode/geonode/language/"
 "ja/)\n"
@@ -37,723 +38,916 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.0\n"
 
-#: geonode/static/geonode/js/search/search.js:373
-msgid "Enter your text here ..."
+msgid "STORE_UPDATED"
 msgstr ""
 
-#: geonode/static/geonode/js/search/search.js:414
-msgid "Enter your region here ..."
-msgstr ""
-
-#: geonode/static/geonode/js/upload/FileType.js:33
 #, javascript-format
 msgid "Missing a %s file, which is required"
-msgstr "必要とされている %s のファイルが、欠落している"
+msgstr "%s ファイルがありません、必須です"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:7
 msgid "ESRI Shapefile"
-msgstr "ESRIのシェープファイル"
+msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:13
-#: geonode/static/geonode/js/upload/FileTypes.js:18
+msgid "ASCII Text File"
+msgstr ""
+
 msgid "GeoTIFF"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:24
 msgid "Comma Separated Value"
-msgstr ""
+msgstr "CSV"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:29
 msgid "Google Earth KML"
-msgstr "Google EarthのKML"
+msgstr "Google Earth KML"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:34
+msgid "Google Earth KML with a GroundOverlay"
+msgstr "Google Earth KML"
+
+msgid "Google Earth KMZ"
+msgstr "Google Earth KMZ"
+
 msgid "GeoJSON"
 msgstr "GeoJSON"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:39
 msgid "Zip Archive"
-msgstr ""
+msgstr "ZIP"
 
-#: geonode/static/geonode/js/upload/FileTypes.js:45
 msgid "ERDAS Imagine"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:50
-#: geonode/static/geonode/js/upload/FileTypes.js:55
 msgid "National Imagery Transmission Format"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:61
 msgid "Controlled Image Base-1 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:68
 msgid "Controlled Image Base-5 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:75
 msgid "Controlled Image Base-10 Meter"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:82
 msgid "CADRG-Global Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:89
 msgid "CADRG-Jet Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:96
 msgid "CADRG-Operational Navigation Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:103
 msgid "CADRG-Tactical Pilotage Chart"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:110
 msgid "CADRG-Joint Operations Graphic"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:117
 msgid "CADRG-Topographic Line Map 100K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:124
 msgid "CADRG-Topographic Line Map 50K"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:131
 msgid "JPEG2000"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/FileTypes.js:136
 msgid "MrSID-Multi-resolution Seamless Image Database"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:331
-msgid "Layer Info"
+msgid "XML Metadata File"
+msgstr "メタデータXMLファイル"
+
+msgid "Style Layer Descriptor"
+msgstr "SLDスタイルファイル"
+
+msgid "JPEG"
+msgstr ""
+
+msgid "PNG"
+msgstr ""
+
+msgid "GIF"
+msgstr ""
+
+msgid "Unexpected error!"
+msgstr "エラーが発生しました"
+
+msgid ""
+" - 400 Bad Request. Server cannot or will not process the request due to "
+"something that is perceived to be a client error (e.g., malformed request "
+"syntax, invalid request message framing, or deceptive request routing)."
+msgstr ""
+
+msgid ""
+" - 401 Unauthorized. Request was not sent with the proper authentication "
+"credentials."
+msgstr ""
+
+msgid ""
+" - 403 Forbidden. This is generally related to permission rules on your "
+"server. Contact the system administrator for more information regarding this "
+"error message."
+msgstr ""
+
+msgid ""
+" - 404 Not Found. Origin server was unable or unwilling to find the resource "
+"requested."
+msgstr ""
+
+msgid ""
+" - 405 Method Not Allowed. Origin server is aware of the requested resource, "
+"but the request method used is not supported."
+msgstr ""
+
+msgid ""
+" - 406 Not Acceptable. Resource is not available at the origin that adheres "
+"to negotiation headers that were  set prior (e.g. via 'Accept-Charset' and "
+"'Accept-Language' headers)."
+msgstr ""
+
+msgid ""
+" - 407 Authentication Required. The client did not send the required "
+"authentication with the request."
+msgstr ""
+
+msgid ""
+" - 408 Request Timeout. The origin server did not receive the complete "
+"request in what it considers a reasonable time."
+msgstr ""
+
+msgid ""
+" - 409 Conflict. The request did not complete because of a conflict with the "
+"current state of the resource. Typically happens on a PUT request where "
+"multiple clients are attempting to edit the same resource."
+msgstr ""
+
+msgid ""
+" - 410 Gone. The resource requested is permanently missing at the origin."
+msgstr ""
+
+msgid ""
+" - 411 Length Required. Client did not define the 'Content-Length' of the "
+"request body in the headers and this is required to obtain the resource."
+msgstr ""
+
+msgid ""
+" - 412 Precondition Failed. Server denies the request because the resource "
+"failed to meet the conditions specified by the client."
+msgstr ""
+
+msgid ""
+" - 413 Payload Too Large. Refusal from the server to process the request "
+"because the payload sent from the client is larger than the server wished to "
+"accept. Server has the optional to close the connection."
+msgstr ""
+
+msgid ""
+" - 414 URI Too Long. Refusal from the server that the URI was too long to be "
+"processed. For example, if a client is attempting a GET request with an "
+"unusually long URI after a POST, this could be seen as a security risk and a "
+"414 gets generated."
+msgstr ""
+
+msgid ""
+" - 415 Unsupported Media Type. Refusal from the server to process the format "
+"of the current payload. One way to identify and fix this issue would be to "
+"look at the 'Content-Type' or 'Content-Encoding' headers sent in the "
+"client’s request."
+msgstr ""
+
+msgid ""
+" - 417 Expectation Failed. Failure of server to meet the requirements "
+"specified in the 'Expect' header of the client’s request."
+msgstr ""
+
+msgid ""
+" - 429 Too Many Requests. Client has sent too many requests in the specified "
+"amount of time according to the server."
+msgstr ""
+
+msgid ""
+" - 499 Client Close Request. Nginx specific response code to indicate when "
+"the connection has been closed by the client while the server is still "
+"processing its request, making server unable to send a status code back."
+msgstr ""
+
+msgid ""
+" - 500 Internal Server Error. This error indicates that the server has "
+"encountered an unexpected condition. This often occurs when an application "
+"request cannot be fulfilled due to the application being configured "
+"incorrectly on the server."
+msgstr ""
+
+msgid ""
+" - 501 Not Implemented. This error indicates that the HTTP method sent by "
+"the client is not supported by the server. This is most often caused by the "
+"server being out of date. It is a very rare error and generally requires "
+"that the web server be updated."
+msgstr ""
+
+msgid ""
+" - 502 Bad Gateway. This error is usually due to improperly configured proxy "
+"servers. The first step in resolving the issue is to clear the client's "
+"cache."
+msgstr ""
+
+msgid ""
+" - 503 Service Unavailable. This error occurs when the server is unable to "
+"handle requests due to a temporary overload or due to the server being "
+"temporarily closed for maintenance. The error indicates that the server will "
+"only temporarily be down."
+msgstr ""
+
+msgid ""
+" - 504 Gateway Timeout. GeoNode lost the connection with GeoServer or DB due "
+"to a connection timeout. Consider using the management commands to import "
+"data!"
+msgstr ""
+
+msgid ""
+" - 505 HTTP Version Not Supported. This error occurs when the server refuses "
+"to support the HTTP protocol that has been specified by the client computer. "
+"This can be caused by the protocol not being specified properly by the "
+"client computer; for example, if an invalid version number has been "
+"specified."
+msgstr ""
+
+msgid ""
+" - 506 Variant Also Negotiates. This error indicates that the server is not "
+"properly configured. Contact the system administrator to resolve this issue."
+msgstr ""
+
+msgid ""
+" - 507 Insufficient Storage. This error indicates that the server is out of "
+"free memory. This is most likely to occur when an application that is being "
+"requested cannot allocate the necessary system resources to run. To resolve "
+"the issue, the server's hard disk may need to be cleaned of any unnecessary "
+"documents to free up more hard disk space, its memory may need to be "
+"expanded, or it may simply need to be restarted. Contact the system "
+"administrator for more information regarding this error message."
+msgstr ""
+
+msgid ""
+" - 509 Bandwidth Limit Exceeded. This error occurs when the bandwidth limit "
+"imposed by the system administrator has been reached. The only fix for this "
+"issue is to wait until the limit is reset in the following cycle. Consult "
+"the system administrator for information about acquiring more bandwidth."
+msgstr ""
+
+msgid ""
+" - 510 Not Extended. This error occurs when an extension attached to the "
+"HTTP request is not supported by the web server. To resolve the issue, you "
+"may need to update the server."
+msgstr ""
+
+msgid "Unknwon"
+msgstr "不明なエラー"
+
+msgid ""
+" Error Code. Contact the system administrator for more information regarding "
+"this error message."
+msgstr ": 詳細はシステム管理者に問い合わせてください"
+
+msgid "Additional info: "
+msgstr "備考: "
+
+msgid "Finalizing"
+msgstr "終了中"
+
+msgid "Unexpected Error"
+msgstr "エラー"
+
+msgid "Your "
+msgstr ""
+
+#, fuzzy
+#| msgid "Layer Info"
+msgid " Info"
 msgstr "レイヤー情報"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:332
 msgid "Edit Metadata"
-msgstr "メタデータの編集"
+msgstr "メタデータを編集"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:333
+msgid "Upload Metadata"
+msgstr "メタデータXMLを登録"
+
+msgid "Upload SLD"
+msgstr "SLDファイルを登録"
+
 msgid "Manage Styles"
 msgstr "スタイル管理"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:336
+msgid "Please wait until GeoNode finished configuring it!"
+msgstr "設定完了までお待ちください"
+
 msgid "The column %1 was renamed to %2 <br/>"
-msgstr ""
+msgstr "カラム名 %1 は %2 に変更されました <br/>"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:342
-msgid "Your layer was successfully uploaded"
-msgstr "あなたの層が正常にアップロードされた"
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:371
 msgid "Performing Final GeoServer Config Step"
-msgstr "ファイナルGeoServer configステップの実行"
+msgstr "GeoServer設定処理を完了中"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:386
-#: geonode/static/geonode/js/upload/LayerInfo.js:412
 msgid "You need to specify more information in order to complete your upload"
-msgstr "あなたのアップロードを完了するために多くの情報を指定する必要があります"
+msgstr "アップロードを完了するためにいくつかの情報を入力してください"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You need to specify more information in order to complete your upload."
-msgstr ""
-"あなたのアップロードを完了するために多くの情報を指定する必要があります。"
+msgid "Files are ready to be ingested!"
+msgstr "ファイルを取り込む準備ができました"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:404
-msgid "You can continue configuring your layer."
-msgstr "あなたの層の構成を続行することができます。"
+msgid "A temporal dimension may be added to this Layer."
+msgstr "このレイヤーには時間軸設定を追加できます"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:422
-#: geonode/static/geonode/js/upload/LayerInfo.js:509
-msgid "Unexpected Error"
-msgstr "予期しないエラー"
-
-#: geonode/static/geonode/js/upload/LayerInfo.js:438
 msgid "Performing GeoServer Config Step"
-msgstr "GeoServer configステップの実行"
+msgstr "GeoServer設定処理中"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:516
-msgid "Layer files uploaded, configuring in GeoServer"
-msgstr "レイヤファイルは、アップロードされたGeoServerに設定"
+msgid ""
+"<br>Please check your network connection. In case of Layer Upload make sure "
+"GeoServer is running and accepting connections."
+msgstr ""
+"<br>PCのネットワーク接続を確認してください。もし正常な場合、GeoServerが正常に"
+"稼働しているか確認してください。"
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:532
-msgid "Select or create a Geogig repository."
+msgid "<br>"
 msgstr ""
 
-#: geonode/static/geonode/js/upload/LayerInfo.js:695
+msgid "<br>Bad request or URL not found."
+msgstr "<br>リクエストが不正、もしくはURLが存在しない"
+
+msgid "<br>Unknown."
+msgstr "<br>不明なエラー"
+
+msgid "Layer files uploaded, configuring in GeoServer"
+msgstr "レイヤーファイルのアップロード済、GeoServerに設定中"
+
 msgid "Remove"
 msgstr "削除する"
 
-#: geonode/static/geonode/js/upload/upload.js:125
 #, javascript-format
 msgid "The file %s is an unsupported file type, please select another file."
 msgstr ""
-"ファイル %s はサポートされていないファイル·タイプが使用され、別のファイルを選"
-"択してください。"
+"%s はサポートされていないファイル形式です、別のファイルを選択してください。"
 
-#: geonode/static/geonode/js/upload/upload.js:285
 msgid ""
 "You are trying to upload an incomplete set of files or not all mandatory "
 "options have been validated.\n"
 "\n"
 "Please check for errors in the form!"
 msgstr ""
+"アップロードしようとしているデータ形式の必須ファイルが揃っていません。\n"
+"\n"
+"フォーム内のエラーを確認してください。"
 
-#: geonode/static/lib/js/assets.min.js:2
-msgid "<iframe frameborder='0' width='0' height='0'/>"
-msgstr ""
+#, javascript-format
+msgid "Available %s"
+msgstr "%s は利用可能です"
 
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<script>"
-msgstr ""
-
-#: geonode/static/lib/js/assets.min.js:4
-msgid "<div>"
-msgstr ""
-
-#: geonode/templates/lang.js:9 geonode/templates/lang.js:236
-msgid "Cancel"
-msgstr "中止"
-
-#: geonode/templates/lang.js:10
-msgid "Save as Copy"
-msgstr "コピーとして保存"
-
-#: geonode/templates/lang.js:11
-msgid "About this Map"
-msgstr "この地図について"
-
-#: geonode/templates/lang.js:12 geonode/templates/lang.js:96
-#: geonode/templates/lang.js:165
-msgid "Abstract"
-msgstr "概要"
-
-#: geonode/templates/lang.js:13
-msgid "Save"
-msgstr "保存"
-
-#: geonode/templates/lang.js:14 geonode/templates/lang.js:100
-#: geonode/templates/lang.js:109 geonode/templates/lang.js:162
-#: geonode/templates/lang.js:184 geonode/templates/lang.js:219
-msgid "Title"
-msgstr "タイトル"
-
-#: geonode/templates/lang.js:20
-msgid "Connection Error"
-msgstr "接続エラー"
-
-#: geonode/templates/lang.js:21
-msgid "The server returned an error"
-msgstr "サーバーはエラーを返しました"
-
-#: geonode/templates/lang.js:22
-msgid "Details..."
-msgstr "詳細"
-
-#: geonode/templates/lang.js:28 geonode/templates/lang.js:31
-msgid "Add Layers"
-msgstr "レイヤーの追加"
-
-#: geonode/templates/lang.js:29
-msgid "Area"
-msgstr "エリア"
-
-#: geonode/templates/lang.js:30
-msgid "Background"
-msgstr "背景"
-
-#: geonode/templates/lang.js:32
-msgid "Done"
-msgstr "実行"
-
-#: geonode/templates/lang.js:33
-msgid "Available Layers"
-msgstr "利用可能なレイヤー"
-
-#: geonode/templates/lang.js:35 geonode/templates/lang.js:121
-msgid "Height"
-msgstr "高さ"
-
-#: geonode/templates/lang.js:36
-msgid "Get Feature Info"
-msgstr "地物情報を取得"
-
-#: geonode/templates/lang.js:37 geonode/templates/lang.js:122
-msgid "Large"
-msgstr "拡大"
-
-#: geonode/templates/lang.js:38
-msgid "or add a new server."
-msgstr "または新しいサーバーを追加"
-
-#: geonode/templates/lang.js:39
-msgid "Map Layers"
-msgstr "地図レイヤー"
-
-#: geonode/templates/lang.js:40
-msgid "View available data from:"
-msgstr "閲覧可能なデータ:"
-
-#: geonode/templates/lang.js:41
-msgid "Data"
-msgstr "データ"
-
-#: geonode/templates/lang.js:42
-msgid "Layers"
-msgstr "レイヤー"
-
-#: geonode/templates/lang.js:43
-msgid "Legend"
-msgstr "凡例"
-
-#: geonode/templates/lang.js:44
-msgid "Length"
-msgstr "長さ"
-
-#: geonode/templates/lang.js:45
-msgid "Loading Map..."
-msgstr "地図の読み込み中"
-
-#: geonode/templates/lang.js:46 geonode/templates/lang.js:123
-msgid "Map Size"
-msgstr "マップの大きさ"
-
-#: geonode/templates/lang.js:47
-msgid "Measure"
-msgstr "計測"
-
-#: geonode/templates/lang.js:48 geonode/templates/lang.js:97
-#: geonode/templates/lang.js:163
-msgid "Contact"
-msgstr "連絡先"
-
-#: geonode/templates/lang.js:49 geonode/templates/lang.js:55
-msgid "Permalink"
-msgstr "パーマリンク"
-
-#: geonode/templates/lang.js:50 geonode/templates/lang.js:124
-msgid "Mini"
-msgstr "ミニ"
-
-#: geonode/templates/lang.js:51
-msgid "Pan Map"
-msgstr "地図を回転する"
-
-#: geonode/templates/lang.js:52
-msgid "Zoom to Next Extent"
-msgstr "次の範囲へズームする"
-
-#: geonode/templates/lang.js:53
-msgid "Zoom to Previous Extent"
-msgstr "前の範囲へズームする"
-
-#: geonode/templates/lang.js:54
-msgid "This map has not yet been saved."
-msgstr "この地図はまだ保存されていません。"
-
-#: geonode/templates/lang.js:56 geonode/templates/lang.js:125
-msgid "Premium"
-msgstr "プレミアム"
-
-#: geonode/templates/lang.js:57
-msgid "Print Map"
-msgstr "地図を印刷する"
-
-#: geonode/templates/lang.js:58
-msgid "Print Preview"
-msgstr "印刷プレビュー"
-
-#: geonode/templates/lang.js:59
-msgid "Properties"
-msgstr "プロパティ"
-
-#: geonode/templates/lang.js:60 geonode/templates/lang.js:126
-msgid "Publish Map"
-msgstr "地図を発行する"
-
-#: geonode/templates/lang.js:61 geonode/templates/lang.js:62
-msgid "Remove Layer"
-msgstr "レイヤーを削除する"
-
-#: geonode/templates/lang.js:63
-msgid "Sorry, your map could not be saved."
-msgstr "あなたの地図は保存されていません。"
-
-#: geonode/templates/lang.js:64
-msgid "Error While Saving"
-msgstr "保存中にエラーが生じました"
-
-#: geonode/templates/lang.js:65
-msgid "Save Map"
-msgstr "地図の保存"
-
-#: geonode/templates/lang.js:66
-msgid "You must be logged in to save this map."
-msgstr "この地図を保存するためにあなたはログインが必要です。"
-
-#: geonode/templates/lang.js:67 geonode/templates/lang.js:128
-msgid "Small"
-msgstr "小さい"
-
-#: geonode/templates/lang.js:68
+#, javascript-format
 msgid ""
-"Error contacting server.\n"
-" Please check the url and try again."
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
 msgstr ""
-"サーバー接続エラー。\n"
-"URLを確認し再度試してください。"
+"利用可能な %s のリストです。\n"
+"以下のボックスで「選択」矢印をクリックすることで複数選択することができます。"
 
-#: geonode/templates/lang.js:69
-msgid "Layer Properties"
-msgstr "レイヤープロパティ"
-
-#: geonode/templates/lang.js:70
-msgid "Change layer format and style"
-msgstr "レイヤー形式とスタイルを変更する"
-
-#: geonode/templates/lang.js:71
-msgid "Edit Styles"
-msgstr "スタイルを編集する"
-
-#: geonode/templates/lang.js:72
-msgid "Edit layer styles"
-msgstr "レイヤースタイルを編集する"
-
-#: geonode/templates/lang.js:73
-msgid "Switch to Google Earth 3D Viewer"
-msgstr "Google Earth 3Dビューワに切り替える"
-
-#: geonode/templates/lang.js:74
-msgid ""
-"The map that you are trying to load does not exist.  Creating a new map "
-"instead."
-msgstr "読み込もうとする地図は存在しません。代わりに、新しい地図を作成します。"
-
-#: geonode/templates/lang.js:75
-msgid "Unknown Map"
-msgstr "不明な地図"
-
-#: geonode/templates/lang.js:76 geonode/templates/lang.js:129
-msgid "Width"
-msgstr "幅"
-
-#: geonode/templates/lang.js:77
-msgid "Zoom In"
-msgstr "拡大"
-
-#: geonode/templates/lang.js:78
-msgid "Zoom Out"
-msgstr "縮小"
-
-#: geonode/templates/lang.js:79
-msgid "Zoom level"
-msgstr "ズームレベル"
-
-#: geonode/templates/lang.js:80
-msgid "Zoom Level"
-msgstr "ズームレベル"
-
-#: geonode/templates/lang.js:81
-msgid "Zoom to Layer Extent"
-msgstr "レイヤーの範囲にズーム"
-
-#: geonode/templates/lang.js:82
-msgid "Zoom to Visible Extent"
-msgstr "可視範囲へズーム"
-
-#: geonode/templates/lang.js:88
-msgid "Zoom Level {zoom}"
-msgstr "ズームレベル {zoom}"
-
-#: geonode/templates/lang.js:94
-msgid "Create Map"
-msgstr "地図を生成"
-
-#: geonode/templates/lang.js:95
-msgid "Export Map"
-msgstr "地図を出力"
-
-#: geonode/templates/lang.js:98
-msgid "Map"
-msgstr "地図"
-
-#: geonode/templates/lang.js:99 geonode/templates/lang.js:166
-msgid "View this Map"
-msgstr "この地図をみる"
-
-#: geonode/templates/lang.js:101
-msgid "Open Map"
-msgstr "地図を開く"
-
-#: geonode/templates/lang.js:107 geonode/templates/lang.js:183
-msgid "Name"
-msgstr "名前"
-
-#: geonode/templates/lang.js:108
-msgid "Queryable"
-msgstr "クエリー可能"
-
-#: geonode/templates/lang.js:115
-msgid "No background"
-msgstr "背景なし"
-
-#: geonode/templates/lang.js:127
-msgid ""
-"Your map is ready to be published to the web!  Simply copy the following "
-"HTML to embed the map in your website:"
+#, javascript-format
+msgid "Type into this box to filter down the list of available %s."
 msgstr ""
-"あなたの地図は既にWebに公開されています！あなたのウェブサイトに地図を埋め込む"
-"には、次のHTMLをコピーします:"
+"このボックスに入力すると、利用可能な %s のリストにフィルターがかかります"
 
-#: geonode/templates/lang.js:136 geonode/templates/lang.js:202
-msgid "Abstract:"
-msgstr "要約:"
+msgid "Filter"
+msgstr "フィルター"
 
-#: geonode/templates/lang.js:137 geonode/templates/lang.js:204
-msgid "No attribution information is provided for this layer."
-msgstr "どの属性情報もこのレイヤーには与えられていません。"
+msgid "Choose all"
+msgstr "全選択"
 
-#: geonode/templates/lang.js:138 geonode/templates/lang.js:205
-msgid "Provided by:"
-msgstr "提供元:"
+#, javascript-format
+msgid "Click to choose all %s at once."
+msgstr "クリックすると全ての %s を一度に選択できます"
 
-#: geonode/templates/lang.js:139 geonode/templates/lang.js:206
-msgid "Download:"
-msgstr "ダウンロード:"
-
-#: geonode/templates/lang.js:140 geonode/templates/lang.js:208
-msgid "No keywords are listed for this layer."
-msgstr "このレイヤーにはキーワードが記入されていません。"
-
-#: geonode/templates/lang.js:141 geonode/templates/lang.js:209
-msgid "Keywords:"
-msgstr "キーワード:"
-
-#: geonode/templates/lang.js:142 geonode/templates/lang.js:210
-msgid "No metadata URLs are defined for this layer."
-msgstr "このレイヤーにはメタデータのURLが定義されていません。"
-
-#: geonode/templates/lang.js:143 geonode/templates/lang.js:211
-msgid "Metadata Links:"
-msgstr "メタデータへのリンク:"
-
-#: geonode/templates/lang.js:149
-msgid "Paper size:"
-msgstr "用紙サイズ:"
-
-#: geonode/templates/lang.js:150
-msgid "Resolution:"
-msgstr "解像度:"
-
-#: geonode/templates/lang.js:151
-msgid "Print"
-msgstr "印刷"
-
-#: geonode/templates/lang.js:152
-msgid "Enter map title here."
-msgstr "ここに地図のタイトルを入力してください。"
-
-#: geonode/templates/lang.js:153
-msgid "Include legend?"
-msgstr "凡例を含みますか？"
-
-#: geonode/templates/lang.js:154
-msgid "Enter comments here."
-msgstr "ここにコメントを入力してください。"
-
-#: geonode/templates/lang.js:155
-msgid "Creating PDF..."
-msgstr "PDFを生成中"
-
-#: geonode/templates/lang.js:164
-msgid "Last Modified"
-msgstr "最終更新"
-
-#: geonode/templates/lang.js:167 geonode/templates/lang.js:188
-msgid "Prev"
-msgstr "前へ"
-
-#: geonode/templates/lang.js:168 geonode/templates/lang.js:189
-msgid "Next"
-msgstr "次へ"
-
-#: geonode/templates/lang.js:169 geonode/templates/lang.js:190
-msgid "of"
-msgstr "の"
-
-#: geonode/templates/lang.js:170 geonode/templates/lang.js:191
-msgid "Your search did not match any items."
-msgstr "どのアイテムも検索と一致しませんでした。"
-
-#: geonode/templates/lang.js:171
-msgid "Search Maps"
-msgstr "地図を検索する"
-
-#: geonode/templates/lang.js:172 geonode/templates/lang.js:192
-msgid "Search"
-msgstr "検索"
-
-#: geonode/templates/lang.js:173 geonode/templates/lang.js:193
-msgid "Showing"
-msgstr "表示中"
-
-#: geonode/templates/lang.js:174
-msgid "Loading"
-msgstr "読み込み中"
-
-#: geonode/templates/lang.js:175 geonode/templates/lang.js:195
-msgid "permalink"
-msgstr "パーマリンク"
-
-#: geonode/templates/lang.js:182
-msgid "Select"
+msgid "Choose"
 msgstr "選択"
 
-#: geonode/templates/lang.js:185
-msgid "Select:"
-msgstr "選択:"
+#, javascript-format
+msgid "Chosen %s"
+msgstr "選択中 %s"
 
-#: geonode/templates/lang.js:186
-msgid "All"
-msgstr "全て"
+#, javascript-format
+msgid ""
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
+msgstr ""
+"選択中の %s のリストです。以下のボックスで「削除」矢印をクリックすることで複"
+"数を削除することができます。"
 
-#: geonode/templates/lang.js:187
-msgid "None"
-msgstr "何も"
+msgid "Remove all"
+msgstr "全削除"
 
-#: geonode/templates/lang.js:194
-msgid "Loading..."
-msgstr "読み込み中"
+#, javascript-format
+msgid "Click to remove all chosen %s at once."
+msgstr "クリックすると全ての %s を一度に削除できます"
 
-#: geonode/templates/lang.js:196
-msgid "You do not have permission to view this data"
-msgstr "このデータを閲覧する権限がありません"
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
 
-#: geonode/templates/lang.js:197
-msgid "This data is stored on a remote server"
-msgstr "このデータはリモート・サーバに保存されています"
+msgid ""
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
+msgstr ""
+"保存されていない変更があります。このまま続けると保存されていない変更は失われ"
+"ます。"
 
-#: geonode/templates/lang.js:203
-msgid "No abstract is provided for this layer."
-msgstr "このレイヤーには要約がありません。"
+msgid ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
+msgstr ""
+"処理が選択されましたが、保存されていない変更があります。保存するならOKをク"
+"リックしてください（処理は再実行する必要があります）。"
 
-#: geonode/templates/lang.js:207
-msgid "No download URLs are definied for this layer."
-msgstr "このレイヤーにはダウンロードURLが定義されていません。"
+msgid ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
 
-#: geonode/templates/lang.js:217
-msgid "Selected Layers"
-msgstr "レイヤーの選択"
+msgid "'"
+msgstr ""
 
-#: geonode/templates/lang.js:218
-msgid "No Layers Selected"
-msgstr "どのレイヤーも選択されていません"
+msgid "-1"
+msgstr ""
 
-#: geonode/templates/lang.js:220
-msgid "Clear Selected"
-msgstr "選択クリア"
+msgid "trailingComments"
+msgstr "先頭コメント"
 
-#: geonode/templates/lang.js:221
-msgid "Clear All"
-msgstr "全てをクリア"
+msgid "leadingComments"
+msgstr "末尾コメント"
 
-#: geonode/templates/lang.js:227
-msgid "Operation Failed"
-msgstr "操作失敗"
+#, fuzzy
+#| msgid "Enter comments here."
+msgid "innerComments"
+msgstr "ここにコメントを入力してください。"
 
-#: geonode/templates/lang.js:228
-msgid "No layers are currently selected."
-msgstr "どのレイヤーも現在選択されていません"
+msgid "Multiselect"
+msgstr ""
 
-#: geonode/templates/lang.js:235
-msgid "Downloading..."
-msgstr "ダウンロード中"
+#, fuzzy
+#| msgid "Select"
+msgid "SelectList"
+msgstr "選択"
 
-#: geonode/templates/lang.js:237
-msgid "Please wait"
-msgstr "お待ちください"
+msgid "show:"
+msgstr ""
 
-#~ msgid "Available %s"
-#~ msgstr "Available %s"
+msgid "DraftEditor/root"
+msgstr ""
+
+msgid "DraftEditor/editorContainer"
+msgstr ""
+
+msgid "-"
+msgstr ""
+
+msgid "uirevision"
+msgstr ""
+
+msgid "bgcolor"
+msgstr ""
+
+msgid "bordercolor"
+msgstr ""
+
+msgid "borderwidth"
+msgstr ""
+
+msgid "orientation"
+msgstr ""
+
+msgid "traceorder"
+msgstr ""
+
+msgid "tracegroupgap"
+msgstr ""
+
+msgid "itemsizing"
+msgstr ""
+
+msgid "itemclick"
+msgstr ""
+
+msgid "itemdoubleclick"
+msgstr ""
+
+msgid "x"
+msgstr ""
+
+msgid "xanchor"
+msgstr ""
+
+msgid "y"
+msgstr ""
+
+msgid "yanchor"
+msgstr ""
+
+msgid "valign"
+msgstr ""
+
+msgid "title.text"
+msgstr ""
+
+msgid "title.side"
+msgstr ""
+
+msgid "visible"
+msgstr ""
+
+msgid "thickness"
+msgstr ""
+
+msgid "autorange"
+msgstr ""
+
+msgid "range"
+msgstr ""
+
+msgid "bingroup"
+msgstr ""
+
+msgid "Print configuration broken ("
+msgstr ""
+
+msgid "Print configuration not available ("
+msgstr ""
+
+msgid "go"
+msgstr ""
+
+msgid "goBack"
+msgstr ""
+
+msgid "goForward"
+msgstr ""
+
+msgid "Abort"
+msgstr "中断"
+
+msgid "As Sibling"
+msgstr ""
+
+msgid "As child"
+msgstr ""
+
+#, fuzzy
+#~| msgid "Now"
+#~ msgid "No"
+#~ msgstr "Now"
+
+#~ msgid "Your layer was successfully uploaded"
+#~ msgstr "あなたの層が正常にアップロードされた"
 
 #~ msgid ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
+#~ "You need to specify more information in order to complete your upload."
 #~ msgstr ""
-#~ "This is the list of available %s. You may choose some by selecting them "
-#~ "in the box below and then clicking the \"Choose\" arrow between the two "
-#~ "boxes."
+#~ "あなたのアップロードを完了するために多くの情報を指定する必要があります。"
 
-#~ msgid "Type into this box to filter down the list of available %s."
-#~ msgstr "Type into this box to filter down the list of available %s."
+#~ msgid "You can continue configuring your layer."
+#~ msgstr "あなたの層の構成を続行することができます。"
 
-#~ msgid "Filter"
-#~ msgstr "Filter"
+#~ msgid "Cancel"
+#~ msgstr "中止"
 
-#~ msgid "Choose all"
-#~ msgstr "Choose all"
+#~ msgid "Save as Copy"
+#~ msgstr "コピーとして保存"
 
-#~ msgid "Click to choose all %s at once."
-#~ msgstr "Click to choose all %s at once."
+#~ msgid "About this Map"
+#~ msgstr "この地図について"
 
-#~ msgid "Choose"
-#~ msgstr "Choose"
+#~ msgid "Abstract"
+#~ msgstr "概要"
 
-#~ msgid "Chosen %s"
-#~ msgstr "Chosen %s"
+#~ msgid "Save"
+#~ msgstr "保存"
+
+#~ msgid "Title"
+#~ msgstr "タイトル"
+
+#~ msgid "Connection Error"
+#~ msgstr "接続エラー"
+
+#~ msgid "The server returned an error"
+#~ msgstr "サーバーはエラーを返しました"
+
+#~ msgid "Details..."
+#~ msgstr "詳細"
+
+#~ msgid "Add Layers"
+#~ msgstr "レイヤーの追加"
+
+#~ msgid "Area"
+#~ msgstr "エリア"
+
+#~ msgid "Background"
+#~ msgstr "背景"
+
+#~ msgid "Done"
+#~ msgstr "実行"
+
+#~ msgid "Available Layers"
+#~ msgstr "利用可能なレイヤー"
+
+#~ msgid "Height"
+#~ msgstr "高さ"
+
+#~ msgid "Get Feature Info"
+#~ msgstr "地物情報を取得"
+
+#~ msgid "Large"
+#~ msgstr "拡大"
+
+#~ msgid "or add a new server."
+#~ msgstr "または新しいサーバーを追加"
+
+#~ msgid "Map Layers"
+#~ msgstr "地図レイヤー"
+
+#~ msgid "View available data from:"
+#~ msgstr "閲覧可能なデータ:"
+
+#~ msgid "Data"
+#~ msgstr "データ"
+
+#~ msgid "Layers"
+#~ msgstr "レイヤー"
+
+#~ msgid "Legend"
+#~ msgstr "凡例"
+
+#~ msgid "Length"
+#~ msgstr "長さ"
+
+#~ msgid "Loading Map..."
+#~ msgstr "地図の読み込み中"
+
+#~ msgid "Map Size"
+#~ msgstr "マップの大きさ"
+
+#~ msgid "Measure"
+#~ msgstr "計測"
+
+#~ msgid "Contact"
+#~ msgstr "連絡先"
+
+#~ msgid "Permalink"
+#~ msgstr "パーマリンク"
+
+#~ msgid "Mini"
+#~ msgstr "ミニ"
+
+#~ msgid "Pan Map"
+#~ msgstr "地図を回転する"
+
+#~ msgid "Zoom to Next Extent"
+#~ msgstr "次の範囲へズームする"
+
+#~ msgid "Zoom to Previous Extent"
+#~ msgstr "前の範囲へズームする"
+
+#~ msgid "This map has not yet been saved."
+#~ msgstr "この地図はまだ保存されていません。"
+
+#~ msgid "Premium"
+#~ msgstr "プレミアム"
+
+#~ msgid "Print Map"
+#~ msgstr "地図を印刷する"
+
+#~ msgid "Print Preview"
+#~ msgstr "印刷プレビュー"
+
+#~ msgid "Properties"
+#~ msgstr "プロパティ"
+
+#~ msgid "Publish Map"
+#~ msgstr "地図を発行する"
+
+#~ msgid "Remove Layer"
+#~ msgstr "レイヤーを削除する"
+
+#~ msgid "Sorry, your map could not be saved."
+#~ msgstr "あなたの地図は保存されていません。"
+
+#~ msgid "Error While Saving"
+#~ msgstr "保存中にエラーが生じました"
+
+#~ msgid "Save Map"
+#~ msgstr "地図の保存"
+
+#~ msgid "You must be logged in to save this map."
+#~ msgstr "この地図を保存するためにあなたはログインが必要です。"
+
+#~ msgid "Small"
+#~ msgstr "小さい"
 
 #~ msgid ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
+#~ "Error contacting server.\n"
+#~ " Please check the url and try again."
 #~ msgstr ""
-#~ "This is the list of chosen %s. You may remove some by selecting them in "
-#~ "the box below and then clicking the \"Remove\" arrow between the two "
-#~ "boxes."
+#~ "サーバー接続エラー。\n"
+#~ "URLを確認し再度試してください。"
 
-#~ msgid "Remove all"
-#~ msgstr "Remove all"
+#~ msgid "Layer Properties"
+#~ msgstr "レイヤープロパティ"
 
-#~ msgid "Click to remove all chosen %s at once."
-#~ msgstr "Click to remove all chosen %s at once."
+#~ msgid "Change layer format and style"
+#~ msgstr "レイヤー形式とスタイルを変更する"
 
-#~ msgid "%(sel)s of %(cnt)s selected"
-#~ msgid_plural "%(sel)s of %(cnt)s selected"
-#~ msgstr[0] "94d7ef36d54e81afde607d8fd121772b_pl_0"
+#~ msgid "Edit Styles"
+#~ msgstr "スタイルを編集する"
+
+#~ msgid "Edit layer styles"
+#~ msgstr "レイヤースタイルを編集する"
+
+#~ msgid "Switch to Google Earth 3D Viewer"
+#~ msgstr "Google Earth 3Dビューワに切り替える"
 
 #~ msgid ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
+#~ "The map that you are trying to load does not exist.  Creating a new map "
+#~ "instead."
 #~ msgstr ""
-#~ "You have unsaved changes on individual editable fields. If you run an "
-#~ "action, your unsaved changes will be lost."
+#~ "読み込もうとする地図は存在しません。代わりに、新しい地図を作成します。"
+
+#~ msgid "Width"
+#~ msgstr "幅"
+
+#~ msgid "Zoom In"
+#~ msgstr "拡大"
+
+#~ msgid "Zoom Out"
+#~ msgstr "縮小"
+
+#~ msgid "Zoom level"
+#~ msgstr "ズームレベル"
+
+#~ msgid "Zoom Level"
+#~ msgstr "ズームレベル"
+
+#~ msgid "Zoom to Layer Extent"
+#~ msgstr "レイヤーの範囲にズーム"
+
+#~ msgid "Zoom to Visible Extent"
+#~ msgstr "可視範囲へズーム"
+
+#~ msgid "Zoom Level {zoom}"
+#~ msgstr "ズームレベル {zoom}"
+
+#~ msgid "Create Map"
+#~ msgstr "地図を生成"
+
+#~ msgid "Export Map"
+#~ msgstr "地図を出力"
+
+#~ msgid "Map"
+#~ msgstr "地図"
+
+#~ msgid "View this Map"
+#~ msgstr "この地図をみる"
+
+#~ msgid "Open Map"
+#~ msgstr "地図を開く"
+
+#~ msgid "Name"
+#~ msgstr "名前"
+
+#~ msgid "Queryable"
+#~ msgstr "クエリー可能"
+
+#~ msgid "No background"
+#~ msgstr "背景なし"
 
 #~ msgid ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "Your map is ready to be published to the web!  Simply copy the following "
+#~ "HTML to embed the map in your website:"
 #~ msgstr ""
-#~ "You have selected an action, but you haven't saved your changes to "
-#~ "individual fields yet. Please click OK to save. You'll need to re-run the "
-#~ "action."
+#~ "あなたの地図は既にWebに公開されています！あなたのウェブサイトに地図を埋め"
+#~ "込むには、次のHTMLをコピーします:"
 
-#~ msgid ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
-#~ msgstr ""
-#~ "You have selected an action, and you haven't made any changes on "
-#~ "individual fields. You're probably looking for the Go button rather than "
-#~ "the Save button."
+#~ msgid "Abstract:"
+#~ msgstr "要約:"
+
+#~ msgid "No attribution information is provided for this layer."
+#~ msgstr "どの属性情報もこのレイヤーには与えられていません。"
+
+#~ msgid "Provided by:"
+#~ msgstr "提供元:"
+
+#~ msgid "Download:"
+#~ msgstr "ダウンロード:"
+
+#~ msgid "No keywords are listed for this layer."
+#~ msgstr "このレイヤーにはキーワードが記入されていません。"
+
+#~ msgid "Keywords:"
+#~ msgstr "キーワード:"
+
+#~ msgid "No metadata URLs are defined for this layer."
+#~ msgstr "このレイヤーにはメタデータのURLが定義されていません。"
+
+#~ msgid "Paper size:"
+#~ msgstr "用紙サイズ:"
+
+#~ msgid "Resolution:"
+#~ msgstr "解像度:"
+
+#~ msgid "Print"
+#~ msgstr "印刷"
+
+#~ msgid "Enter map title here."
+#~ msgstr "ここに地図のタイトルを入力してください。"
+
+#~ msgid "Include legend?"
+#~ msgstr "凡例を含みますか？"
+
+#~ msgid "Creating PDF..."
+#~ msgstr "PDFを生成中"
+
+#~ msgid "Last Modified"
+#~ msgstr "最終更新"
+
+#~ msgid "Prev"
+#~ msgstr "前へ"
+
+#~ msgid "Next"
+#~ msgstr "次へ"
+
+#~ msgid "of"
+#~ msgstr "の"
+
+#~ msgid "Your search did not match any items."
+#~ msgstr "どのアイテムも検索と一致しませんでした。"
+
+#~ msgid "Search Maps"
+#~ msgstr "地図を検索する"
+
+#~ msgid "Search"
+#~ msgstr "検索"
+
+#~ msgid "Showing"
+#~ msgstr "表示中"
+
+#~ msgid "Loading"
+#~ msgstr "読み込み中"
+
+#~ msgid "permalink"
+#~ msgstr "パーマリンク"
+
+#~ msgid "Select:"
+#~ msgstr "選択:"
+
+#~ msgid "All"
+#~ msgstr "全て"
+
+#~ msgid "None"
+#~ msgstr "何も"
+
+#~ msgid "Loading..."
+#~ msgstr "読み込み中"
+
+#~ msgid "You do not have permission to view this data"
+#~ msgstr "このデータを閲覧する権限がありません"
+
+#~ msgid "This data is stored on a remote server"
+#~ msgstr "このデータはリモート・サーバに保存されています"
+
+#~ msgid "No abstract is provided for this layer."
+#~ msgstr "このレイヤーには要約がありません。"
+
+#~ msgid "No download URLs are definied for this layer."
+#~ msgstr "このレイヤーにはダウンロードURLが定義されていません。"
+
+#~ msgid "Selected Layers"
+#~ msgstr "レイヤーの選択"
+
+#~ msgid "No Layers Selected"
+#~ msgstr "どのレイヤーも選択されていません"
+
+#~ msgid "Clear Selected"
+#~ msgstr "選択クリア"
+
+#~ msgid "Clear All"
+#~ msgstr "全てをクリア"
+
+#~ msgid "Operation Failed"
+#~ msgstr "操作失敗"
+
+#~ msgid "No layers are currently selected."
+#~ msgstr "どのレイヤーも現在選択されていません"
+
+#~ msgid "Downloading..."
+#~ msgstr "ダウンロード中"
+
+#~ msgid "Please wait"
+#~ msgstr "お待ちください"
 
 #~ msgid ""
 #~ "January February March April May June July August September October "
@@ -770,9 +964,6 @@ msgstr "お待ちください"
 
 #~ msgid "Hide"
 #~ msgstr "Hide"
-
-#~ msgid "Now"
-#~ msgstr "Now"
 
 #~ msgid "Clock"
 #~ msgstr "Clock"

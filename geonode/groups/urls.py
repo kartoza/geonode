@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 #
 # Copyright (C) 2017 OSGeo
@@ -21,7 +20,7 @@
 from django.conf.urls import url
 from django.views.generic import TemplateView
 
-from .views import GroupDetailView, GroupActivityView
+from .views import GroupDetailView, GroupActivityView, SetGroupDatasetPermission
 from . import views
 
 urlpatterns = [  # 'geonode.groups.views',
@@ -30,7 +29,7 @@ urlpatterns = [  # 'geonode.groups.views',
 
     url(r'^categories/$',
         TemplateView.as_view(
-        template_name="groups/category_list.html"),
+            template_name="groups/category_list.html"),
         name="group_category_list"),
     url(r'^categories/_create/$', views.group_category_create,
         name="group_category_create"),
@@ -50,10 +49,20 @@ urlpatterns = [  # 'geonode.groups.views',
         views.group_members_add, name='group_members_add'),
     url(r'^group/(?P<slug>[-\w]+)/member_remove/(?P<username>.+)$', views.group_member_remove,
         name='group_member_remove'),
+    url(r'^group/(?P<slug>[-\w]+)/member_promote/(?P<username>.+)$',
+        views.group_member_promote, name='group_member_promote'),
+    url(r'^group/(?P<slug>[-\w]+)/member_demote/(?P<username>.+)$',
+        views.group_member_demote, name='group_member_demote'),
     url(r'^group/(?P<slug>[-\w]+)/remove/$',
         views.group_remove, name='group_remove'),
     url(r'^group/(?P<slug>[-\w]+)/join/$',
         views.group_join, name='group_join'),
     url(r'^group/(?P<slug>[-\w]+)/activity/$',
         GroupActivityView.as_view(), name='group_activity'),
+    url(r'^autocomplete/$',
+        views.GroupProfileAutocomplete.as_view(), name='autocomplete_groups'),
+    url(r'^autocomplete_category/$',
+        views.GroupCategoryAutocomplete.as_view(), name='autocomplete_category'),
+    url(r'^dataset/permission/$',
+        SetGroupDatasetPermission.as_view(), name='set_group_dataset_permissions'),
 ]

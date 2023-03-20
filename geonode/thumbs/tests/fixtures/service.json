@@ -1,0 +1,27 @@
+[
+   {
+      "model":"services.service",
+      "pk":1003,
+      "fields":{
+         "type":"WMS",
+         "method":"I",
+         "base_url":"http://www502.regione.toscana.it/wmsraster/com.rt.wms.RTmap/wms",
+         "version":"1.3.0",
+         "name":"httpwww502regionetoscanaitwmsrastercomrtwmsrtmapwmsmapwmsgeologiamap_resolution91",
+         "description":null,
+         "extra_queryparams":"map=wmsgeologia&map_resolution=91&",
+         "tkeywords":[
+
+         ],
+         "regions":[
+
+         ],
+         "users_geolimits":[
+
+         ],
+         "groups_geolimits":[
+
+         ]
+      }
+   }
+]

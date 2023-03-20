@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -31,11 +30,11 @@ def load_path_attr(path):
     try:
         mod = importlib.import_module(module)
     except ImportError as e:
-        raise ImproperlyConfigured("Error importing {0}: '{1}'".format(module, e))
+        raise ImproperlyConfigured(f"Error importing {module}: '{e}'")
     try:
         attr = getattr(mod, attr)
     except AttributeError:
-        raise ImproperlyConfigured("Module '{0}' does not define a '{1}'".format(module, attr))
+        raise ImproperlyConfigured(f"Module '{module}' does not define a '{attr}'")
     return attr
 
 
@@ -49,8 +48,8 @@ def is_installed(package):
 
 class GeoNodeClientAppConf(AppConf):
 
-    LAYER_PREVIEW_LIBRARY = 'geoext'
-    HOOKSET = "geonode.client.hooksets.GeoExtHookSet"
+    LAYER_PREVIEW_LIBRARY = 'geonode'
+    HOOKSET = "geonode.client.hooksets.BaseHookSet"
 
     def configure_hookset(self, value):
         return load_path_attr(value)()

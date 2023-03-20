@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -21,20 +20,20 @@
 """User can login using authentication feature tests."""
 
 import pytest
-from geonode.people.models import Profile
+from django.contrib.auth import get_user_model
 from pytest_bdd import given, scenario, then, when
 
 
 # https://github.com/pytest-dev/pytest-django/issues/329
 @pytest.mark.django_db(transaction=True)  # , serialized_rollback=True)
-@scenario('login.feature', 'User can access login page')
+@scenario('features/login.feature', 'User can access login page')
 def test_user_can_access_login_page(db, geonode_db_setup):
     """User can access login page."""
     # pass
 
 
 @pytest.mark.django_db(transaction=True)  # , serialized_rollback=True)
-@scenario('login.feature', 'Admin user')
+@scenario('features/login.feature', 'Admin user')
 def test_admin_user():
     """Admin user."""
     # pass
@@ -48,7 +47,7 @@ def admin_user():
 @given('A global administrator named "admin"')
 def administrator_named_admin():
     """A global administrator named "admin"."""
-    admin = Profile.objects.filter(username='admin')
+    admin = get_user_model().objects.filter(username='admin')
     assert admin.exists() is True
 
 

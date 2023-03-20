@@ -22,21 +22,57 @@
 Some of these signals deal with authentication related workflows.
 
 """
-
 import logging
+import traceback
 
-from uuid import uuid4
-
-from allauth.account.signals import user_signed_up
-from allauth.socialaccount.signals import social_account_added
+from uuid import uuid1
 
 from allauth.account.models import EmailAddress
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.db.models import Q
+
+from geonode.base.auth import (
+    get_or_create_token,
+    delete_old_tokens,
+    set_session_token,
+    remove_session_token)
 
 from geonode.notifications_helper import send_notification
 
 from .adapters import get_data_extractor
+
+logger = logging.getLogger(__name__)
+
+
+def do_login(sender, user, request, **kwargs):
+    """
+    Take action on user login. Generate a new user access_token to be shared
+    with GeoServer, and store it into the request.session
+    """
+    if user and user.is_authenticated:
+        token = None
+        try:
+            token = get_or_create_token(user)
+        except Exception:
+            u = uuid1()
+            token = u.hex
+            tb = traceback.format_exc()
+            logger.debug(tb)
+
+        set_session_token(request.session, token)
+
+
+def do_logout(sender, user, request, **kwargs):
+    if 'access_token' in request.session:
+        try:
+            delete_old_tokens(user)
+        except Exception:
+            tb = traceback.format_exc()
+            logger.debug(tb)
+        remove_session_token(request.session)
+        request.session.modified = True
 
 
 def update_user_email_addresses(sender, **kwargs):
@@ -53,26 +89,44 @@ def update_user_email_addresses(sender, **kwargs):
             EmailAddress.objects.add_email(
                 request=None, user=user, email=sociallogin_email, confirm=False)
         except IntegrityError:
-            logging.exception(msg="Could not add email address {} to user {}".format(sociallogin_email, user))
+            logging.exception(msg=f"Could not add email address {sociallogin_email} to user {user}")
 
 
 def notify_admins_new_signup(sender, **kwargs):
-    staff = get_user_model().objects.filter(is_staff=True)
+    staff = get_user_model().objects.filter(Q(is_active=True) & (Q(is_staff=True) | Q(is_superuser=True)))
     send_notification(
         users=staff,
         label="account_approve",
-        extra_context={"from_user": kwargs["user"]}
+        extra_context={
+            "from_user": kwargs["user"],
+            "account_approval_required": settings.ACCOUNT_APPROVAL_REQUIRED
+        }
     )
 
 
-""" Connect relevant signals to their corresponding handlers. """
-social_account_added.connect(
-    update_user_email_addresses,
-    dispatch_uid=str(uuid4()),
-    weak=False
-)
-user_signed_up.connect(
-    notify_admins_new_signup,
-    dispatch_uid=str(uuid4()),
-    weak=False
-)
+def profile_post_save(instance, sender, **kwargs):
+    """
+    Make sure the user belongs by default to the anonymous and contributors groups.
+    This will make sure that anonymous and contributors permissions will be granted to the new users.
+    """
+    from django.contrib.auth.models import Group
+    from geonode.groups.conf import settings as groups_settings
+
+    created = kwargs.get('created', False)
+
+    if created:
+        anon_group, _ = Group.objects.get_or_create(name='anonymous')
+        instance.groups.add(anon_group)
+        is_anonymous = instance.username == 'AnonymousUser'
+
+        if not is_anonymous:
+            if Group.objects.filter(name='contributors').count() and not (instance.is_staff or instance.is_superuser):
+                cont_group = Group.objects.get(name='contributors')
+                instance.groups.add(cont_group)
+            if Group.objects.filter(name=groups_settings.REGISTERED_MEMBERS_GROUP_NAME).count():
+                registeredmembers_group = Group.objects.get(name=groups_settings.REGISTERED_MEMBERS_GROUP_NAME)
+                instance.groups.add(registeredmembers_group)
+
+    # do not create email, when user-account signup code is in use
+    if getattr(instance, '_disable_account_creation', False):
+        return

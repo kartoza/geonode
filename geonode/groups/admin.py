@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -20,6 +19,7 @@
 
 from django.contrib import admin
 from modeltranslation.admin import TranslationAdmin
+from geonode.base.admin import set_user_and_group_dataset_permission
 
 from . import models
 
@@ -34,11 +34,12 @@ class GroupMemberInline(admin.TabularInline):
     model = models.GroupMember
 
 
-class GroupAdmin(admin.ModelAdmin):
+class GroupProfileAdmin(admin.ModelAdmin):
     inlines = [
         GroupMemberInline
     ]
     exclude = ['group', ]
+    actions = [set_user_and_group_dataset_permission]
 
 
-admin.site.register(models.GroupProfile, GroupAdmin)
+admin.site.register(models.GroupProfile, GroupProfileAdmin)

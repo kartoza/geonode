@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -18,17 +17,22 @@
 #
 #########################################################################
 
-from django.test import TestCase
+from geonode.tests.base import GeoNodeBaseTestSupport
 
 from geonode.messaging import connection
 from geonode.messaging.consumer import Consumer
 
 
-class MessagingTest(TestCase):
+class MessagingTest(GeoNodeBaseTestSupport):
     """
     Tests geonode.messaging
     """
+
+    type = 'dataset'
+
     def setUp(self):
+        super().setUp()
+
         self.adm_un = "admin"
         self.adm_pw = "admin"
 
@@ -37,5 +41,5 @@ class MessagingTest(TestCase):
             try:
                 worker = Consumer(connection)
                 self.assertTrue(worker is not None)
-            except:
+            except Exception:
                 self.fail("could not create a Consumer.")

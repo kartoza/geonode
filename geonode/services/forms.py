@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -28,6 +27,7 @@ import taggit
 from . import enumerations
 from .models import Service
 from .serviceprocessors import get_service_handler
+from geonode.services.serviceprocessors import get_available_service_types
 
 logger = logging.getLogger(__name__)
 
@@ -48,18 +48,7 @@ class CreateServiceForm(forms.Form):
     )
     type = forms.ChoiceField(
         label=_("Service Type"),
-        choices=(
-            # (enumerations.AUTO, _('Auto-detect')),
-            # (enumerations.OWS, _('Paired WMS/WFS/WCS')),
-            (enumerations.WMS, _('Web Map Service')),
-            (enumerations.GN_WMS, _('GeoNode (Web Map Service)')),
-            # (enumerations.GN_CSW, _('GeoNode (Catalogue Service)')),
-            # (enumerations.CSW, _('Catalogue Service')),
-            (enumerations.REST_MAP, _('ArcGIS REST MapServer')),
-            # (enumerations.REST_IMG, _('ArcGIS REST ImageServer')),
-            # (enumerations.OGP, _('OpenGeoPortal')),
-            # (enumerations.HGL, _('Harvard Geospatial Library')),
-        ),
+        choices=[(k, v["label"]) for k, v in get_available_service_types().items()],  # from dictionary to tuple
         initial='AUTO',
     )
 
@@ -75,22 +64,22 @@ class CreateServiceForm(forms.Form):
 
     def clean(self):
         """Validates form fields that depend on each other"""
-        super(CreateServiceForm, self).clean()
+        super().clean()
         url = self.cleaned_data.get("url")
         service_type = self.cleaned_data.get("type")
         if url is not None and service_type is not None:
             try:
                 service_handler = get_service_handler(
                     base_url=url, service_type=service_type)
-            except Exception:
+            except Exception as e:
+                logger.error(f"CreateServiceForm cleaning error: {e}")
                 raise ValidationError(
                     _("Could not connect to the service at %(url)s"),
                     params={"url": url}
                 )
-            if not service_handler.has_resources():
+            if not service_handler.probe():
                 raise ValidationError(
-                    _("Could not find importable resources for the service "
-                      "at %(url)s"),
+                    _("Could not connect to the service at %(url)s"),
                     params={"url": url}
                 )
             elif service_type not in (enumerations.AUTO, enumerations.OWS):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -18,10 +17,72 @@
 #
 #########################################################################
 from django import template
+from django.conf import settings
 from django.template.base import FilterExpression, kwarg_re
 from ..hooks import hookset
 
 register = template.Library()
+
+
+@register.simple_tag
+def mapbox_access_token():
+    return getattr(settings, "MAPBOX_ACCESS_TOKEN", None)
+
+
+@register.simple_tag
+def bing_api_key():
+    return getattr(settings, "BING_API_KEY", None)
+
+
+@register.simple_tag
+def google_api_key():
+    return getattr(settings, "GOOGLE_API_KEY", None)
+
+
+# For client single page links
+@register.simple_tag
+def dataset_list_url():
+    return hookset.dataset_list_url()
+
+
+@register.simple_tag
+def dataset_upload_url():
+    return hookset.dataset_upload_url()
+
+
+@register.simple_tag
+def dataset_detail_url(layer):
+    return hookset.dataset_detail_url(layer)
+
+
+@register.simple_tag
+def map_list_url():
+    return hookset.map_list_url()
+
+
+@register.simple_tag
+def map_detail_url(map):
+    return hookset.map_detail_url(map)
+
+
+@register.simple_tag
+def document_list_url():
+    return hookset.document_list_url()
+
+
+@register.simple_tag
+def document_detail_url(document):
+    return hookset.document_detail_url(document)
+
+
+@register.simple_tag
+def geoapp_list_url():
+    return hookset.geoapp_list_url()
+
+
+@register.simple_tag
+def geoapp_detail_url(geoapp):
+    return hookset.geoapp_detail_url(geoapp)
 
 
 def parse_tag(token, parser):
@@ -71,37 +132,47 @@ class GeoNodeClientLibraryTag(template.Node):
         t = None
 
         # LAYERS
-        if self.tag_name == 'get_layer_detail':
+        if self.tag_name == 'get_dataset_list':
             t = context.template.engine.get_template(
-                hookset.layer_detail_template(
+                hookset.dataset_list_template(
                     context=context))
-        elif self.tag_name == 'get_layer_new':
+        elif self.tag_name == 'get_dataset_detail':
+            t = context.template.engine.get_template('geonode-mapstore-client/legacy/dataset_detail.html')
+        elif self.tag_name == 'get_dataset_new':
             t = context.template.engine.get_template(
-                hookset.layer_new_template(
+                hookset.dataset_new_template(
                     context=context))
-        elif self.tag_name == 'get_layer_view':
+        elif self.tag_name == 'get_dataset_view':
             t = context.template.engine.get_template(
-                hookset.layer_view_template(
+                hookset.dataset_view_template(
                     context=context))
-        elif self.tag_name == 'get_layer_edit':
+        elif self.tag_name == 'get_dataset_edit':
             t = context.template.engine.get_template(
-                hookset.layer_edit_template(
+                hookset.dataset_edit_template(
                     context=context))
-        elif self.tag_name == 'get_layer_update':
+        elif self.tag_name == 'get_dataset_update':
             t = context.template.engine.get_template(
-                hookset.layer_update_template(
+                hookset.dataset_update_template(
                     context=context))
-        elif self.tag_name == 'get_layer_embed':
+        elif self.tag_name == 'get_dataset_embed':
             t = context.template.engine.get_template(
-                hookset.layer_embed_template(
+                hookset.dataset_embed_template(
                     context=context))
-        elif self.tag_name == 'get_layer_download':
+        elif self.tag_name == 'get_dataset_download':
             t = context.template.engine.get_template(
-                hookset.layer_download_template(
+                hookset.dataset_download_template(
+                    context=context))
+        elif self.tag_name == 'get_dataset_style_edit':
+            t = context.template.engine.get_template(
+                hookset.dataset_style_edit_template(
                     context=context))
 
         # MAPS
-        if self.tag_name == 'get_map_detail':
+        if self.tag_name == 'get_map_list':
+            t = context.template.engine.get_template(
+                hookset.map_list_template(
+                    context=context))
+        elif self.tag_name == 'get_map_detail':
             t = context.template.engine.get_template(
                 hookset.map_detail_template(
                     context=context))
@@ -122,12 +193,44 @@ class GeoNodeClientLibraryTag(template.Node):
                 hookset.map_update_template(
                     context=context))
         elif self.tag_name == 'get_map_embed':
-            t = context.template.engine.get_template(
-                hookset.map_embed_template(
-                    context=context))
+            t = context.template.engine.get_template('geonode-mapstore-client/map_embed.html')
         elif self.tag_name == 'get_map_download':
             t = context.template.engine.get_template(
                 hookset.map_download_template(
+                    context=context))
+
+        # GEONODE_APPS
+        if self.tag_name == 'get_geoapp_list':
+            t = context.template.engine.get_template(
+                hookset.geoapp_list_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_detail':
+            t = context.template.engine.get_template(
+                hookset.geoapp_detail_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_new':
+            t = context.template.engine.get_template(
+                hookset.geoapp_new_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_view':
+            t = context.template.engine.get_template(
+                hookset.geoapp_view_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_edit':
+            t = context.template.engine.get_template(
+                hookset.geoapp_edit_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_update':
+            t = context.template.engine.get_template(
+                hookset.geoapp_update_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_embed':
+            t = context.template.engine.get_template(
+                hookset.geoapp_embed_template(
+                    context=context))
+        elif self.tag_name == 'get_geoapp_download':
+            t = context.template.engine.get_template(
+                hookset.geoapp_download_template(
                     context=context))
 
         if t:
@@ -141,14 +244,17 @@ def do_get_client_library_template(parser, token):
     return GeoNodeClientLibraryTag(tag_name, args, kwargs)
 
 
-register.tag('get_layer_detail', do_get_client_library_template)
-register.tag('get_layer_new', do_get_client_library_template)
-register.tag('get_layer_view', do_get_client_library_template)
-register.tag('get_layer_edit', do_get_client_library_template)
-register.tag('get_layer_update', do_get_client_library_template)
-register.tag('get_layer_embed', do_get_client_library_template)
-register.tag('get_layer_download', do_get_client_library_template)
+register.tag('get_dataset_list', do_get_client_library_template)
+register.tag('get_dataset_detail', do_get_client_library_template)
+register.tag('get_dataset_new', do_get_client_library_template)
+register.tag('get_dataset_view', do_get_client_library_template)
+register.tag('get_dataset_edit', do_get_client_library_template)
+register.tag('get_dataset_update', do_get_client_library_template)
+register.tag('get_dataset_embed', do_get_client_library_template)
+register.tag('get_dataset_download', do_get_client_library_template)
+register.tag('get_dataset_style_edit', do_get_client_library_template)
 
+register.tag('get_map_list', do_get_client_library_template)
 register.tag('get_map_detail', do_get_client_library_template)
 register.tag('get_map_new', do_get_client_library_template)
 register.tag('get_map_view', do_get_client_library_template)
@@ -156,3 +262,12 @@ register.tag('get_map_edit', do_get_client_library_template)
 register.tag('get_map_update', do_get_client_library_template)
 register.tag('get_map_embed', do_get_client_library_template)
 register.tag('get_map_download', do_get_client_library_template)
+
+register.tag('get_geoapp_list', do_get_client_library_template)
+register.tag('get_geoapp_detail', do_get_client_library_template)
+register.tag('get_geoapp_new', do_get_client_library_template)
+register.tag('get_geoapp_view', do_get_client_library_template)
+register.tag('get_geoapp_edit', do_get_client_library_template)
+register.tag('get_geoapp_update', do_get_client_library_template)
+register.tag('get_geoapp_embed', do_get_client_library_template)
+register.tag('get_geoapp_download', do_get_client_library_template)

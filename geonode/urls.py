@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+#########################################################################
 #
 # Copyright (C) 2018 OSGeo
 #
@@ -16,75 +15,108 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-#
+#########################################################################
 
 import django
+from django.urls import path
 from django.conf.urls import include, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
-from geonode.sitemap import LayerSitemap, MapSitemap
+from geonode.sitemap import DatasetSitemap, MapSitemap
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf.urls.i18n import i18n_patterns
-from django.views.i18n import javascript_catalog
+from django.views.i18n import JavaScriptCatalog
 from django.contrib.sitemaps.views import sitemap
 
 import geonode.proxy.urls
 from . import views
+from . import version
 
-from geonode.api.urls import api
-from geonode.api.views import verify_token, roles, users, admin_role
+from geonode.api.urls import api, router
+from geonode.api.views import verify_token, user_info, roles, users, admin_role
 
-from geonode import geoserver, qgis_server  # noqa
+from geonode import geoserver
 from geonode.utils import check_ogc_backend
-
-from autocomplete_light.registry import autodiscover
-
-# Setup Django Admin
-autodiscover()
+from geonode.base import register_url_event
+from geonode.messaging.urls import urlpatterns as msg_urls
+from .people.views import CustomSignupView
+from oauth2_provider.urls import (
+    app_name as oauth2_app_name,
+    base_urlpatterns,
+    oidc_urlpatterns)
 
 admin.autodiscover()
 
 js_info_dict = {
     'domain': 'djangojs',
-    'packages': ('geonode',)
+    'packages': 'geonode'
 }
 
 sitemaps = {
-    "layer": LayerSitemap,
+    "dataset": DatasetSitemap,
     "map": MapSitemap
 }
 
-urlpatterns = [  # '',
-    # Static pages
+homepage = register_url_event()(TemplateView.as_view(template_name='index.html'))
+
+urlpatterns = [
     url(r'^$',
-        TemplateView.as_view(template_name='index.html'),
+        homepage,
         name='home'),
     url(r'^help/$',
         TemplateView.as_view(template_name='help.html'),
         name='help'),
     url(r'^developer/$',
         TemplateView.as_view(
-        template_name='developer.html'),
+            template_name='developer.html'),
         name='developer'),
     url(r'^about/$',
         TemplateView.as_view(template_name='about.html'),
         name='about'),
+    url(r'^privacy_cookies/$',
+        TemplateView.as_view(template_name='privacy-cookies.html'),
+        name='privacy-cookies'),
 
-    # Layer views
-    url(r'^layers/', include('geonode.layers.urls')),
+    # Meta
+    url(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps},
+        name='sitemap'),
+    url(r'^robots\.txt$', TemplateView.as_view(
+        template_name='robots.txt'), name='robots'),
+    url(r'(.*version\.txt)$', version.version, name='version'),
+    url(r'^messages/', include(msg_urls))
+
+]
+
+urlpatterns += [
+
+    # ResourceBase views
+    url(r'^base/', include('geonode.base.urls')),
+
+    # Dataset views
+    url(r'^datasets/', include('geonode.layers.urls')),
+
+    # Remote Services views
+    url(r'^services/', include('geonode.services.urls')),
 
     # Map views
     url(r'^maps/', include('geonode.maps.urls')),
 
+    # Documents views
+    url(r'^documents/', include('geonode.documents.urls')),
+
+    # Apps views
+    url(r'^apps/', include('geonode.geoapps.urls')),
+
     # Catalogue views
     url(r'^catalogue/', include('geonode.catalogue.urls')),
 
-    # data.json
-    url(r'^data.json$',
-        geonode.catalogue.views.data_json,
-        name='data_json'),
+    # Group Profiles views
+    url(r'^groups/', include('geonode.groups.urls')),
+
+    # Harvesting views
+    url(r'^harvesters/', include('geonode.harvesting.urls')),
 
     # ident
     url(r'^ident.json$',
@@ -96,21 +128,14 @@ urlpatterns = [  # '',
         views.h_keywords,
         name='h_keywords_api'),
 
-    # Search views
-    url(r'^search/$',
-        TemplateView.as_view(
-        template_name='search/search.html'),
-        name='search'),
-
     # Social views
+    url(r'^account/signup/', CustomSignupView.as_view(), name='account_signup'),
     url(r"^account/", include("allauth.urls")),
     url(r'^invitations/', include(
         'geonode.invitations.urls', namespace='geonode.invitations')),
     url(r'^people/', include('geonode.people.urls')),
     url(r'^avatar/', include('avatar.urls')),
-    # (r'^comments/', include('dialogos.urls')),
-    url(r'^comments/', include('dialogos.urls')),
-    url(r'^ratings/', include('agon_ratings.urls')),
+    url(r'^ratings/', include('pinax.ratings.urls', namespace='pinax_ratings')),
     url(r'^activity/', include('actstream.urls')),
     url(r'^announcements/', include('announcements.urls')),
     url(r'^messages/', include('user_messages.urls')),
@@ -129,64 +154,56 @@ urlpatterns = [  # '',
         geonode.views.moderator_contacted,
         name='moderator_contacted'),
 
-    # Meta
-    url(r'^lang\.js$', TemplateView.as_view(template_name='lang.js', content_type='text/javascript'),
-        name='lang'),
-
-    url(r'^jsi18n/$', javascript_catalog,
-        js_info_dict, name='javascript-catalog'),
-    url(r'^sitemap\.xml$', sitemap, {'sitemaps': sitemaps},
-        name='sitemap'),
-    url(r'^robots\.txt$', TemplateView.as_view(
-        template_name='robots.txt'), name='robots'),
-
-    # url(r'^i18n/', include('django.conf.urls.i18n')),
-    url(r'^autocomplete/', include('autocomplete_light.urls')),
-    # url(r'^admin/', include(admin.site.urls)),
-    url(r'^groups/', include('geonode.groups.urls')),
-    url(r'^documents/', include('geonode.documents.urls')),
-    url(r'^services/', include('geonode.services.urls')),
-
-    # OAuth Provider
+    # OAuth2/OIDC Provider
     url(r'^o/',
-        include('oauth2_provider.urls',
-                namespace='oauth2_provider')),
-
-    # Api Views
+        include((base_urlpatterns + oidc_urlpatterns, oauth2_app_name), namespace='oauth2_provider')),
     url(r'^api/o/v4/tokeninfo',
         verify_token, name='tokeninfo'),
+    url(r'^api/o/v4/userinfo',
+        user_info, name='userinfo'),
+
+    # Api Views
     url(r'^api/roles', roles, name='roles'),
     url(r'^api/adminRole', admin_role, name='adminRole'),
     url(r'^api/users', users, name='users'),
-    url(r'', include(api.urls)), ]
-
-urlpatterns += i18n_patterns(
-    url("^admin/", include(admin.site.urls)),
-)
-
-urlpatterns += [
-    url(r'^i18n/', include(django.conf.urls.i18n))
+    url(r'^api/v2/', include(router.urls)),
+    url(r'^api/v2/', include('geonode.api.urls')),
+    url(r'^api/v2/', include('geonode.management_commands_http.urls')),
+    url(r'^api/v2/api-auth/', include('rest_framework.urls', namespace='geonode_rest_framework')),
+    url(r'', include(api.urls)),
 ]
 
-if "geonode.contrib.dynamic" in settings.INSTALLED_APPS:
-    urlpatterns += [  # '',
-        url(r'^dynamic/', include(
-            'geonode.contrib.dynamic.urls')),
-    ]
+# tinymce WYSIWYG HTML Editor
+if 'tinymce' in settings.INSTALLED_APPS:
+    urlpatterns += [url(r'^tinymce/', include('tinymce.urls')), ]
 
-if "geonode.contrib.metadataxsl" in settings.INSTALLED_APPS:
-    urlpatterns += [  # '',
-        url(r'^showmetadata/',
-            include('geonode.contrib.metadataxsl.urls')),
-    ]
+# django-select2 Widgets
+if 'django_select2' in settings.INSTALLED_APPS:
+    urlpatterns += [path("select2/", include("django_select2.urls")), ]
 
-if "geonode.contrib.createlayer" in settings.INSTALLED_APPS:
-    urlpatterns += [  # '',
-        url(r'^createlayer/',
-            include('geonode.contrib.createlayer.urls')),
-    ]
+urlpatterns += i18n_patterns(
+    url(r'^grappelli/', include('grappelli.urls')),
+    url(r'^admin/', admin.site.urls, name="admin"),
+)
+
+# Internationalization Javascript
+urlpatterns += [
+    url(r'^i18n/', include(django.conf.urls.i18n), name="i18n"),
+    url(r'^jsi18n/$', JavaScriptCatalog.as_view(), js_info_dict, name='javascript-catalog')
+]
+
+urlpatterns += [  # '',
+    url(r'^showmetadata/',
+        include('geonode.catalogue.metadataxsl.urls')),
+]
 
 if check_ogc_backend(geoserver.BACKEND_PACKAGE):
+    if settings.CREATE_LAYER:
+        urlpatterns += [  # '',
+            url(r'^createlayer/',
+                include('geonode.geoserver.createlayer.urls')),
+        ]
+
     from geonode.geoserver.views import get_capabilities
     # GeoServer Helper Views
     urlpatterns += [  # '',
@@ -194,37 +211,24 @@ if check_ogc_backend(geoserver.BACKEND_PACKAGE):
         url(r'^upload/', include('geonode.upload.urls')),
         # capabilities
         url(r'^capabilities/layer/(?P<layerid>\d+)/$',
-            get_capabilities, name='capabilities_layer'),
+            get_capabilities, name='capabilities_dataset'),
         url(r'^capabilities/map/(?P<mapid>\d+)/$',
             get_capabilities, name='capabilities_map'),
-        url(r'^capabilities/user/(?P<user>[\w.-]+)/$',
+        url(r'^capabilities/user/(?P<user>[\w.@+-]+)/$',
             get_capabilities, name='capabilities_user'),
         url(r'^capabilities/category/(?P<category>\w+)/$',
             get_capabilities, name='capabilities_category'),
         url(r'^gs/', include('geonode.geoserver.urls')),
     ]
-if check_ogc_backend(qgis_server.BACKEND_PACKAGE):
-    # QGIS Server's urls
-    urlpatterns += [  # '',
-        url(r'^qgis-server/',
-            include(
-            'geonode.qgis_server.urls',
-            namespace='qgis_server')),
-    ]
 
 if settings.NOTIFICATIONS_MODULE in settings.INSTALLED_APPS:
-    notifications_urls = '{}.urls'.format(settings.NOTIFICATIONS_MODULE)
+    notifications_urls = f'{settings.NOTIFICATIONS_MODULE}.urls'
     urlpatterns += [  # '',
         url(r'^notifications/', include(notifications_urls)),
     ]
 if "djmp" in settings.INSTALLED_APPS:
     urlpatterns += [  # '',
         url(r'^djmp/', include('djmp.urls')),
-    ]
-
-if 'geonode.contrib.ows_api' in settings.INSTALLED_APPS:
-    urlpatterns += [  # '',
-        url('^', include('geonode.contrib.ows_api.urls')),
     ]
 
 # Set up proxy
@@ -234,18 +238,19 @@ urlpatterns += geonode.proxy.urls.urlpatterns
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.LOCAL_MEDIA_URL,
                       document_root=settings.MEDIA_ROOT)
+handler401 = 'geonode.views.err403'
 handler403 = 'geonode.views.err403'
-
-# Featured Maps Pattens
-urlpatterns += [  # '',
-    url(r'^featured/(?P<site>[A-Za-z0-9_\-]+)/$',
-        geonode.maps.views.featured_map),
-    url(r'^featured/(?P<site>[A-Za-z0-9_\-]+)/info$',
-        geonode.maps.views.featured_map_info),
-]
+handler404 = 'geonode.views.handler404'
+handler500 = 'geonode.views.handler500'
 
 
 if settings.MONITORING_ENABLED:
     urlpatterns += [url(r'^monitoring/',
-                        include('geonode.contrib.monitoring.urls',
+                        include(('geonode.monitoring.urls', 'geonode.monitoring'),
                                 namespace='monitoring'))]
+
+
+# Internationalization Javascript
+urlpatterns += [
+    url(r'^metadata_update_redirect$', views.metadata_update_redirect, name='metadata_update_redirect'),
+]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -27,8 +26,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from geonode.maps.models import MapLayer
         from django.conf import settings
-
-        map_layers = MapLayer.objects.filter(local=True)
-        for maplayer in map_layers:
-            maplayer.ows_url = settings.SITEURL + "geoserver/wms"
+        site_url = settings.SITEURL.rstrip('/') if settings.SITEURL.startswith('http') else settings.SITEURL
+        map_datasets = MapLayer.objects.filter(local=True)
+        for maplayer in map_datasets:
+            maplayer.ows_url = f"{site_url}/geoserver/wms"
             maplayer.save()

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -20,7 +19,7 @@
 
 from modeltranslation.translator import translator, TranslationOptions
 from geonode.base.models import (TopicCategory, SpatialRepresentationType, Region,
-                                 RestrictionCodeType, Backup, License, ResourceBase)
+                                 RestrictionCodeType, License, ResourceBase)
 
 
 class TopicCategoryTranslationOptions(TranslationOptions):
@@ -39,10 +38,6 @@ class RestrictionCodeTypeTranslationOptions(TranslationOptions):
     fields = ('description', 'gn_description',)
 
 
-class BackupTranslationOptions(TranslationOptions):
-    fields = ('name', 'description',)
-
-
 class LicenseTranslationOptions(TranslationOptions):
     fields = ('name', 'description', 'license_text',)
 
@@ -51,6 +46,5 @@ translator.register(TopicCategory, TopicCategoryTranslationOptions)
 translator.register(SpatialRepresentationType, SpatialRepresentationTypeTranslationOptions)
 translator.register(Region, RegionTranslationOptions)
 translator.register(RestrictionCodeType, RestrictionCodeTypeTranslationOptions)
-translator.register(Backup, BackupTranslationOptions)
 translator.register(License, LicenseTranslationOptions)
 translator.register(ResourceBase)

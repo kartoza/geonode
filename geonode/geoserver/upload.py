@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2018 OSGeo
@@ -27,27 +26,27 @@ from geoserver.resource import FeatureType, Coverage
 from django.conf import settings
 
 from geonode import GeoNodeException
-from geonode.layers.utils import layer_type, get_files
-from .helpers import (GEOSERVER_LAYER_TYPES,
-                      gs_catalog,
-                      get_store,
-                      get_sld_for,
-                      ogc_server_settings,
-                      cascading_delete,
-                      _create_db_featurestore,
-                      _create_featurestore,
-                      _create_coveragestore)
+from geonode.layers.utils import dataset_type, get_files
+from .helpers import (
+    GEOSERVER_LAYER_TYPES,
+    gs_catalog,
+    get_store,
+    get_sld_for,
+    ogc_server_settings,
+    _create_db_featurestore,
+    _create_featurestore,
+    _create_coveragestore)
 
 logger = logging.getLogger(__name__)
 
 
-def geoserver_layer_type(filename):
-    the_type = layer_type(filename)
+def geoserver_dataset_type(filename):
+    the_type = dataset_type(filename)
     return GEOSERVER_LAYER_TYPES[the_type]
 
 
 def geoserver_upload(
-        layer,
+        dataset,
         base_file,
         user,
         name,
@@ -60,9 +59,9 @@ def geoserver_upload(
 
     # Step 2. Check that it is uploading to the same resource type as
     # the existing resource
-    logger.info('>>> Step 2. Make sure we are not trying to overwrite a '
-                'existing resource named [%s] with the wrong type', name)
-    the_layer_type = geoserver_layer_type(base_file)
+    logger.debug('>>> Step 2. Make sure we are not trying to overwrite a '
+                 'existing resource named [%s] with the wrong type', name)
+    the_dataset_type = geoserver_dataset_type(base_file)
 
     # Get a short handle to the gsconfig geoserver catalog
     cat = gs_catalog
@@ -72,18 +71,14 @@ def geoserver_upload(
     # Check if the store exists in geoserver
     try:
         store = get_store(cat, name, workspace=workspace)
-
-    except geoserver.catalog.FailedRequestError as e:
+    except geoserver.catalog.FailedRequestError:
         # There is no store, ergo the road is clear
         pass
     else:
         # If we get a store, we do the following:
-        resources = store.get_resources()
+        resources = cat.get_resources(names=[name], stores=[store], workspaces=[workspace])
 
-        # If the store is empty, we just delete it.
-        if len(resources) == 0:
-            cat.delete(store)
-        else:
+        if len(resources) > 0:
             # If our resource is already configured in the store it needs
             # to have the right resource type
             for resource in resources:
@@ -91,189 +86,173 @@ def geoserver_upload(
                     msg = 'Name already in use and overwrite is False'
                     assert overwrite, msg
                     existing_type = resource.resource_type
-                    if existing_type != the_layer_type:
-                        msg = ('Type of uploaded file %s (%s) '
+                    if existing_type != the_dataset_type:
+                        msg = (f'Type of uploaded file {name} ({the_dataset_type}) '
                                'does not match type of existing '
-                               'resource type '
-                               '%s' % (name, the_layer_type, existing_type))
-                        logger.info(msg)
+                               f'resource type {existing_type}')
+                        logger.debug(msg)
                         raise GeoNodeException(msg)
 
     # Step 3. Identify whether it is vector or raster and which extra files
     # are needed.
-    logger.info('>>> Step 3. Identifying if [%s] is vector or raster and '
-                'gathering extra files', name)
-    if the_layer_type == FeatureType.resource_type:
+    logger.debug('>>> Step 3. Identifying if [%s] is vector or raster and '
+                 'gathering extra files', name)
+    if the_dataset_type == FeatureType.resource_type:
         logger.debug('Uploading vector layer: [%s]', base_file)
         if ogc_server_settings.DATASTORE:
             create_store_and_resource = _create_db_featurestore
         else:
             create_store_and_resource = _create_featurestore
-    elif the_layer_type == Coverage.resource_type:
+    elif the_dataset_type == Coverage.resource_type:
         logger.debug("Uploading raster layer: [%s]", base_file)
         create_store_and_resource = _create_coveragestore
     else:
-        msg = ('The layer type for name %s is %s. It should be '
-               '%s or %s,' % (name,
-                              the_layer_type,
-                              FeatureType.resource_type,
-                              Coverage.resource_type))
+        msg = (f'The layer type for name {name} is {the_dataset_type}. It should be '
+               f'{FeatureType.resource_type} or {Coverage.resource_type},')
         logger.warn(msg)
         raise GeoNodeException(msg)
 
     # Step 4. Create the store in GeoServer
-    logger.info('>>> Step 4. Starting upload of [%s] to GeoServer...', name)
+    logger.debug('>>> Step 4. Starting upload of [%s] to GeoServer...', name)
 
     # Get the helper files if they exist
-    files = get_files(base_file)
-
+    files, _tmpdir = get_files(base_file)
     data = files
-
     if 'shp' not in files:
         data = base_file
-
     try:
-        store, gs_resource = create_store_and_resource(name,
-                                                       data,
-                                                       charset=charset,
-                                                       overwrite=overwrite,
-                                                       workspace=workspace)
+        store, gs_resource = create_store_and_resource(
+            name,
+            data,
+            charset=charset,
+            overwrite=overwrite,
+            workspace=workspace)
     except UploadError as e:
-        msg = ('Could not save the layer %s, there was an upload '
-               'error: %s' % (name, str(e)))
+        msg = (f'Could not save the layer {name}, there was an upload '
+               f'error: {e}')
         logger.warn(msg)
         e.args = (msg,)
         raise
     except ConflictingDataError as e:
         # A datastore of this name already exists
-        msg = ('GeoServer reported a conflict creating a store with name %s: '
-               '"%s". This should never happen because a brand new name '
+        msg = (f'GeoServer reported a conflict creating a store with name {name}: '
+               f'"{e}". This should never happen because a brand new name '
                'should have been generated. But since it happened, '
-               'try renaming the file or deleting the store in '
-               'GeoServer.' % (name, str(e)))
+               'try renaming the file or deleting the store in GeoServer.')
         logger.warn(msg)
         e.args = (msg,)
         raise
-    else:
-        logger.debug('Finished upload of [%s] to GeoServer without '
-                     'errors.', name)
+    except Exception as e:
+        logger.error("Error during the creation of the resource in GeoServer", exc_info=e)
+        raise e
+
+    logger.debug(f'The File {name} has been sent to GeoServer without errors.')
 
     # Step 5. Create the resource in GeoServer
-    logger.info('>>> Step 5. Generating the metadata for [%s] after '
-                'successful import to GeoSever', name)
+    logger.debug(f'>>> Step 5. Generating the metadata for {name} after successful import to GeoSever')
 
     # Verify the resource was created
-    if gs_resource is not None:
-        assert gs_resource.name == name
-    else:
-        msg = ('GeoNode encountered problems when creating layer %s.'
-               'It cannot find the Layer that matches this Workspace.'
-               'try renaming your files.' % name)
+    if not gs_resource:
+        gs_resource = gs_catalog.get_resource(
+            name=name,
+            workspace=workspace)
+
+    if not gs_resource:
+        msg = f'GeoNode encountered problems when creating layer {name}.It cannot find the Dataset that matches this Workspace.try renaming your files.'
         logger.warn(msg)
         raise GeoNodeException(msg)
 
-    # Step 6. Make sure our data always has a valid projection
-    # FIXME: Put this in gsconfig.py
-    logger.info('>>> Step 6. Making sure [%s] has a valid projection' % name)
-    if gs_resource.native_bbox is None:
-        box = gs_resource.native_bbox[:4]
-        minx, maxx, miny, maxy = [float(a) for a in box]
-        if -180 <= minx <= 180 and -180 <= maxx <= 180 and \
-           - 90 <= miny <= 90 and -90 <= maxy <= 90:
-            logger.info('GeoServer failed to detect the projection for layer '
-                        '[%s]. Guessing EPSG:4326', name)
-            # If GeoServer couldn't figure out the projection, we just
-            # assume it's lat/lon to avoid a bad GeoServer configuration
+    assert gs_resource.name == name
 
-            gs_resource.latlon_bbox = gs_resource.native_bbox
+    # Step 6. Make sure our data always has a valid projection
+    logger.debug(f'>>> Step 6. Making sure [{name}] has a valid projection')
+    _native_bbox = None
+    try:
+        _native_bbox = gs_resource.native_bbox
+    except Exception:
+        pass
+
+    if _native_bbox and len(_native_bbox) >= 5 and _native_bbox[4:5][0] == 'EPSG:4326':
+        box = _native_bbox[:4]
+        minx, maxx, miny, maxy = [float(a) for a in box]
+        if -180 <= round(minx, 5) <= 180 and -180 <= round(maxx, 5) <= 180 and \
+                -90 <= round(miny, 5) <= 90 and -90 <= round(maxy, 5) <= 90:
+            gs_resource.latlon_bbox = _native_bbox
             gs_resource.projection = "EPSG:4326"
-            cat.save(gs_resource)
         else:
-            msg = ('GeoServer failed to detect the projection for layer '
-                   '[%s]. It doesn\'t look like EPSG:4326, so backing out '
-                   'the layer.')
-            logger.info(msg, name)
-            cascading_delete(cat, name)
-            raise GeoNodeException(msg % name)
+            logger.warning('BBOX coordinates outside normal EPSG:4326 values for layer '
+                           '[%s].', name)
+            _native_bbox = [-180, -90, 180, 90, "EPSG:4326"]
+            gs_resource.latlon_bbox = _native_bbox
+            gs_resource.projection = "EPSG:4326"
+            logger.debug('BBOX coordinates forced to [-180, -90, 180, 90] for layer [%s].', name)
 
     # Step 7. Create the style and assign it to the created resource
-    # FIXME: Put this in gsconfig.py
-    logger.info('>>> Step 7. Creating style for [%s]' % name)
-    publishing = cat.get_layer(name)
-
-    if 'sld' in files:
-        f = open(files['sld'], 'r')
-        sld = f.read()
-        f.close()
-    else:
-        sld = get_sld_for(cat, publishing)
+    logger.debug(f'>>> Step 7. Creating style for [{name}]')
+    cat.save(gs_resource)
+    publishing = cat.get_layer(name) or gs_resource
+    sld = None
+    try:
+        if 'sld' in files:
+            with open(files['sld'], 'rb') as f:
+                sld = f.read()
+        else:
+            sld = get_sld_for(cat, dataset)
+    except Exception as e:
+        logger.exception(e)
 
     style = None
-    if sld is not None:
+    if sld:
         try:
-            style = cat.get_style(name, workspace=settings.DEFAULT_WORKSPACE) or cat.get_style(name)
+            style = cat.get_style(name, workspace=workspace)
+        except geoserver.catalog.FailedRequestError:
+            style = cat.get_style(name)
+
+        try:
             overwrite = style or False
-            cat.create_style(name, sld, overwrite=overwrite, raw=True, workspace=settings.DEFAULT_WORKSPACE)
+            cat.create_style(name, sld, overwrite=overwrite, raw=True, workspace=workspace)
+            cat.reset()
         except geoserver.catalog.ConflictingDataError as e:
-            msg = ('There was already a style named %s in GeoServer, '
-                   'try to use: "%s"' % (name + "_layer", str(e)))
+            msg = (f'There was already a style named {name}_dataset in GeoServer, '
+                   f'try to use: "{e}"')
             logger.warn(msg)
             e.args = (msg,)
         except geoserver.catalog.UploadError as e:
-            msg = ('Error while trying to upload style named %s in GeoServer, '
-                   'try to use: "%s"' % (name + "_layer", str(e)))
+            msg = (f'Error while trying to upload style named {name}_dataset in GeoServer, '
+                   f'try to use: "{e}"')
             e.args = (msg,)
             logger.exception(e)
 
         if style is None:
             try:
-                style = cat.get_style(name, workspace=settings.DEFAULT_WORKSPACE) or cat.get_style(name)
-                overwrite = style or False
-                cat.create_style(name, sld, overwrite=overwrite, raw=True, workspace=settings.DEFAULT_WORKSPACE)
-            except:
-                try:
-                    style = cat.get_style(name + '_layer', workspace=settings.DEFAULT_WORKSPACE) or \
-                            cat.get_style(name + '_layer')
-                    overwrite = style or False
-                    cat.create_style(name + '_layer', sld, overwrite=overwrite, raw=True,
-                                     workspace=settings.DEFAULT_WORKSPACE)
-                    style = cat.get_style(name + '_layer', workspace=settings.DEFAULT_WORKSPACE) or \
-                        cat.get_style(name + '_layer')
-                except geoserver.catalog.ConflictingDataError as e:
-                    msg = ('There was already a style named %s in GeoServer, '
-                           'cannot overwrite: "%s"' % (name, str(e)))
-                    logger.warn(msg)
-                    e.args = (msg,)
-
-                style = cat.get_style(name + "_layer", workspace=settings.DEFAULT_WORKSPACE) or \
-                    cat.get_style(name + "_layer")
-                if style is None:
-                    style = cat.get_style('point')
-                    msg = ('Could not find any suitable style in GeoServer '
-                           'for Layer: "%s"' % (name))
-                    logger.error(msg)
-
-        if style:
-            publishing.default_style = style
-            logger.info('default style set to %s', name)
-            try:
-                cat.save(publishing)
-            except geoserver.catalog.FailedRequestError as e:
-                msg = ('Error while trying to save resource named %s in GeoServer, '
-                       'try to use: "%s"' % (publishing, str(e)))
+                style = cat.get_style(name, workspace=workspace) or cat.get_style(name)
+            except Exception as e:
+                style = cat.get_style('point')
+                msg = f'Could not find any suitable style in GeoServer for Dataset: "{name}"'
                 e.args = (msg,)
                 logger.exception(e)
 
-    # Step 10. Create the Django record for the layer
-    logger.info('>>> Step 10. Creating Django record for [%s]', name)
-    # FIXME: Do this inside the layer object
-    alternate = workspace.name + ':' + gs_resource.name
-    layer_uuid = str(uuid.uuid1())
+        if style:
+            publishing.default_style = style
+            logger.debug('default style set to %s', name)
+            try:
+                cat.save(publishing)
+            except geoserver.catalog.FailedRequestError as e:
+                msg = (f'Error while trying to save resource named {publishing} in GeoServer, '
+                       f'try to use: "{e}"')
+                e.args = (msg,)
+                logger.exception(e)
+
+    # Step 8. Create the Django record for the layer
+    logger.debug('>>> Step 8. Creating Django record for [%s]', name)
+    alternate = f"{workspace.name}:{gs_resource.name}"
+    dataset_uuid = str(uuid.uuid4())
+
     defaults = dict(store=gs_resource.store.name,
-                    storeType=gs_resource.store.resource_type,
+                    subtype=gs_resource.store.resource_type,
                     alternate=alternate,
                     title=title or gs_resource.title,
-                    uuid=layer_uuid,
+                    uuid=dataset_uuid,
                     abstract=abstract or gs_resource.abstract or '',
                     owner=user)
 

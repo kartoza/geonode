@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -21,20 +20,29 @@
 import taggit
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.translation import ugettext as _
 
-from geonode.people.models import Profile
-from geonode.base.models import ContactRole
+from captcha.fields import ReCaptchaField
 
 # Ported in from django-registration
 attrs_dict = {'class': 'required'}
 
 
+class AllauthReCaptchaSignupForm(forms.Form):
+
+    captcha = ReCaptchaField()
+
+    def signup(self, request, user):
+        """ Required, or else it thorws deprecation warnings """
+        pass
+
+
 class ProfileCreationForm(UserCreationForm):
 
     class Meta:
-        model = Profile
+        model = get_user_model()
         fields = ("username",)
 
     def clean_username(self):
@@ -42,8 +50,8 @@ class ProfileCreationForm(UserCreationForm):
         # but it sets a nicer error message than the ORM. See #13147.
         username = self.cleaned_data["username"]
         try:
-            Profile.objects.get(username=username)
-        except Profile.DoesNotExist:
+            get_user_model().objects.get(username=username)
+        except get_user_model().DoesNotExist:
             return username
         raise forms.ValidationError(
             self.error_messages['duplicate_username'],
@@ -54,35 +62,24 @@ class ProfileCreationForm(UserCreationForm):
 class ProfileChangeForm(UserChangeForm):
 
     class Meta:
-        model = Profile
+        model = get_user_model()
         fields = '__all__'
 
 
 class ForgotUsernameForm(forms.Form):
     email = forms.EmailField(widget=forms.TextInput(attrs=dict(attrs_dict,
                                                                maxlength=75)),
-                             label=_(u'Email Address'))
-
-
-class RoleForm(forms.ModelForm):
-
-    class Meta:
-        model = ContactRole
-        exclude = ('contact', 'layer')
-
-
-class PocForm(forms.Form):
-    contact = forms.ModelChoiceField(label="New point of contact",
-                                     queryset=Profile.objects.all())
+                             label=_('Email Address'))
 
 
 class ProfileForm(forms.ModelForm):
     keywords = taggit.forms.TagField(
+        label=_("Keywords"),
         required=False,
         help_text=_("A space or comma-separated list of keywords"))
 
     class Meta:
-        model = Profile
+        model = get_user_model()
         exclude = (
             'user',
             'password',
@@ -93,4 +90,5 @@ class ProfileForm(forms.ModelForm):
             'is_staff',
             'is_superuser',
             'is_active',
-            'date_joined')
+            'date_joined'
+        )

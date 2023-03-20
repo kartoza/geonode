@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -18,9 +17,15 @@
 #
 #########################################################################
 
+import json
+import logging
 from django import template
 from django.utils.translation import ugettext_lazy as _
+
+from geonode.utils import get_geonode_app_types
+
 register = template.Library()
+logger = logging.getLogger(__name__)
 
 
 def get_data(action, key, default=None):
@@ -29,9 +34,18 @@ def get_data(action, key, default=None):
     """
 
     if hasattr(action, 'data') and action.data:
-        return action.data.get(key, default)
-    else:
-        return default
+        if hasattr(action.data, 'get'):
+            return action.data.get(key, default)
+        elif action and action.data:
+            _action_data = json.loads(action.data)
+            if isinstance(_action_data, str):
+                return _action_data
+            else:
+                try:
+                    return _action_data.get(key, default)
+                except Exception as e:
+                    logger.exceprion(e)
+    return default
 
 
 @register.inclusion_tag('social/_activity_item.html')
@@ -39,11 +53,10 @@ def activity_item(action, **kwargs):
     """
     Provides a location to manipulate an action in preparation for display.
     """
-
     actor = action.actor
     activity_class = 'activity'
     verb = action.verb
-    username = actor.username
+    username = actor.username if actor else "someone"
     target = action.target
     object_type = None
     object = action.action_object
@@ -58,27 +71,26 @@ def activity_item(action, **kwargs):
     if target:
         target_type = target.__class__._meta.object_name.lower()  # noqa
 
-    if actor is None:
-        return str()
-
     # Set the item's class based on the object.
     if object:
-        if object_type == 'comment':
-            activity_class = 'comment'
-            preposition = _("on")
-            object = None
-            fragment = "comments"
+        geoapps = [app.lower() for app in get_geonode_app_types()]
+        if object_type in geoapps:
+            activity_class = object_type
 
         if object_type == 'map':
             activity_class = 'map'
 
-        if object_type == 'layer':
-            activity_class = 'layer'
+        if object_type == 'dataset':
+            activity_class = 'dataset'
+
+        if object_type == 'document':
+            activity_class = 'document'
 
     if raw_action == 'deleted':
         activity_class = 'delete'
 
-    if raw_action == 'created' and object_type == 'layer':
+    if raw_action == 'created' and \
+            object_type in ('dataset', 'document'):
         activity_class = 'upload'
 
     ctx = dict(

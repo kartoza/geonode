@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2016 OSGeo
@@ -17,22 +16,24 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
+from django.contrib.auth.decorators import login_required
+from geonode.client.hooks import hookset
+import json
 
 from django import forms
-from django.conf import settings
-from django.contrib.auth import authenticate, login, get_user_model
-from django.http import HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse
-try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
+from django.apps import apps
 from django.db.models import Q
+from django.urls import reverse
+from django.conf import settings
+from django.shortcuts import render
 from django.template.response import TemplateResponse
+from geonode.base.templatetags.base_tags import facets
+from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth import authenticate, login, get_user_model
 
 from geonode import get_version
-from geonode.base.templatetags.base_tags import facets
 from geonode.groups.models import GroupProfile
+from geonode.geoapps.models import GeoApp
 
 
 class AjaxLoginForm(forms.Form):
@@ -86,14 +87,28 @@ def ajax_lookup(request):
             content='use a field named "query" to specify a prefix to filter usernames',
             content_type='text/plain')
     keyword = request.POST['query']
-    users = get_user_model().objects.filter(Q(username__icontains=keyword)).exclude(Q(username='AnonymousUser') |
-                                                                                    Q(is_active=False))
-    groups = GroupProfile.objects.filter(Q(title__icontains=keyword))
+    users = get_user_model().objects.filter(
+        Q(username__icontains=keyword)).exclude(Q(username='AnonymousUser') |
+                                                Q(is_active=False))
+    if request.user and request.user.is_authenticated and request.user.is_superuser:
+        groups = GroupProfile.objects.filter(
+            Q(title__icontains=keyword) |
+            Q(slug__icontains=keyword))
+    elif request.user.is_anonymous:
+        groups = GroupProfile.objects.filter(
+            Q(title__icontains=keyword) |
+            Q(slug__icontains=keyword)).exclude(Q(access='private'))
+    else:
+        groups = GroupProfile.objects.filter(
+            Q(title__icontains=keyword) |
+            Q(slug__icontains=keyword)).exclude(
+                Q(access='private') & ~Q(
+                    slug__in=request.user.groupmember_set.values_list("group__slug", flat=True))
+        )
     json_dict = {
         'users': [({'username': u.username}) for u in users],
         'count': users.count(),
     }
-
     json_dict['groups'] = [({'name': g.slug, 'title': g.title})
                            for g in groups]
     return HttpResponse(
@@ -102,50 +117,75 @@ def ajax_lookup(request):
     )
 
 
-def err403(request):
-    if not request.user.is_authenticated():
+def err403(request, exception):
+    if not request.user.is_authenticated:
         return HttpResponseRedirect(
-            reverse('account_login') +
-            '?next=' +
-            request.get_full_path())
+            f"{reverse('account_login')}?next={request.get_full_path()}")
     else:
         return TemplateResponse(request, '401.html', {}, status=401).render()
 
 
-def ident_json(request):
-    if not request.user.is_authenticated():
-        return HttpResponseRedirect(
-            reverse('account_login') +
-            '?next=' +
-            request.get_full_path())
+def handler404(request, exception, template_name="404.html"):
+    response = render(request, template_name)
+    response.status_code = 404
+    return response
 
+
+def handler500(request, template_name="500.html"):
+    response = render(request, template_name)
+    response.status_code = 500
+    return response
+
+
+def ident_json(request):
+    site_url = settings.SITEURL.rstrip('/') if settings.SITEURL.startswith('http') else settings.SITEURL
     json_data = {}
-    json_data['siteurl'] = settings.SITEURL
+    json_data['siteurl'] = site_url
     json_data['name'] = settings.PYCSW['CONFIGURATION']['metadata:main']['identification_title']
 
     json_data['poc'] = {
         'name': settings.PYCSW['CONFIGURATION']['metadata:main']['contact_name'],
         'email': settings.PYCSW['CONFIGURATION']['metadata:main']['contact_email'],
-        'twitter': 'https://twitter.com/%s' % settings.TWITTER_SITE
+        'twitter': f'https://twitter.com/{settings.TWITTER_SITE}'
     }
 
     json_data['version'] = get_version()
 
     json_data['services'] = {
         'csw': settings.CATALOGUE['default']['URL'],
-        'ows': settings.OGC_SERVER['default']['LOCATION']
+        'ows': settings.OGC_SERVER['default']['PUBLIC_LOCATION']
     }
 
     json_data['counts'] = facets({'request': request, 'facet_type': 'home'})
 
     return HttpResponse(content=json.dumps(json_data),
-                        mimetype='application/json')
+                        content_type='application/json')
 
 
 def h_keywords(request):
     from geonode.base.models import HierarchicalKeyword as hk
-    keywords = json.dumps(hk.dump_bulk_tree())
-    return HttpResponse(content=keywords)
+    p_type = request.GET.get('type', None)
+    resource_name = request.GET.get('resource_name', None)
+    keywords = hk.resource_keywords_tree(request.user, resource_type=p_type, resource_name=resource_name)
+
+    subtypes = []
+    if p_type == 'geoapp':
+        for label, app in apps.app_configs.items():
+            if hasattr(app, 'type') and app.type == 'GEONODE_APP':
+                if hasattr(app, 'default_model'):
+                    _model = apps.get_model(label, app.default_model)
+                    if issubclass(_model, GeoApp):
+                        subtypes.append(_model.__name__.lower())
+
+    for _type in subtypes:
+        _bulk_tree = hk.resource_keywords_tree(request.user, resource_type=_type, resource_name=resource_name)
+        if isinstance(_bulk_tree, list):
+            for _elem in _bulk_tree:
+                keywords.append(_elem)
+        else:
+            keywords.append(_bulk_tree)
+
+    return HttpResponse(content=json.dumps(keywords))
 
 
 def moderator_contacted(request, inactive_user=None):
@@ -156,3 +196,10 @@ def moderator_contacted(request, inactive_user=None):
         template="account/admin_approval_sent.html",
         context={"email": user.email}
     )
+
+
+@login_required
+def metadata_update_redirect(request):
+    url = request.POST['url']
+    client_redirect_url = hookset.metadata_update_redirect(url, request=request)
+    return HttpResponse(content=client_redirect_url)

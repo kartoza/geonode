@@ -20,13 +20,14 @@ define(function (require, exports) {
      */
     make_request = exports.make_request = (function () {
         return function (options) {
+            options.mode ="queue";
             var success = options.success,
                 failure = options.failure;
 
             delete options.success;
             delete options.failure;
 
-            $.ajaxQueue(options).done(function (resp, status, obj) {
+            $.ajax(options).done(function (resp, status, obj) {
                if (typeof resp === "object" && resp.success === true) {
                     success(resp, status);
                } else if (typeof resp === "string"){
@@ -57,9 +58,19 @@ define(function (require, exports) {
         if (empty) {
             status.empty();
         }
+        var msg = options.msg;
+        var level = options.level;
+        if (msg.error_msg !== undefined) {
+            msg = msg.error_msg;
+            level = 'alert-warning';
+        }
+        if (msg.errors !== undefined) {
+            msg = msg.errors;
+            level = 'alert-warning';
+        }
         status.append(progressTemplate({
-            message: options.msg,
-            alertLevel: options.level
+            message: msg,
+            alertLevel: level
         }));
     };
 

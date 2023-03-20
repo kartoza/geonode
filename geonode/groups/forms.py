@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2017 OSGeo
@@ -24,28 +23,29 @@ from django.utils.translation import ugettext as _
 from modeltranslation.forms import TranslationModelForm
 
 from django.contrib.auth import get_user_model
+from django_select2.forms import Select2MultipleWidget
 
 from geonode.groups.models import GroupProfile
+from geonode.people.utils import get_available_users
 
 
 class GroupForm(TranslationModelForm):
 
     slug = forms.SlugField(
-        max_length=20,
         help_text=_("a short version of the name consisting only of letters, numbers, underscores and hyphens."),
         widget=forms.HiddenInput,
         required=False)
 
     def clean_slug(self):
         if GroupProfile.objects.filter(
-                slug__iexact=self.cleaned_data["slug"]).count() > 0:
+                slug__iexact=self.cleaned_data["slug"]).exists():
             raise forms.ValidationError(
                 _("A group already exists with that slug."))
         return self.cleaned_data["slug"].lower()
 
     def clean_title(self):
         if GroupProfile.objects.filter(
-                title__iexact=self.cleaned_data["title"]).count() > 0:
+                title__iexact=self.cleaned_data["title"]).exists():
             raise forms.ValidationError(
                 _("A group already exists with that name."))
         return self.cleaned_data["title"]
@@ -54,8 +54,13 @@ class GroupForm(TranslationModelForm):
         cleaned_data = self.cleaned_data
 
         name = cleaned_data.get("title")
+        if not name or GroupProfile.objects.filter(title__iexact=self.cleaned_data["title"]).exists():
+            raise forms.ValidationError(
+                _("A group already exists with that name."))
         slug = slugify(name)
-
+        if not slug or GroupProfile.objects.filter(slug__iexact=self.cleaned_data["slug"]).exists():
+            raise forms.ValidationError(
+                _("A group already exists with that slug."))
         cleaned_data["slug"] = slug
 
         return cleaned_data
@@ -69,7 +74,7 @@ class GroupUpdateForm(forms.ModelForm):
 
     def clean_name(self):
         if GroupProfile.objects.filter(
-                name__iexact=self.cleaned_data["title"]).count() > 0:
+                name__iexact=self.cleaned_data["title"]).exists():
             if self.cleaned_data["title"] == self.instance.name:
                 pass  # same instance
             else:
@@ -83,27 +88,40 @@ class GroupUpdateForm(forms.ModelForm):
 
 
 class GroupMemberForm(forms.Form):
-    user_identifiers = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'user-select'
-            }
-        )
+
+    def __init__(self, *args, **kwargs):
+        """ Grants access to the request object so that only members of the current user
+        are given as options"""
+        _user = None
+        if isinstance(args[0], get_user_model()):
+            _user = args[0]
+            args = args[1:]
+        super(forms.Form, self).__init__(*args, **kwargs)
+        if _user:
+            self.fields['user_identifiers'].queryset = get_available_users(_user).order_by('username')
+        else:
+            self.fields['user_identifiers'].queryset = None
+
+    user_identifiers = forms.ModelMultipleChoiceField(
+        required=True,
+        queryset=None,
+        label=_("User Identifiers"),
+        widget=Select2MultipleWidget
     )
+
     manager_role = forms.BooleanField(
         required=False,
         label=_("Assign manager role")
     )
 
     def clean_user_identifiers(self):
-        value = self.cleaned_data["user_identifiers"]
         new_members = []
         errors = []
-        for name in (v.strip() for v in value.split(",")):
+        for user in self.cleaned_data['user_identifiers']:
             try:
-                new_members.append(get_user_model().objects.get(username=name))
+                new_members.append(user)
             except get_user_model().DoesNotExist:
-                errors.append(name)
+                errors.append(user)
         if errors:
             raise forms.ValidationError(
                 _("The following are not valid usernames: %(errors)s; "
