@@ -281,7 +281,10 @@ def dataset_style_upload(request):
             if layer:
                 sld = request.FILES['sld_file'].read()
 
-                set_dataset_style(layer, data.get('dataset_title'), sld)
+                set_dataset_style(
+                    layer, data.get('dataset_title'), sld,
+                    base_file=request.FILES['sld_file']
+                )
                 out['url'] = layer.get_absolute_url()
                 out['bbox'] = layer.bbox_string
                 out['crs'] = {

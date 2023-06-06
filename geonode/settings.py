@@ -2227,3 +2227,9 @@ SUPPORTED_DATASET_FILE_TYPES = [
         "needsFiles": ["shp", "prj", "dbf", "shx", "csv", "tiff", "zip", "xml"]
     }
 ]
+
+# This will assign layer to existing default geoserver style if there is
+# no SLD provided to avoid proliferation of styles in the system
+USE_DEFAULT_GEOSERVER_STYLE = ast.literal_eval(
+    os.environ.get('USE_DEFAULT_GEOSERVER_STYLE', 'False')
+)
