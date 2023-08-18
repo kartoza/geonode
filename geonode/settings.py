@@ -17,25 +17,25 @@
 #
 #########################################################################
 
+import ast
 # Django settings for the GeoNode project.
 import os
 import re
-import ast
-import sys
 import subprocess
-import dj_database_url
-from schema import Optional
+import sys
 from datetime import timedelta
 from urllib.parse import urlparse, urljoin
 
+import dj_database_url
 #
 # General Django development settings
 #
 from django.conf.global_settings import DATETIME_INPUT_FORMATS
-from geonode import get_version
 from kombu import Queue, Exchange
 from kombu.serialization import register
+from schema import Optional
 
+from geonode import get_version
 from . import serializer
 
 SILENCED_SYSTEM_CHECKS = [
@@ -2374,3 +2374,9 @@ GEONODE_APPS += ("geonode.assets",)
 AVATAR_ADD_TEMPLATE = "people/avatar/add.html"
 AVATAR_CHANGE_TEMPLATE = "people/avatar/change.html"
 AVATAR_DELETE_TEMPLATE = "people/avatar/confirm_delete.html"
+
+# This will assign layer to existing default geoserver style if there is
+# no SLD provided to avoid proliferation of styles in the system
+USE_DEFAULT_GEOSERVER_STYLE = ast.literal_eval(
+    os.environ.get('USE_DEFAULT_GEOSERVER_STYLE', 'False')
+)

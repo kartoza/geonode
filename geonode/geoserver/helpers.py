@@ -301,14 +301,42 @@ def get_sld_for(gs_catalog, layer):
     _max_retries, _tries = getattr(ogc_server_settings, "MAX_RETRIES", 2), 0
     try:
         gs_dataset = gs_catalog.get_layer(layer.name)
-        if gs_dataset.default_style:
-            gs_style = gs_dataset.default_style.sld_body
-            set_dataset_style(layer, layer.alternate, gs_style)
-        name = gs_dataset.default_style.name
-        _default_style = gs_dataset.default_style
+
+        # If using geoserver default
+        logger.debug(f'GET SLD INIT: {layer.default_style_id}')
+        if settings.USE_DEFAULT_GEOSERVER_STYLE:
+
+            # Get the default one
+            if gs_dataset.default_style and gs_dataset.default_style.name in f'geonode_{layer.name}':
+                logger.debug(f'GET SLD DEFAULT ONE: {gs_dataset.default_style.name}')
+                gs_default_style = gs_dataset.default_style
+                sld_body = gs_dataset.default_style.sld_body
+                for _type in ['polygon', 'point', 'line', 'raster']:
+                    if _type in str(sld_body).lower():
+                        logger.debug(f'GET SLD USED ONE: {name}')
+                        target_style = gs_catalog.get_style(name)
+                        if target_style:
+                            name = _type
+                            _default_style = gs_catalog.get_style(name)
+                            logger.debug(f'GET SLD USED ONE STYLE: {_default_style.name}')
+                            gs_dataset.default_style = _default_style
+                            gs_catalog.save(gs_dataset)
+                            gs_catalog.delete(gs_default_style, purge=True, recurse=False)
+
+
+        logger.debug(f'GET SLD USED ONE STYLE: {_default_style}')
+        # If not using geoserver default
+        if not _default_style:
+            logger.debug(f'GET SLD DEFAULT: {_default_style.name}')
+            if gs_dataset.default_style:
+                gs_style = gs_dataset.default_style.sld_body
+                set_dataset_style(layer, layer.alternate, gs_style)
+            name = gs_dataset.default_style.name
+            _default_style = gs_dataset.default_style
     except Exception as e:
         logger.debug(e)
         name = None
+    logger.debug(f'GET FINAL: {name}')
 
     while not name and _tries < _max_retries:
         try:
@@ -366,11 +394,13 @@ def get_sld_for(gs_catalog, layer):
 
 def set_dataset_style(saved_dataset, title, sld, base_file=None):
     # Check SLD is valid
+    from_file = base_file
     try:
         if sld:
             if isfile(sld):
                 with open(sld, "rb") as sld_file:
                     sld = sld_file.read()
+                from_file = True
 
             elif isinstance(sld, str):
                 sld = sld.strip("b'\n")
@@ -380,6 +410,7 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
             with open(base_file, "rb") as sld_file:
                 sld = sld_file.read()
             dlxml.parse(base_file)
+            from_file = True
     except Exception:
         logger.exception("The uploaded SLD file is not valid XML")
         raise Exception("The uploaded SLD file is not valid XML")
@@ -388,7 +419,10 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
     match = None
     styles = list(saved_dataset.styles.all()) + [saved_dataset.default_style]
     for style in styles:
-        if style and style.name == saved_dataset.name:
+        if style and (
+            style.name == saved_dataset.name or
+            (not from_file and style.name in DEFAULT_STYLE_NAME)
+        ):
             match = style
             break
     layer = gs_catalog.get_layer(title)
@@ -406,6 +440,8 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
             logger.exception(e)
     else:
         try:
+            if match.name in DEFAULT_STYLE_NAME:
+                raise Exception()
             _sld_format = _extract_style_version_from_sld(sld)
             style = gs_catalog.create_style(
                 saved_dataset.name,
@@ -1145,7 +1181,19 @@ def set_styles(layer, gs_catalog: Catalog):
         default_style = gs_dataset.get_full_default_style()
         if default_style:
             # make sure we are not using a default SLD (which won't be editable)
-            layer.default_style, _gs_default_style = save_style(default_style, layer)
+            sld_body = default_style.sld_body
+            workspace = default_style.workspace
+
+            # We make polygon as default style
+            default_style_used = default_style
+            if settings.USE_DEFAULT_GEOSERVER_STYLE and not workspace and default_style.name in f'geonode_{layer.name}':
+                for _type in ['polygon', 'point', 'line', 'raster']:
+                    if _type in str(sld_body).lower():
+                        default_style_used = gs_catalog.get_style(_type)
+                if not default_style_used:
+                    default_style_used = default_style
+
+            layer.default_style, _gs_default_style = save_style(default_style_used, layer, True)
             try:
                 if (
                     default_style.name != _gs_default_style.name
@@ -1240,14 +1288,20 @@ def set_styles(layer, gs_catalog: Catalog):
         logger.debug(tb)
 
 
-def save_style(gs_style, layer):
+def save_style(gs_style, layer, is_default=False):
     style_name = os.path.basename(urlparse(gs_style.body_href).path).split(".")[0]
     sld_name = copy.copy(gs_style.name)
     sld_body = copy.copy(gs_style.sld_body)
     _gs_style = None
     if not gs_style.workspace:
         logger.debug(f'save_style: Copying style "{sld_name}" to "{layer.workspace}:{layer.name}')
-        _gs_style = gs_catalog.create_style(layer.name, sld_body, raw=True, overwrite=True, workspace=layer.workspace)
+        if is_default and gs_style.name in DEFAULT_STYLE_NAME:
+            _gs_style = gs_style
+        if not _gs_style:
+            _gs_style = gs_catalog.create_style(
+                layer.name, sld_body,
+                raw=True, overwrite=True,
+                workspace=layer.workspace)
     else:
         logger.debug(
             f'save_style: Retrieving style "{layer.workspace}:{sld_name}" for layer "{layer.workspace}:{layer.name}'
