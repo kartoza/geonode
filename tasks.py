@@ -45,7 +45,7 @@ def waitfordbs(ctx):
         (
             f"/usr/bin/wait-for-databases "
             f"{_db_conf['HOST']} {_db_conf['NAME']} {_db_conf['USER']} "
-            f"{_db_conf['PASSWORD']}"
+            f"{_db_conf['PASSWORD']} {_db_conf['PORT']}"
         ),
         pty=True
     )
@@ -56,7 +56,7 @@ def waitfordbs(ctx):
         (
             f"/usr/bin/wait-for-databases "
             f"{_db_conf['HOST']} {_db_conf['NAME']} {_db_conf['USER']} "
-            f"{_db_conf['PASSWORD']}"
+            f"{_db_conf['PASSWORD']} {_db_conf['PORT']}"
         ),
         pty=True
     )
