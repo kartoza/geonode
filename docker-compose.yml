@@ -3,7 +3,7 @@ version: '3.9'
 # Common Django template for GeoNode and Celery services below
 x-common-django:
   &default-common-django
-  image: kartoza/geonode:v4.1.x-multi-host.2
+  image: kartoza/geonode:v4.1.x-multi-host.3
   restart: on-failure
   env_file:
     - .env
