@@ -3,7 +3,7 @@ version: '3.9'
 # Common Django template for GeoNode and Celery services below
 x-common-django:
   &default-common-django
-  image: geonode/geonode:4.0
+  image: kartoza/geonode:4.1.x-resend
   restart: on-failure
   env_file:
     - .env
@@ -43,7 +43,7 @@ services:
   # Celery worker that executes celery tasks created by Django.
   celery:
     << : *default-common-django
-    image: geonode/geonode:4.0
+    image: kartoza/geonode:4.1.x-resend
     container_name: celery4${COMPOSE_PROJECT_NAME}
     depends_on:
       - django
@@ -89,7 +89,7 @@ services:
 
   # Geoserver backend
   geoserver:
-    image: geonode/geoserver:2.23.0
+    image: geonode/geoserver:2.23.3
     container_name: geoserver4${COMPOSE_PROJECT_NAME}
     healthcheck:
       test: "curl --fail --silent --write-out 'HTTP CODE : %{http_code}\n' --output /dev/null http://127.0.0.1:8080/geoserver/ows"
