@@ -33,6 +33,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('people', '0032_set_contributors_group'),
+        # TODO:
+        #  This fix error migrations
+        ('wagtailcore', '0089_log_entry_data_json_null_to_object'),
     ]
 
     operations = [
