@@ -526,3 +526,21 @@ def run_check(service, collector, since=None, until=None, force_check=None, form
             return collector.process(service, data_in, last_check, until)
         finally:
             h.mark_as_checked()
+
+def update_request_layer_to_dataset(request):
+    """Return request get json.
+
+    Replace layer to dataset of resource type.
+    """
+    query_params = request.GET.copy()
+    resource_types = query_params.get('resource_type', None)
+    if resource_types is not None:
+        if isinstance(resource_types, list):
+            query_params['resource_type'] = [
+                'dataset' if resource_type == 'layer'
+                else resource_type for resource_type
+                in resource_types
+            ]
+        elif resource_types == 'layer':
+            query_params['resource_type'] = 'dataset'
+    return query_params

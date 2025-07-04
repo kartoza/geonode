@@ -46,7 +46,7 @@ from geonode.monitoring.models import (
     MetricNotificationCheck,
 )
 from geonode.monitoring.models import do_autoconfigure
-from geonode.monitoring.utils import TypeChecks, dump, extend_datetime_input_formats
+from geonode.monitoring.utils import TypeChecks, dump, extend_datetime_input_formats, update_request_layer_to_dataset
 from geonode.monitoring.service_handlers import exposes
 
 # Create your views here.
@@ -447,7 +447,8 @@ class MetricDataView(View):
     def get_filters(self, **kwargs):
         out = {}
         self.errors = None
-        f = MetricsFilters(data=self.request.GET)
+        query_params = update_request_layer_to_dataset(self.request)
+        f = MetricsFilters(data=query_params)
         if not f.is_valid():
             self.errors = f.errors
         else:

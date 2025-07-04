@@ -541,6 +541,8 @@ class RequestEvent(models.Model):
         for r in resources_list:
             if r is None:
                 continue
+            if type_name == 'layer':
+                type_name = 'dataset'
             rinst, _ = MonitoredResource.objects.get_or_create(name=r, type=type_name)
             out.append(rinst)
         return out
@@ -548,6 +550,9 @@ class RequestEvent(models.Model):
     @classmethod
     def _get_or_create_resources(cls, res_name, res_type, res_id):
         out = []
+        if res_type == 'layer':
+            res_type = 'dataset'
+
         r, _ = MonitoredResource.objects.get_or_create(name=res_name, type=res_type)
         if r and res_id:
             r.resource_id = res_id
