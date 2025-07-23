@@ -27,6 +27,7 @@ import socket
 import ipaddress
 import logging
 import datetime
+import dj_database_url
 from pathlib import Path
 
 from urllib.parse import urlparse, urlunparse
@@ -39,10 +40,28 @@ logger = logging.getLogger(__name__)
 
 @task
 def waitfordbs(ctx):
-    print("**************************databases*******************************")
-    db_host = os.getenv("DATABASE_HOST", "db")
-    ctx.run(f"/usr/bin/wait-for-databases {db_host}", pty=True)
-
+    print("**************************databases - geonode *******************************")
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    _db_conf = dj_database_url.parse(DATABASE_URL)
+    ctx.run(
+        (
+            f"/usr/bin/wait-for-databases "
+            f"{_db_conf['HOST']} {_db_conf['NAME']} {_db_conf['USER']} "
+            f"{_db_conf['PASSWORD']}"
+        ),
+        pty=True
+    )
+    print("**************************databases - geonode data *******************************")
+    DATABASE_URL = os.getenv("GEODATABASE_URL")
+    _db_conf = dj_database_url.parse(DATABASE_URL)
+    ctx.run(
+        (
+            f"/usr/bin/wait-for-databases "
+            f"{_db_conf['HOST']} {_db_conf['NAME']} {_db_conf['USER']} "
+            f"{_db_conf['PASSWORD']}"
+        ),
+        pty=True
+    )
 
 @task
 def update(ctx):
