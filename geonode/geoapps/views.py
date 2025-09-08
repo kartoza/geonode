@@ -28,7 +28,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
-from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.clickjacking import xframe_options_exempt
 from geonode.base.enumerations import SOURCE_TYPE_LOCAL
 
 from geonode.client.hooks import hookset
@@ -88,7 +88,7 @@ def new_geoapp(request, template="apps/app_new.html"):
     return HttpResponseRedirect(hookset.geoapp_list_url())
 
 
-@xframe_options_sameorigin
+@xframe_options_exempt
 def geoapp_edit(request, geoappid, template="apps/app_edit.html"):
     """
     The view that returns the app composer opened to
