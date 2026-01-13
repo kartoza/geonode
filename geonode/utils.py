@@ -66,6 +66,9 @@ from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ImproperlyConfigured
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, connection, transaction
+from django.test import Client
+from django.urls import resolve
+from django.urls.exceptions import Resolver404
 from django.utils.translation import gettext_lazy as _
 
 from geonode import geoserver, GeoNodeException  # noqa
@@ -1999,3 +2002,17 @@ def get_supported_datasets_file_types():
 
 def get_allowed_extensions():
     return list(itertools.chain.from_iterable([_type["ext"] for _type in get_supported_datasets_file_types()]))
+
+def url_exists(path: str, user = None) -> bool:
+    """
+    Returns True if the URL exists and will NOT return 404.
+    403, 200, 302 (login redirect) are all treated as valid.
+    """
+    client = Client()
+
+    if user:
+        client.force_login(user)
+
+    response = client.get(path, follow=False)
+
+    return response.status_code != 404
