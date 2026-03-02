@@ -42,7 +42,7 @@ from .. import models
 from geonode.utils import (
     XML_PARSER,
     get_xpath_value,
-    url_exists,
+    is_url_accessible,
 )
 from .. import resourcedescriptor
 
@@ -180,7 +180,7 @@ class OgcWmsHarvester(base.BaseHarvesterWorker):
                 for _op_method in ogc_wms_get_capabilities.get("methods"):
                     if _op_method.get("type", None).upper() == "GET" and _op_method.get("url", None):
                         # Only change the URL if it is not returning 404
-                        if url_exists(_op_method.get("url")):
+                        if is_url_accessible(_op_method.get("url")):
                             ogc_wms_url = _op_method.get("url")
                             break
         except Exception as e:
