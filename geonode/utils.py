@@ -1999,3 +1999,21 @@ def get_supported_datasets_file_types():
 
 def get_allowed_extensions():
     return list(itertools.chain.from_iterable([_type["ext"] for _type in get_supported_datasets_file_types()]))
+
+
+def is_url_accessible(url: str, timeout: int = 5) -> bool:
+    """
+    Check if an external URL is accessible (does not return 404 or other errors).
+    
+    Args:
+        url: The URL to check
+        timeout: Request timeout in seconds (default: 5)
+    
+    Returns:
+        True if the URL is accessible, False if it returns 404 or fails
+    """
+    try:
+        response = requests.head(url, timeout=timeout, allow_redirects=True)
+        return response.status_code != 404
+    except requests.RequestException:
+        return False
