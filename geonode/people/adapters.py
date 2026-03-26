@@ -136,7 +136,9 @@ class LocalAccountAdapter(DefaultAccountAdapter, BaseInvitationsAdapter):
             msg.send()
         except Exception as e:
             logger.exception(e)
-            messages.warning(context.get("request"), f"An error occurred while trying to send the email: {e}")
+            request = context.get("request")
+            if request is not None:
+                messages.warning(request, f"An error occurred while trying to send the email: {e}")
 
     def enhanced_invitation_context(self, context):
         user = context.get("inviter") if context.get("inviter") else context.get("user")
