@@ -338,6 +338,7 @@ ALL_LANGUAGES = (
     ('chi', 'Chinese'),
     ('cos', 'Corsican'),
     ('dan', 'Danish'),
+    ('dut', 'Dutch'),
     ('dzo', 'Dzongkha'),
     ('eng', 'English'),
     ('fra', 'French'),
