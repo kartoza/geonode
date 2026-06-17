@@ -239,8 +239,10 @@
     <dl class="dl-horizontal">
 
         {% block scale %}
-        <dt>{% trans "Spatial Extent" %}</dt>
-        <dd>{% if resource.scale %} {{ resource.scale }} {% else %} --- {% endif %}</dd>
+            {% if resource.scale %}
+                <dt>{% trans "Scale" %}</dt>
+                <dd>{{ resource.scale }}</dd>
+            {% endif %}
         {% endblock scale %}
 
         {% block srid %}
