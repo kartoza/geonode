@@ -85,6 +85,13 @@ def document_download(request, docid):
 
 def document_link(request, docid):
     response = get_download_response(request, docid)
+    try:
+        if response.basename:
+            response["Content-Disposition"] = (
+                f'inline; filename="{response.basename}"'
+            )
+    except Exception:
+        pass
     return response
 
 
